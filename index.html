@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infodrogas - Consulta</title>
+    <title>Infodrogas - Lista de Medicamentos</title>
     <style>
         /* 1. CONFIGURAÇÕES GERAIS */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f0f2f5; /* Fundo cinza claro */
+            background-color: #f0f2f5; 
             margin: 0;
             padding: 0;
             display: flex;
@@ -24,64 +24,61 @@
             padding: 15px 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             display: flex;
-            justify-content: flex-end; /* Joga a pesquisa para a direita */
+            justify-content: flex-end;
+            position: sticky; /* Fica fixo no topo ao rolar */
+            top: 0;
+            z-index: 1000;
         }
 
-        .busca-container {
-            margin-right: 5%;
-        }
-
+        .busca-container { margin-right: 5%; }
         .busca-container input {
             padding: 8px 15px;
             border-radius: 20px;
             border: 1px solid #ddd;
             outline: none;
             width: 200px;
-            transition: 0.3s;
         }
 
-        .busca-container input:focus {
-            border-color: #1a73e8;
-            width: 250px;
+        /* 3. CAMADA SOBREPOSTA (CONTAINER PRINCIPAL) */
+        .lista-remedios {
+            width: 95%;
+            max-width: 800px;
+            margin: 40px 0;
         }
 
-        /* 3. CAMADA SOBREPOSTA (O CARTÃO BRANCO) */
-        .container-principal {
-            background-color: #ffffff; /* Fundo branco da camada */
-            width: 90%;
-            max-width: 600px;
-            margin-top: 50px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Sombra para dar efeito de sobreposição */
+        /* Estilo de cada cartão de remédio */
+        .cartao-remedio {
+            background-color: #ffffff;
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .foto-remedio {
-            width: 100%;
-            height: 300px;
+            width: 180px;
+            height: 180px;
             object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 10px;
         }
 
-        h1 { color: #202124; margin-bottom: 5px; }
-        .subtitulo { color: #5f6368; margin-bottom: 20px; display: block; }
+        .info { flex: 1; min-width: 250px; }
+        h2 { color: #1a73e8; margin: 0 0 5px 0; }
+        .subtitulo { color: #5f6368; font-size: 14px; margin-bottom: 15px; display: block; }
 
         /* 4. SEÇÃO DE ALERGIAS */
-        .alergia-alerta {
+        .alergia-box {
             background-color: #fff1f0;
-            border: 1px solid #ffa39e;
-            padding: 15px;
-            border-radius: 8px;
+            border-left: 4px solid #cf1322;
+            padding: 10px 15px;
+            border-radius: 4px;
         }
 
-        .alergia-alerta h3 {
-            color: #cf1322;
-            margin-top: 0;
-            font-size: 16px;
-        }
-
-        ul { color: #444; padding-left: 20px; line-height: 1.6; }
+        .alergia-box strong { color: #cf1322; font-size: 13px; display: block; margin-bottom: 5px; }
+        ul { margin: 0; padding-left: 20px; font-size: 14px; color: #333; }
     </style>
 </head>
 <body>
@@ -92,21 +89,178 @@
         </div>
     </header>
 
-    <main class="container-principal">
-        
-        <img class="foto-remedio" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800" alt="Remédio">
+    <main class="lista-remedios">
 
-        <h1>Dipirona Monoidratada</h1>
-        <span class="subtitulo">Analgésico e Antipirético</span>
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300" alt="Dipirona">
+            <div class="info">
+                <span class="subtitulo">Analgésico e Antipirético</span>
+                <h2>Dipirona Monoidratada</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia a pirazolonas.</li>
+                        <li>Asma induzida por analgésicos.</li>
+                        <li>Menores de 3 meses.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-        <div class="alergia-alerta">
-            <h3>⚠️ Alergias e Contraindicações</h3>
-            <ul>
-                <li>Hipersensibilidade a pirazolonas (ex: dipirona, isopropilaminofenazona).</li>
-                <li>Histórico de asma induzida por analgésicos.</li>
-                <li>Não recomendado para menores de 3 meses.</li>
-                <li>Evitar o uso se houver problemas graves nos rins ou fígado.</li>
-            </ul>
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=300" alt="Paracetamol">
+            <div class="info">
+                <span class="subtitulo">Analgésico</span>
+                <h2>Paracetamol (Tylenol)</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Hipersensibilidade ao paracetamol.</li>
+                        <li>Doença hepática grave (fígado).</li>
+                        <li>Reações cutâneas raras.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1550572017-ed951b551046?w=300" alt="Ibuprofeno">
+            <div class="info">
+                <span class="subtitulo">Anti-inflamatório (AINE)</span>
+                <h2>Ibuprofeno (Advil)</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia a aspirina ou outros AINEs.</li>
+                        <li>Úlcera gástrica ativa.</li>
+                        <li>Insuficiência renal grave.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=300" alt="Amoxicilina">
+            <div class="info">
+                <span class="subtitulo">Antibiótico</span>
+                <h2>Amoxicilina</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia a Penicilina ou Cefalosporinas.</li>
+                        <li>Histórico de choque anafilático a antibióticos.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1471864190281-ad5f9f33d70e?w=300" alt="Loratadina">
+            <div class="info">
+                <span class="subtitulo">Anti-histamínico (Alergia)</span>
+                <h2>Loratadina</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Hipersensibilidade à loratadina.</li>
+                        <li>Uso cauteloso em insuficiência hepática.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1555633514-abcee6ad93e1?w=300" alt="Buscopan">
+            <div class="info">
+                <span class="subtitulo">Antiespasmódico</span>
+                <h2>Butilbrometo de Escopolamina</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Glaucoma de ângulo fechado.</li>
+                        <li>Alergia a componentes da fórmula.</li>
+                        <li>Miastenia gravis.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1585435557343-3b092031a831?w=300" alt="Dorflex">
+            <div class="info">
+                <span class="subtitulo">Relaxante Muscular</span>
+                <h2>Dorflex</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia à Dipirona ou Orfenadrina.</li>
+                        <li>Glaucoma e obstrução pilórica.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-151242855908e-5603564f6252?w=300" alt="Nimesulida">
+            <div class="info">
+                <span class="subtitulo">Anti-inflamatório Potente</span>
+                <h2>Nimesulida</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Altamente hepatotóxico (fígado).</li>
+                        <li>Alergia a ácido acetilsalicílico.</li>
+                        <li>Uso proibido em menores de 12 anos.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1576073719710-aa1008d6139c?w=300" alt="Cimegripe">
+            <div class="info">
+                <span class="subtitulo">Antigripal</span>
+                <h2>Cimegripe / Resfenol</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia a Clorfeniramina.</li>
+                        <li>Hipertensão arterial grave.</li>
+                        <li>Contém Paracetamol (cuidado com dose extra).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1471864190281-ad5f9f33d70e?w=300" alt="Dexametasona">
+            <div class="info">
+                <span class="subtitulo">Corticosteroide</span>
+                <h2>Dexametasona</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Infecções fúngicas sistêmicas.</li>
+                        <li>Alergia a corticoides.</li>
+                        <li>Uso prolongado sem supervisão.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cartao-remedio">
+            <img class="foto-remedio" src="https://images.unsplash.com/photo-1526253038957-bce54e05968e?w=300" alt="Omeprazol">
+            <div class="info">
+                <span class="subtitulo">Protetor Gástrico</span>
+                <h2>Omeprazol</h2>
+                <div class="alergia-box">
+                    <strong>⚠️ ALERGIAS E RISCOS:</strong>
+                    <ul>
+                        <li>Alergia a benzimidazóis.</li>
+                        <li>Uso concomitante com nelfinavir.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
     </main>
