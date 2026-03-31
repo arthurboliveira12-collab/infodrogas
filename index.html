@@ -3,87 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Medicamento - Dipirona</title>
+    <title>Infodrogas - Consulta</title>
     <style>
-        /* Estilo para deixar o site bonito e centralizado */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #eef2f7; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
+        /* 1. CONFIGURAÇÕES GERAIS */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5; /* Fundo cinza claro */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-        .card { 
-            background: white; 
-            width: 90%; 
-            max-width: 450px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            overflow: hidden; 
+
+        /* 2. BARRA SUPERIOR (HEADER) */
+        header {
+            width: 100%;
+            background-color: #ffffff;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: flex-end; /* Joga a pesquisa para a direita */
         }
-        .foto-remedio { 
-            width: 100%; 
-            height: 250px; 
-            object-fit: cover; 
+
+        .busca-container {
+            margin-right: 5%;
         }
-        .corpo { 
-            padding: 25px; 
+
+        .busca-container input {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            outline: none;
+            width: 200px;
+            transition: 0.3s;
         }
-        .categoria { 
-            text-transform: uppercase; 
-            font-size: 12px; 
-            letter-spacing: 1px; 
-            color: #1a73e8; 
-            font-weight: bold; 
+
+        .busca-container input:focus {
+            border-color: #1a73e8;
+            width: 250px;
         }
-        h1 { 
-            margin: 10px 0; 
-            color: #202124; 
-            font-size: 24px; 
+
+        /* 3. CAMADA SOBREPOSTA (O CARTÃO BRANCO) */
+        .container-principal {
+            background-color: #ffffff; /* Fundo branco da camada */
+            width: 90%;
+            max-width: 600px;
+            margin-top: 50px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Sombra para dar efeito de sobreposição */
         }
-        .alerta-box { 
-            background-color: #fce8e6; 
-            border-left: 5px solid #d93025; 
-            padding: 15px; 
-            margin-top: 20px; 
-            border-radius: 5px; 
+
+        .foto-remedio {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
-        .alerta-titulo { 
-            color: #d93025; 
-            font-weight: bold; 
-            display: block; 
-            margin-bottom: 5px; 
+
+        h1 { color: #202124; margin-bottom: 5px; }
+        .subtitulo { color: #5f6368; margin-bottom: 20px; display: block; }
+
+        /* 4. SEÇÃO DE ALERGIAS */
+        .alergia-alerta {
+            background-color: #fff1f0;
+            border: 1px solid #ffa39e;
+            padding: 15px;
+            border-radius: 8px;
         }
-        ul { 
-            margin: 0; 
-            padding-left: 20px; 
-            color: #3c4043; 
-            line-height: 1.6; 
+
+        .alergia-alerta h3 {
+            color: #cf1322;
+            margin-top: 0;
+            font-size: 16px;
         }
+
+        ul { color: #444; padding-left: 20px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <img class="foto-remedio" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600" alt="Foto de Medicamento">
-
-        <div class="corpo">
-            <span class="categoria">Analgésico e Antipirético</span>
-            <h1>Dipirona Monoidratada</h1>
-
-            <div class="alerta-box">
-                <span class="alerta-titulo">⚠️ ALERGIAS E RISCOS:</span>
-                <ul>
-                    <li>Alergia a pirazolonas ou pirazolidinas.</li>
-                    <li>Reação alérgica prévia (ex: urticária) após uso de analgésicos.</li>
-                    <li>Portadores de asma ou rinite alérgica.</li>
-                    <li>Pessoas com deficiência de glicose-6-fosfato desidrogenase.</li>
-                </ul>
-            </div>
+    <header>
+        <div class="busca-container">
+            <input type="text" placeholder="Buscar remédio...">
         </div>
-    </div>
+    </header>
+
+    <main class="container-principal">
+        
+        <img class="foto-remedio" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800" alt="Remédio">
+
+        <h1>Dipirona Monoidratada</h1>
+        <span class="subtitulo">Analgésico e Antipirético</span>
+
+        <div class="alergia-alerta">
+            <h3>⚠️ Alergias e Contraindicações</h3>
+            <ul>
+                <li>Hipersensibilidade a pirazolonas (ex: dipirona, isopropilaminofenazona).</li>
+                <li>Histórico de asma induzida por analgésicos.</li>
+                <li>Não recomendado para menores de 3 meses.</li>
+                <li>Evitar o uso se houver problemas graves nos rins ou fígado.</li>
+            </ul>
+        </div>
+
+    </main>
 
 </body>
 </html>
