@@ -10,8 +10,9 @@
             margin: 0;
             overflow: hidden;
             background-color: #000;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Courier New', Courier, monospace; /* Retro Font */
             user-select: none;
+            image-rendering: pixelated; /* Retro look for UI if needed */
         }
 
         #game-container {
@@ -29,7 +30,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Let clicks pass through to the canvas */
+            pointer-events: none;
             z-index: 10;
         }
 
@@ -81,31 +82,43 @@
         #health-bar {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #800000, #ff1a1a);
+            background: linear-gradient(90deg, #cc0000, #ff0055);
             transition: width 0.2s ease-out;
         }
 
         #level-display {
-            color: #fff;
+            color: #00ffcc;
             font-size: 24px;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 0px #000;
         }
 
         #xp-bar-container {
             width: 250px;
-            height: 6px;
+            height: 10px;
             background-color: #111;
-            border-radius: 3px;
-            overflow: hidden;
+            border: 2px solid #222;
+            border-radius: 0px;
             margin-top: -5px;
         }
 
         #xp-bar {
             width: 0%;
             height: 100%;
-            background-color: #8b5cf6;
+            background-color: #9900ff;
             transition: width 0.3s ease;
+        }
+
+        /* Interaction Prompt */
+        #interaction-prompt {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 20px;
+            text-shadow: 2px 2px 0px #000;
+            display: none;
         }
 
         /* Screens */
@@ -126,37 +139,40 @@
         }
 
         .title {
-            font-size: 48px;
+            font-size: 50px;
             font-weight: bold;
-            color: #aa0000;
+            color: #ff0055;
             text-transform: uppercase;
-            letter-spacing: 5px;
+            letter-spacing: 2px;
             margin-bottom: 20px;
-            text-shadow: 0 0 20px #ff000055;
+            text-shadow: 4px 4px 0px #440022;
         }
 
         .instructions {
-            font-size: 18px;
-            color: #aaa;
+            font-size: 20px;
+            color: #00ffcc;
             text-align: center;
             line-height: 1.6;
             margin-bottom: 30px;
+            text-shadow: 2px 2px 0px #000;
         }
 
         .btn {
-            padding: 12px 30px;
-            background-color: #300;
-            color: white;
-            border: 1px solid #700;
-            border-radius: 6px;
-            font-size: 18px;
+            padding: 15px 40px;
+            background-color: #220033;
+            color: #00ffcc;
+            border: 4px solid #00ffcc;
+            border-radius: 0px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            cursor: pointer;
             transition: all 0.2s;
         }
         .btn:hover {
-            background-color: #500;
-            box-shadow: 0 0 15px #f005;
+            background-color: #00ffcc;
+            color: #220033;
         }
 
         /* Blood overlay for damage */
@@ -188,6 +204,7 @@
     <div id="ui-layer">
         <div id="damage-overlay"></div>
         <div id="crosshair"></div>
+        <div id="interaction-prompt">Pressione E para abrir</div>
         
         <div id="hud">
             <div id="level-display">Nível <span id="lvl-val">1</span></div>
@@ -229,6 +246,7 @@
         let moveBackward = false;
         let moveLeft = false;
         let moveRight = false;
+        const playerSpeed = 300.0;
         
         // RPG Stats
         let maxHealth = 100;
@@ -243,15 +261,25 @@
         let isAttacking = false;
         let attackProgress = 0;
 
-        // Entities
+        // Entities & Environment
         const enemies = [];
+        const collidableObjects = []; // For basic wall collisions
+        let floorObjects = []; // For ground detection
         const damageAmount = 20;
-        const damageCooldown = 1.0; // seconds
+        const damageCooldown = 1.0; 
         let lastDamageTime = 0;
+        
+        // Interactive Elements
+        let doorMesh;
+        let doorPivot;
+        let isDoorOpen = false;
+        let doorAnimationProgress = 0;
+        let isAnimatingDoor = false;
 
-        // Raycasting for combat
+        // Raycasting for combat and ground
         const raycaster = new THREE.Raycaster();
-        const centerCoords = new THREE.Vector2(0, 0); // Always center for crosshair
+        const groundRaycaster = new THREE.Raycaster();
+        const centerCoords = new THREE.Vector2(0, 0); 
 
         // DOM Elements
         const blocker = document.getElementById('blocker');
@@ -262,107 +290,69 @@
         const lvlVal = document.getElementById('lvl-val');
         const xpBar = document.getElementById('xp-bar');
         const damageOverlay = document.getElementById('damage-overlay');
+        const interactionPrompt = document.getElementById('interaction-prompt');
 
         init();
         animate();
 
         function init() {
-            // 1. Scene Setup
+            // 1. Scene Setup - Retro PS1 Style (Saturated, Dramatic Fog)
             scene = new THREE.Scene();
-            // Dark, moody fog - Brighter to fix pitch black screen
-            scene.background = new THREE.Color(0x13151a);
-            scene.fog = new THREE.FogExp2(0x13151a, 0.025);
+            scene.background = new THREE.Color(0x1a0033); // Deep purple
+            scene.fog = new THREE.FogExp2(0x1a0033, 0.025); // Thick saturated fog
 
             // 2. Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-            camera.position.y = 10; // Player height
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 0); // Player height
 
-            // Player Weapon (Asta's Demon-Slayer Sword)
+            // Player Weapon (Low Poly Retro Asta's Sword)
             swordGroup = new THREE.Group();
             
-            // Blade (Massive, dark, broad)
-            const bladeGeo = new THREE.BoxGeometry(2.5, 7, 0.4);
-            const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7, metalness: 0.3 });
+            // Blade (Black, flat shading)
+            const bladeGeo = new THREE.BoxGeometry(1.5, 6, 0.2);
+            const bladeMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
             const blade = new THREE.Mesh(bladeGeo, bladeMat);
-            blade.position.y = 3.5;
+            blade.position.y = 3;
             swordGroup.add(blade);
             
             // Guard
-            const guardGeo = new THREE.BoxGeometry(3.5, 0.5, 1.0);
-            const guardMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
+            const guardGeo = new THREE.BoxGeometry(2.5, 0.5, 0.6);
+            const guardMat = new THREE.MeshLambertMaterial({ color: 0x330000 });
             const guard = new THREE.Mesh(guardGeo, guardMat);
             swordGroup.add(guard);
 
             // Handle
-            const handleGeo = new THREE.CylinderGeometry(0.3, 0.3, 2, 16);
-            const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a1a1a, roughness: 0.9 });
+            const handleGeo = new THREE.BoxGeometry(0.3, 1.5, 0.3); // Blocky handle
+            const handleMat = new THREE.MeshLambertMaterial({ color: 0x2a1a1a });
             const handle = new THREE.Mesh(handleGeo, handleMat);
             handle.position.y = -1;
             swordGroup.add(handle);
 
-            // Position sword on the right side of the screen
-            swordGroup.position.set(2.5, -2.5, -4);
+            swordGroup.position.set(1.5, -2, -3);
             swordGroup.rotation.x = -Math.PI / 4;
-            swordGroup.rotation.y = Math.PI / 6; // Angle it so we see the flat blade
+            swordGroup.rotation.y = Math.PI / 6;
             camera.add(swordGroup);
             scene.add(camera);
 
-            // 3. Lighting
-            const ambientLight = new THREE.AmbientLight(0x303545, 2.0); // Moonlit ambient
+            // 3. Lighting - Dramatic, neon/saturated accents
+            const ambientLight = new THREE.AmbientLight(0x221144, 1.0); 
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0x8888aa, 1.5);
-            directionalLight.position.set(50, 100, 50);
+            const pointLight = new THREE.PointLight(0xff0055, 2, 50); // Redish light in library
+            pointLight.position.set(0, 8, 0);
+            scene.add(pointLight);
+
+            const directionalLight = new THREE.DirectionalLight(0x00ffcc, 0.5); // Teal moonlight
+            directionalLight.position.set(-20, 50, -20);
             scene.add(directionalLight);
 
-            // 4. Environment
-            // Ground
-            const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
-            const floorMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x111215, 
-                roughness: 0.9, 
-                metalness: 0.1 
-            });
-            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.rotation.x = -Math.PI / 2;
-            scene.add(floor);
+            // 4. Environment Construction (PS1 Style)
+            buildLevel();
 
-            // Grid for visibility
-            const gridHelper = new THREE.GridHelper(1000, 100, 0x000000, 0x000000);
-            gridHelper.position.y = 0.05;
-            gridHelper.material.opacity = 0.3;
-            gridHelper.material.transparent = true;
-            scene.add(gridHelper);
-
-            // Scenery (Tombstones and Dead Trees)
-            const tombstoneGeo = new THREE.BoxGeometry(3, 4, 1);
-            const tombstoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 });
-            
-            const treeGeo = new THREE.CylinderGeometry(0.8, 1.5, 20, 7);
-            const treeMat = new THREE.MeshStandardMaterial({ color: 0x1a120e, roughness: 1.0 });
-
-            for (let i = 0; i < 150; i++) {
-                const isTree = Math.random() > 0.5;
-                const mesh = isTree ? new THREE.Mesh(treeGeo, treeMat) : new THREE.Mesh(tombstoneGeo, tombstoneMat);
-                
-                mesh.position.x = (Math.random() - 0.5) * 600;
-                mesh.position.z = (Math.random() - 0.5) * 600;
-                mesh.position.y = isTree ? 10 : 2; 
-                
-                if (isTree) {
-                    mesh.rotation.x = (Math.random() - 0.5) * 0.2;
-                    mesh.rotation.z = (Math.random() - 0.5) * 0.2;
-                }
-
-                // Keep clear of center spawn
-                if (mesh.position.distanceTo(new THREE.Vector3(0, 0, 0)) > 30) {
-                    scene.add(mesh);
-                }
-            }
-
-            // 5. Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
+            // 5. Renderer - Pixelated, no AA
+            renderer = new THREE.WebGLRenderer({ antialias: false });
+            // Lower pixel ratio for retro look (adjust multiplier for chunkiness)
+            renderer.setPixelRatio(window.devicePixelRatio > 1 ? 0.5 : 0.25); 
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('game-container').appendChild(renderer.domElement);
 
@@ -381,9 +371,9 @@
             controls.addEventListener('unlock', function () {
                 if(!isDead) {
                     blocker.style.display = 'flex';
-                    menuTitle.innerText = 'PAUSED';
-                    menuInstructions.innerText = 'Click below to resume.';
-                    startBtn.innerText = 'Resume';
+                    menuTitle.innerText = 'PAUSADO';
+                    menuInstructions.innerText = 'Clique abaixo para continuar.';
+                    startBtn.innerText = 'Continuar';
                 }
             });
 
@@ -400,6 +390,7 @@
                     case 'KeyS': moveBackward = true; break;
                     case 'ArrowRight':
                     case 'KeyD': moveRight = true; break;
+                    case 'KeyE': handleInteraction(); break;
                 }
             };
 
@@ -417,142 +408,287 @@
             };
 
             const onMouseClick = function (event) {
-            if (controls.isLocked && !isDead) {
-                if (!isAttacking) {
-                    isAttacking = true;
-                    attackProgress = 0;
-                    attack();
+                if (controls.isLocked && !isDead) {
+                    if (!isAttacking) {
+                        isAttacking = true;
+                        attackProgress = 0;
+                        attack();
+                    }
                 }
-            }
-        };
+            };
 
-        document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseClick);
             window.addEventListener('resize', onWindowResize);
-
-        // Initial Enemies
-        for(let i=0; i<20; i++) {
-            spawnEnemy();
         }
-    }
 
-    function spawnEnemy() {
-        // Skeleton Group
-        const skeletonGroup = new THREE.Group();
-        const boneMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
+        function buildLevel() {
+            // Materials (Basic colors, flat looking for retro vibe)
+            const wallMat = new THREE.MeshLambertMaterial({ color: 0x332222 });
+            const floorMat = new THREE.MeshLambertMaterial({ color: 0x222233 });
+            const woodMat = new THREE.MeshLambertMaterial({ color: 0x3a2000 });
+            const pathMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
+            const leafMat = new THREE.MeshLambertMaterial({ color: 0x003311 });
+            const castleMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
 
-        // Skull
-        const skullGeo = new THREE.SphereGeometry(1.2, 16, 16);
-        const skull = new THREE.Mesh(skullGeo, boneMat);
-        skull.position.y = 6;
-        skeletonGroup.add(skull);
+            // A. Library Tower (Spawn Room)
+            const roomSize = 20;
+            const roomHeight = 15;
+            
+            // Floor
+            const libFloor = new THREE.Mesh(new THREE.PlaneGeometry(roomSize, roomSize), floorMat);
+            libFloor.rotation.x = -Math.PI / 2;
+            scene.add(libFloor);
+            floorObjects.push(libFloor);
 
-        // Spine / Ribcage
-        const spineGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
-        const spine = new THREE.Mesh(spineGeo, boneMat);
-        spine.position.y = 3.5;
-        skeletonGroup.add(spine);
+            // Walls (Back, Left, Right)
+            const wallGeo = new THREE.BoxGeometry(roomSize, roomHeight, 1);
+            const wallB = new THREE.Mesh(wallGeo, wallMat); wallB.position.set(0, roomHeight/2, roomSize/2);
+            const wallL = new THREE.Mesh(wallGeo, wallMat); wallL.position.set(-roomSize/2, roomHeight/2, 0); wallL.rotation.y = Math.PI/2;
+            const wallR = new THREE.Mesh(wallGeo, wallMat); wallR.position.set(roomSize/2, roomHeight/2, 0); wallR.rotation.y = Math.PI/2;
+            
+            // Front Wall (with hole for door)
+            const wallF1 = new THREE.Mesh(new THREE.BoxGeometry(roomSize/2 - 3, roomHeight, 1), wallMat);
+            wallF1.position.set(-roomSize/4 - 1.5, roomHeight/2, -roomSize/2);
+            const wallF2 = new THREE.Mesh(new THREE.BoxGeometry(roomSize/2 - 3, roomHeight, 1), wallMat);
+            wallF2.position.set(roomSize/4 + 1.5, roomHeight/2, -roomSize/2);
+            const wallF3 = new THREE.Mesh(new THREE.BoxGeometry(6, roomHeight - 8, 1), wallMat); // Above door
+            wallF3.position.set(0, roomHeight - (roomHeight-8)/2, -roomSize/2);
 
-        // Arms
-        const armGeo = new THREE.CylinderGeometry(0.3, 0.3, 2.5, 8);
-        const leftArm = new THREE.Mesh(armGeo, boneMat);
-        leftArm.position.set(-1.2, 4, 0);
-        leftArm.rotation.z = Math.PI / 4;
-        skeletonGroup.add(leftArm);
+            scene.add(wallB, wallL, wallR, wallF1, wallF2, wallF3);
+            collidableObjects.push(wallB, wallL, wallR, wallF1, wallF2);
 
-        const rightArm = new THREE.Mesh(armGeo, boneMat);
-        rightArm.position.set(1.2, 4, 0);
-        rightArm.rotation.z = -Math.PI / 4;
-        skeletonGroup.add(rightArm);
-        
-        // Spawn location
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 15 + Math.random() * 100;
-        
-        skeletonGroup.position.x = controls.getObject().position.x + Math.cos(angle) * distance;
-        skeletonGroup.position.z = controls.getObject().position.z + Math.sin(angle) * distance;
-        skeletonGroup.position.y = 2; // Float slightly above ground
-        
-        skeletonGroup.userData = { 
-            bobOffset: Math.random() * Math.PI * 2,
-            hp: 3,
-            originalMat: boneMat
-        };
-
-        // Face the center roughly
-        skeletonGroup.lookAt(0, 2, 0);
-
-        scene.add(skeletonGroup);
-        enemies.push(skeletonGroup);
-    }
-
-    function attack() {
-        // Melee Raycast from center of camera
-        raycaster.setFromCamera(centerCoords, camera);
-        const attackRange = 18;
-
-        // Check intersections with all parts of the skeletons
-        const intersects = raycaster.intersectObjects(enemies, true);
-
-        if (intersects.length > 0 && intersects[0].distance <= attackRange) {
-            // Find the parent skeleton group
-            let hitEnemy = intersects[0].object;
-            while (hitEnemy.parent && hitEnemy.parent.type !== 'Scene' && !enemies.includes(hitEnemy)) {
-                hitEnemy = hitEnemy.parent;
+            // Bookshelves (Colored boxes)
+            for(let i=0; i<8; i++) {
+                const shelf = new THREE.Mesh(new THREE.BoxGeometry(3, 8, 2), new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}));
+                shelf.position.set((Math.random()-0.5)*12, 4, (Math.random()-0.5)*12);
+                // Keep center clear
+                if(shelf.position.distanceTo(new THREE.Vector3(0,4,0)) > 5) {
+                    scene.add(shelf);
+                    collidableObjects.push(shelf);
+                }
             }
 
-            if (enemies.includes(hitEnemy)) {
-                hitEnemy.userData.hp -= 1;
+            // Interactive Door
+            doorPivot = new THREE.Group();
+            doorPivot.position.set(-3, 0, -roomSize/2); // Hinge position
+            
+            doorMesh = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 0.5), woodMat);
+            doorMesh.position.set(3, 4, 0); // Offset from pivot
+            doorPivot.add(doorMesh);
+            scene.add(doorPivot);
+            collidableObjects.push(doorMesh);
+
+            // B. Stone Path & Forest
+            const pathLength = 150;
+            const path = new THREE.Mesh(new THREE.PlaneGeometry(10, pathLength), pathMat);
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, 0.1, -roomSize/2 - pathLength/2);
+            scene.add(path);
+            floorObjects.push(path);
+
+            // Trees (Retro style)
+            const treeGeo = new THREE.ConeGeometry(3, 10, 4); // 4-sided pyramid for retro look
+            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.5, 5, 4);
+            
+            for(let i=0; i<30; i++) {
+                const zPos = -roomSize/2 - Math.random() * pathLength;
+                const xPos = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 10); // Placed on sides
                 
-                // Flash red
-                hitEnemy.children.forEach(child => {
-                    child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-                });
+                const tree = new THREE.Group();
+                const leaves = new THREE.Mesh(treeGeo, leafMat); leaves.position.y = 7;
+                const trunk = new THREE.Mesh(trunkGeo, woodMat); trunk.position.y = 2.5;
+                tree.add(leaves, trunk);
+                tree.position.set(xPos, 0, zPos);
+                scene.add(tree);
+                collidableObjects.push(trunk); // Collide with trunks
+            }
 
-                setTimeout(() => {
-                    if (hitEnemy && hitEnemy.parent) {
-                        hitEnemy.children.forEach(child => {
-                            child.material = hitEnemy.userData.originalMat;
-                        });
-                    }
-                }, 150);
+            // C. Bridge
+            const bridgeLength = 80;
+            const bridgeZStart = -roomSize/2 - pathLength;
+            const bridge = new THREE.Mesh(new THREE.PlaneGeometry(6, bridgeLength), woodMat);
+            bridge.rotation.x = -Math.PI / 2;
+            bridge.position.set(0, 0.2, bridgeZStart - bridgeLength/2);
+            scene.add(bridge);
+            floorObjects.push(bridge);
 
-                // Die
-                if (hitEnemy.userData.hp <= 0) {
-                    scene.remove(hitEnemy);
-                    const index = enemies.indexOf(hitEnemy);
-                    if (index > -1) {
-                        enemies.splice(index, 1);
-                    }
-                    gainXP(1);
-                    
-                    // Spawn replacement skeletons
-                    spawnEnemy();
-                    if(Math.random() < 0.4) spawnEnemy(); 
+            // D. Castle (End of bridge)
+            const castleZ = bridgeZStart - bridgeLength - 20;
+            const castleGroup = new THREE.Group();
+            
+            // Main Keep
+            const keep = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), castleMat);
+            keep.position.set(0, 20, castleZ);
+            castleGroup.add(keep);
+            collidableObjects.push(keep);
+
+            // Towers
+            const towerGeo = new THREE.BoxGeometry(10, 60, 10);
+            const t1 = new THREE.Mesh(towerGeo, castleMat); t1.position.set(-20, 30, castleZ + 20);
+            const t2 = new THREE.Mesh(towerGeo, castleMat); t2.position.set(20, 30, castleZ + 20);
+            castleGroup.add(t1, t2);
+            collidableObjects.push(t1, t2);
+
+            // Glowing Windows
+            const winMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const winGeo = new THREE.BoxGeometry(2, 4, 11); // protrudes slightly on Z
+            const w1 = new THREE.Mesh(winGeo, winMat); w1.position.set(-20, 45, castleZ + 20);
+            const w2 = new THREE.Mesh(winGeo, winMat); w2.position.set(20, 45, castleZ + 20);
+            castleGroup.add(w1, w2);
+
+            scene.add(castleGroup);
+
+            // Spawn initial enemies along path and bridge
+            for(let i=0; i<15; i++) {
+                spawnEnemy(-roomSize/2 - 20 - Math.random() * (pathLength + bridgeLength - 30));
+            }
+        }
+
+        function handleInteraction() {
+            if(!controls.isLocked || isDead) return;
+
+            // Check distance to door
+            const playerPos = controls.getObject().position;
+            const doorPos = new THREE.Vector3(0, 4, -10); // Center of door arch
+            
+            if (playerPos.distanceTo(doorPos) < 15 && !isAnimatingDoor) {
+                isAnimatingDoor = true;
+                // Toggle collision based on door state *after* animation starts
+                if(isDoorOpen) {
+                    collidableObjects.push(doorMesh);
+                } else {
+                    const index = collidableObjects.indexOf(doorMesh);
+                    if (index > -1) collidableObjects.splice(index, 1);
                 }
             }
         }
-    }
 
-    function gainXP(amount) {
-            xp += amount;
-            if (xp >= xpToNext) {
-                levelUp();
+        function spawnEnemy(specificZ = null) {
+            // Blocky Skeleton
+            const skeletonGroup = new THREE.Group();
+            const boneMat = new THREE.MeshLambertMaterial({ color: 0xdddddd });
+
+            // Skull (Box)
+            const skull = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), boneMat);
+            skull.position.y = 5;
+            skeletonGroup.add(skull);
+
+            // Body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 1), boneMat);
+            body.position.y = 2.5;
+            skeletonGroup.add(body);
+
+            // Arms
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3, 0.8), boneMat);
+            const lArm = arm.clone(); lArm.position.set(-1.5, 3, 0); skeletonGroup.add(lArm);
+            const rArm = arm.clone(); rArm.position.set(1.5, 3, 0); skeletonGroup.add(rArm);
+            
+            // Placement
+            const zPos = specificZ !== null ? specificZ : (-30 - Math.random() * 200); // Along path
+            const xSpread = (zPos < -160 && zPos > -240) ? 2 : 4; // Narrower on bridge
+            const xPos = (Math.random() - 0.5) * xSpread;
+
+            skeletonGroup.position.set(xPos, 1.5, zPos);
+            
+            skeletonGroup.userData = { 
+                bobOffset: Math.random() * Math.PI * 2,
+                hp: 2,
+                originalMat: boneMat
+            };
+
+            scene.add(skeletonGroup);
+            enemies.push(skeletonGroup);
+        }
+
+        function attack() {
+            raycaster.setFromCamera(centerCoords, camera);
+            const attackRange = 15;
+            const intersects = raycaster.intersectObjects(enemies, true);
+
+            if (intersects.length > 0 && intersects[0].distance <= attackRange) {
+                let hitEnemy = intersects[0].object;
+                while (hitEnemy.parent && hitEnemy.parent.type !== 'Scene' && !enemies.includes(hitEnemy)) {
+                    hitEnemy = hitEnemy.parent;
+                }
+
+                if (enemies.includes(hitEnemy)) {
+                    // Level increases damage
+                    const damageDealt = 1 + Math.floor(level * 0.5);
+                    hitEnemy.userData.hp -= damageDealt;
+                    
+                    // Flash red
+                    hitEnemy.children.forEach(child => {
+                        child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                    });
+
+                    setTimeout(() => {
+                        if (hitEnemy && hitEnemy.parent) {
+                            hitEnemy.children.forEach(child => {
+                                child.material = hitEnemy.userData.originalMat;
+                            });
+                        }
+                    }, 150);
+
+                    // Show DMG number (simple DOM element overlaid)
+                    showDamageNumber(damageDealt);
+
+                    if (hitEnemy.userData.hp <= 0) {
+                        scene.remove(hitEnemy);
+                        const index = enemies.indexOf(hitEnemy);
+                        if (index > -1) enemies.splice(index, 1);
+                        gainXP(1);
+                        
+                        // Respawn somewhere along the path
+                        setTimeout(() => spawnEnemy(), 3000);
+                    }
+                }
             }
+        }
+
+        function showDamageNumber(amount) {
+            const dmgEl = document.createElement('div');
+            dmgEl.innerText = amount;
+            dmgEl.style.position = 'absolute';
+            dmgEl.style.left = '50%';
+            dmgEl.style.top = '50%';
+            dmgEl.style.color = 'red';
+            dmgEl.style.fontWeight = 'bold';
+            dmgEl.style.fontSize = '30px';
+            dmgEl.style.pointerEvents = 'none';
+            dmgEl.style.transform = `translate(-50%, -50%) translate(${(Math.random()-0.5)*50}px, ${(Math.random()-0.5)*50}px)`;
+            dmgEl.style.textShadow = '2px 2px 0px #000';
+            dmgEl.style.zIndex = '20';
+            document.body.appendChild(dmgEl);
+
+            let opacity = 1;
+            let topPos = 50;
+            const anim = setInterval(() => {
+                opacity -= 0.05;
+                topPos -= 1;
+                dmgEl.style.opacity = opacity;
+                dmgEl.style.top = topPos + '%';
+                if(opacity <= 0) {
+                    clearInterval(anim);
+                    dmgEl.remove();
+                }
+            }, 50);
+        }
+
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= xpToNext) levelUp();
             updateHUD();
         }
 
         function levelUp() {
             level++;
             xp -= xpToNext;
-            xpToNext = Math.floor(xpToNext * 1.5); // Increase required XP
-            
-            // Heal player slightly or fully on level up
+            xpToNext = Math.floor(xpToNext * 1.5);
             currentHealth = maxHealth;
             
-            // Visual feedback for level up (flash screen)
-            damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(255, 255, 255, 0.4) 100%)';
+            damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(0, 255, 200, 0.4) 100%)';
             damageOverlay.style.opacity = '1';
             setTimeout(() => {
                 damageOverlay.style.opacity = '0';
@@ -560,74 +696,58 @@
                     damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(200, 0, 0, 0.4) 100%)';
                 }, 200);
             }, 150);
-
         }
 
         function takeDamage(amount) {
             const now = performance.now() / 1000;
-            if (now - lastDamageTime < damageCooldown) return; // i-frames
-
+            if (now - lastDamageTime < damageCooldown) return;
+            
             lastDamageTime = now;
             currentHealth -= amount;
             if (currentHealth <= 0) {
                 currentHealth = 0;
                 die();
             }
-
-            // Visual feedback
             damageOverlay.style.opacity = '1';
-            setTimeout(() => {
-                if(!isDead) damageOverlay.style.opacity = '0';
-            }, 300);
-
+            setTimeout(() => { if(!isDead) damageOverlay.style.opacity = '0'; }, 300);
             updateHUD();
         }
 
         function die() {
-        isDead = true;
-        controls.unlock();
-        
-        blocker.style.display = 'flex';
-        menuTitle.innerText = 'VOCÊ MORREU';
-        menuTitle.style.color = '#ff0000';
-        menuInstructions.innerHTML = `Você chegou ao Nível ${level}.<br>A escuridão te consumiu.`;
-        startBtn.innerText = 'Tentar Novamente';
-    }
-
-    function resetGame() {
-            // Reset Stats
-            maxHealth = 100;
-            currentHealth = maxHealth;
-            level = 1;
-            xp = 0;
-            xpToNext = 5;
-            isDead = false;
-            lastDamageTime = 0;
-            damageOverlay.style.opacity = '0';
-
-            // Reset Player Pos
-            controls.getObject().position.set(0, 10, 0);
-
-            // Clear Enemies
-        enemies.forEach(e => scene.remove(e));
-        enemies.length = 0;
-
-        // Spawn Initial Enemies
-        for(let i=0; i<20; i++) {
-            spawnEnemy();
+            isDead = true;
+            controls.unlock();
+            blocker.style.display = 'flex';
+            menuTitle.innerText = 'VOCÊ MORREU';
+            menuTitle.style.color = '#ff0000';
+            menuInstructions.innerHTML = `Nível alcançado: ${level}.<br>O vazio o chama.`;
+            startBtn.innerText = 'Tentar Novamente';
         }
 
-        updateHUD();
-    }
+        function resetGame() {
+            maxHealth = 100; currentHealth = maxHealth;
+            level = 1; xp = 0; xpToNext = 5;
+            isDead = false; lastDamageTime = 0;
+            damageOverlay.style.opacity = '0';
+            
+            // Close door
+            isDoorOpen = false;
+            doorAnimationProgress = 0;
+            doorPivot.rotation.y = 0;
+            if(!collidableObjects.includes(doorMesh)) collidableObjects.push(doorMesh);
 
-    function updateHUD() {
-            const hpPercent = Math.max(0, (currentHealth / maxHealth) * 100);
-            healthBar.style.width = hpPercent + '%';
-            
+            controls.getObject().position.set(0, 5, 0);
+
+            enemies.forEach(e => scene.remove(e));
+            enemies.length = 0;
+            for(let i=0; i<15; i++) spawnEnemy(-10 - Math.random() * 200);
+
+            updateHUD();
+        }
+
+        function updateHUD() {
+            healthBar.style.width = Math.max(0, (currentHealth / maxHealth) * 100) + '%';
             lvlVal.innerText = level;
-            
-            const xpPercent = Math.min(100, (xp / xpToNext) * 100);
-            xpBar.style.width = xpPercent + '%';
+            xpBar.style.width = Math.min(100, (xp / xpToNext) * 100) + '%';
         }
 
         function onWindowResize() {
@@ -636,74 +756,115 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        function checkCollision(targetPosition) {
+            // Very basic AABB collision against collidableObjects
+            const playerBox = new THREE.Box3();
+            const playerSize = 2.0; // Collision radius roughly
+            playerBox.setFromCenterAndSize(targetPosition, new THREE.Vector3(playerSize, 10, playerSize));
+
+            for(let i=0; i<collidableObjects.length; i++) {
+                const obj = collidableObjects[i];
+                const objBox = new THREE.Box3().setFromObject(obj);
+                if(playerBox.intersectsBox(objBox)) return true;
+            }
+            return false;
+        }
+
         function animate() {
-        requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
 
-        const time = performance.now();
-        // Delta in seconds
-        const delta = Math.min((time - prevTime) / 1000, 0.1); 
+            const time = performance.now();
+            const delta = Math.min((time - prevTime) / 1000, 0.1); 
 
-        if (controls.isLocked && !isDead) {
-
-            // Player Movement Physics
-            velocity.x -= velocity.x * 10.0 * delta;
-            velocity.z -= velocity.z * 10.0 * delta;
-
-            direction.z = Number(moveForward) - Number(moveBackward);
-            direction.x = Number(moveRight) - Number(moveLeft);
-            direction.normalize();
-
-            const speed = 400.0;
-
-            if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-            if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
-
-            controls.moveRight(-velocity.x * delta);
-            controls.moveForward(-velocity.z * delta);
-
-            // Fix height
-            controls.getObject().position.y = 10;
-
-            // --- Sword Animation ---
-            if (isAttacking) {
-                attackProgress += delta * 6; // Swing speed
-                
-                if (attackProgress < 0.5) {
-                    // Swing down
-                    const p = attackProgress * 2;
-                    swordGroup.rotation.x = -Math.PI / 4 - (p * Math.PI / 2.5);
-                    swordGroup.position.z = -4 - (p * 2);
-                } else if (attackProgress < 1.0) {
-                    // Swing back up
-                    const p = (attackProgress - 0.5) * 2;
-                    swordGroup.rotation.x = -Math.PI / 4 - (Math.PI / 2.5) + (p * Math.PI / 2.5);
-                    swordGroup.position.z = -6 + (p * 2);
+            if (controls.isLocked && !isDead) {
+                // UI Prompts
+                const playerPos = controls.getObject().position;
+                const doorPos = new THREE.Vector3(0, 4, -10);
+                if(playerPos.distanceTo(doorPos) < 15) {
+                    interactionPrompt.style.display = 'block';
+                    interactionPrompt.innerText = isDoorOpen ? "Pressione E para fechar" : "Pressione E para abrir";
                 } else {
-                    // End attack
-                    isAttacking = false;
-                    swordGroup.rotation.x = -Math.PI / 4;
-                    swordGroup.position.z = -4;
+                    interactionPrompt.style.display = 'none';
+                }
+
+                // Door Animation
+                if(isAnimatingDoor) {
+                    const targetAngle = isDoorOpen ? 0 : -Math.PI / 2;
+                    const currentAngle = doorPivot.rotation.y;
+                    const diff = targetAngle - currentAngle;
+                    
+                    doorPivot.rotation.y += diff * delta * 5;
+                    
+                    if(Math.abs(diff) < 0.05) {
+                        doorPivot.rotation.y = targetAngle;
+                        isAnimatingDoor = false;
+                        isDoorOpen = !isDoorOpen;
+                    }
+                }
+
+                // Player Movement Physics
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize();
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * playerSpeed * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * playerSpeed * delta;
+
+                // Predict next position
+                const currentPos = controls.getObject().position.clone();
+                const nextPosX = currentPos.clone().add(new THREE.Vector3(-velocity.x * delta, 0, 0));
+                const nextPosZ = currentPos.clone().add(new THREE.Vector3(0, 0, -velocity.z * delta));
+
+                // Apply movement if no collision
+                if(!checkCollision(nextPosX)) controls.moveRight(-velocity.x * delta);
+                else velocity.x = 0;
+                
+                if(!checkCollision(nextPosZ)) controls.moveForward(-velocity.z * delta);
+                else velocity.z = 0;
+
+                // Fix height (prevent falling off easily, but keep simple)
+                controls.getObject().position.y = 5;
+
+                // Fall off edge detection (Very simple check based on Z bounds for bridge)
+                const pZ = controls.getObject().position.z;
+                const pX = controls.getObject().position.x;
+                // If on bridge section (-160 to -240 approx) and walk off edges
+                if(pZ < -160 && pZ > -240) {
+                    if(Math.abs(pX) > 4) takeDamage(100); // Fell off
+                }
+
+                // --- Sword Animation ---
+                if (isAttacking) {
+                    attackProgress += delta * 5; 
+                    if (attackProgress < 0.5) {
+                        const p = attackProgress * 2;
+                        swordGroup.rotation.x = -Math.PI / 4 - (p * Math.PI / 2.5);
+                        swordGroup.position.z = -3 - (p * 2);
+                    } else if (attackProgress < 1.0) {
+                        const p = (attackProgress - 0.5) * 2;
+                        swordGroup.rotation.x = -Math.PI / 4 - (Math.PI / 2.5) + (p * Math.PI / 2.5);
+                        swordGroup.position.z = -5 + (p * 2);
+                    } else {
+                        isAttacking = false;
+                        swordGroup.rotation.x = -Math.PI / 4;
+                        swordGroup.position.z = -3;
+                    }
+                }
+
+                // --- Enemy AI (Passive Bobbing & Look) ---
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    enemy.position.y = 1.5 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 0.3;
+                    const targetRotation = Math.atan2(playerPos.x - enemy.position.x, playerPos.z - enemy.position.z);
+                    const currentRotation = enemy.rotation.y;
+                    enemy.rotation.y = currentRotation + (targetRotation - currentRotation) * delta * 2;
                 }
             }
 
-            // --- Enemy AI (Passive Skeletons) ---
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const enemy = enemies[i];
-                // Passive idle bobbing
-                enemy.position.y = 2 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 0.5;
-                
-                // Look at player slowly
-                const playerPos = controls.getObject().position;
-                const targetRotation = Math.atan2(playerPos.x - enemy.position.x, playerPos.z - enemy.position.z);
-                // Interpolate rotation for smooth turning
-                const currentRotation = enemy.rotation.y;
-                enemy.rotation.y = currentRotation + (targetRotation - currentRotation) * delta * 2;
-            }
+            prevTime = time;
+            renderer.render(scene, camera);
         }
-
-        prevTime = time;
-        renderer.render(scene, camera);
-    }
-</script>
-</body>
-</html>
+    </script>
