@@ -1,415 +1,616 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infodrogas - Catálogo Completo</title>
+    <title>Dark Reverie - First Person Survival</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #1a73e8;
-            --danger: #d93025;
-            --bg: #f8f9fa;
-            --white: #ffffff;
-            --text: #3c4043;
-        }
-
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
             margin: 0;
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
         }
 
-        /* HEADER E BUSCA */
-        header {
-            width: 100%;
-            background-color: var(--white);
-            padding: 20px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: sticky;
+        #game-container {
+            position: absolute;
             top: 0;
-            z-index: 1000;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to the canvas */
+            z-index: 10;
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+        #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+
+        /* Health & Level HUD */
+        #hud {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .stat-label {
+            color: #ccc;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #health-bar-container {
+            width: 250px;
+            height: 20px;
+            background-color: rgba(20, 0, 0, 0.8);
+            border: 2px solid #300;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #800000, #ff1a1a);
+            transition: width 0.2s ease-out;
+        }
+
+        #level-display {
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        #xp-bar-container {
+            width: 250px;
+            height: 6px;
+            background-color: #111;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: -5px;
+        }
+
+        #xp-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #aaa;
+            transition: width 0.3s ease;
+        }
+
+        /* Screens */
+        #blocker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-        }
-
-        .busca-container {
-            width: 90%;
-            max-width: 600px;
-            display: flex;
-            background: #fff;
-            border: 1px solid #dfe1e5;
-            border-radius: 24px;
-            padding: 2px 15px;
-            transition: box-shadow 0.2s;
-        }
-
-        .busca-container:hover, .busca-container:focus-within {
-            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
-        }
-
-        .busca-container input {
-            flex: 1;
-            height: 44px;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            padding-left: 10px;
-        }
-
-        /* FILTROS */
-        .filtros {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            width: 90%;
-            max-width: 800px;
-            padding: 5px;
-        }
-
-        .btn-filtro {
-            background: #fff;
-            border: 1px solid #dadce0;
-            padding: 8px 16px;
-            border-radius: 18px;
-            cursor: pointer;
-            white-space: nowrap;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-
-        .btn-filtro:hover { background: #f1f3f4; }
-        .btn-filtro.ativo {
-            background: #e8f0fe;
-            color: var(--primary);
-            border-color: var(--primary);
-            font-weight: 500;
-        }
-
-        /* LISTAGEM */
-        .lista-remedios {
-            width: 95%;
-            max-width: 850px;
-            margin: 40px 0;
-        }
-
-        .cartao-remedio {
-            background-color: var(--white);
-            margin-bottom: 20px;
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #dadce0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .foto-remedio {
-            width: 160px;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            background: #f1f3f4;
-        }
-
-        .info { flex: 1; min-width: 280px; }
-        .info h2 { margin: 0; font-size: 22px; color: #202124; }
-        .tag-cat { 
-            display: inline-block; 
-            color: var(--primary); 
-            font-size: 12px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin-bottom: 8px; 
-        }
-
-        .alergia-alerta {
-            background-color: #fef7f7;
-            border-left: 4px solid var(--danger);
-            padding: 12px;
-            border-radius: 4px;
-            margin: 15px 0;
-        }
-
-        .alergia-alerta b { color: var(--danger); font-size: 13px; display: block; margin-bottom: 5px; }
-        .alergia-alerta ul { margin: 0; padding-left: 18px; font-size: 14px; color: #3c4043; }
-
-        .btn-bula {
-            display: inline-block;
-            padding: 10px 20px;
-            background: var(--primary);
+            justify-content: center;
             color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: opacity 0.2s;
+            z-index: 20;
+            cursor: pointer;
         }
-        .btn-bula:hover { opacity: 0.9; }
 
-        #no-results { display: none; text-align: center; padding: 50px; color: #70757a; }
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #aa0000;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff000055;
+        }
+
+        .instructions {
+            font-size: 18px;
+            color: #aaa;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background-color: #300;
+            color: white;
+            border: 1px solid #700;
+            border-radius: 6px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #500;
+            box-shadow: 0 0 15px #f005;
+        }
+
+        /* Blood overlay for damage */
+        #damage-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(200, 0, 0, 0.4) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s;
+            z-index: 5;
+        }
+
     </style>
+    <!-- Import Maps for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
 
-    <header>
-        <div class="busca-container">
-            <input type="text" id="mainSearch" placeholder="Pesquise o nome do remédio e aperte ENTER...">
-        </div>
-        <div class="filtros" id="filterBar">
-            <button class="btn-filtro ativo" data-filter="todos">Todos</button>
-            <button class="btn-filtro" data-filter="Analgésico">Analgésicos</button>
-            <button class="btn-filtro" data-filter="Antibiótico">Antibióticos</button>
-            <button class="btn-filtro" data-filter="Anti-inflamatório">Anti-inflamatórios</button>
-            <button class="btn-filtro" data-filter="Gástrico">Gástricos</button>
-        </div>
-    </header>
+    <div id="game-container"></div>
 
-    <main class="lista-remedios" id="remedyList">
+    <div id="ui-layer">
+        <div id="damage-overlay"></div>
+        <div id="crosshair"></div>
         
-        <div class="cartao-remedio" data-name="dipirona" data-cat="Analgésico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400" alt="Dipirona">
-            <div class="info">
-                <span class="tag-cat">Analgésico / Antipirético</span>
-                <h2>Dipirona Monoidratada</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Alergia a pirazolonas.</li>
-                        <li>Asma induzida por analgésicos.</li>
-                    </ul>
-                </div>
-                <a href="https://consultas.anvisa.gov.br/#/bulario/" target="_blank" class="btn-bula">Ver Bula Online</a>
+        <div id="hud">
+            <div id="level-display">LVL <span id="lvl-val">1</span></div>
+            <div id="xp-bar-container"><div id="xp-bar"></div></div>
+            <div class="stat-label">Health</div>
+            <div id="health-bar-container">
+                <div id="health-bar"></div>
             </div>
         </div>
+    </div>
 
-        <div class="cartao-remedio" data-name="paracetamol tylenol" data-cat="Analgésico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=400" alt="Paracetamol">
-            <div class="info">
-                <span class="tag-cat">Analgésico</span>
-                <h2>Paracetamol (Tylenol)</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Doença hepática grave (fígado).</li>
-                        <li>Alergia ao paracetamol.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
+    <!-- Start / Game Over Screen -->
+    <div id="blocker">
+        <div id="menu-content" class="flex flex-col items-center">
+            <div class="title" id="menu-title">Dark Reverie</div>
+            <div class="instructions" id="menu-instructions">
+                A dark fantasy survival.<br><br>
+                WASD = Move<br>
+                MOUSE = Look around<br>
+                LEFT CLICK = Banish Spirits<br><br>
+                Survive the encroaching darkness.
             </div>
+            <button class="btn" id="start-btn">Click to Enter</button>
         </div>
+    </div>
 
-        <div class="cartao-remedio" data-name="ibuprofeno advil" data-cat="Anti-inflamatório">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1550572017-ed951b551046?w=400" alt="Ibuprofeno">
-            <div class="info">
-                <span class="tag-cat">Anti-inflamatório</span>
-                <h2>Ibuprofeno</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Úlcera de estômago ativa.</li>
-                        <li>Alergia a aspirina/AINEs.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        <div class="cartao-remedio" data-name="amoxicilina" data-cat="Antibiótico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=400" alt="Amoxicilina">
-            <div class="info">
-                <span class="tag-cat">Antibiótico</span>
-                <h2>Amoxicilina</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Alergia a penicilinas.</li>
-                        <li>Reação alérgica a cefalosporinas.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        // Game State Variables
+        let camera, scene, renderer, controls;
+        let prevTime = performance.now();
+        
+        // Movement state
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let moveForward = false;
+        let moveBackward = false;
+        let moveLeft = false;
+        let moveRight = false;
+        
+        // RPG Stats
+        let maxHealth = 100;
+        let currentHealth = 100;
+        let level = 1;
+        let xp = 0;
+        let xpToNext = 5;
+        let isDead = false;
 
-        <div class="cartao-remedio" data-name="omeprazol" data-cat="Gástrico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1526253038957-bce54e05968e?w=400" alt="Omeprazol">
-            <div class="info">
-                <span class="tag-cat">Protetor Gástrico</span>
-                <h2>Omeprazol</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Alergia a benzimidazóis.</li>
-                        <li>Uso com nelfinavir.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        // Entities
+        const enemies = [];
+        const enemySpeed = 15.0; // units per second
+        const damageAmount = 20;
+        const damageCooldown = 1.0; // seconds
+        let lastDamageTime = 0;
 
-        <div class="cartao-remedio" data-name="loratadina claritin" data-cat="Analgésico">
-            <img class="foto-remedio" src="https://plus.unsplash.com/premium_photo-1673327144804-984042861a15?w=400" alt="Loratadina">
-            <div class="info">
-                <span class="tag-cat">Antialérgico</span>
-                <h2>Loratadina</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Alergia à loratadina.</li>
-                        <li>Doença hepática severa.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        // Raycasting for combat
+        const raycaster = new THREE.Raycaster();
+        const centerCoords = new THREE.Vector2(0, 0); // Always center for crosshair
 
-        <div class="cartao-remedio" data-name="dorflex" data-cat="Analgésico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400" alt="Dorflex">
-            <div class="info">
-                <span class="tag-cat">Relaxante Muscular</span>
-                <h2>Dorflex</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Alergia à dipirona.</li>
-                        <li>Glaucoma ou obstrução pilórica.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        // DOM Elements
+        const blocker = document.getElementById('blocker');
+        const menuTitle = document.getElementById('menu-title');
+        const menuInstructions = document.getElementById('menu-instructions');
+        const startBtn = document.getElementById('start-btn');
+        const healthBar = document.getElementById('health-bar');
+        const lvlVal = document.getElementById('lvl-val');
+        const xpBar = document.getElementById('xp-bar');
+        const damageOverlay = document.getElementById('damage-overlay');
 
-        <div class="cartao-remedio" data-name="buscopan escopolamina" data-cat="Analgésico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1471864190281-ad5f9f33d70e?w=400" alt="Buscopan">
-            <div class="info">
-                <span class="tag-cat">Antiespasmódico</span>
-                <h2>Buscopan (Escopolamina)</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Miastenia gravis.</li>
-                        <li>Megacólon.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        init();
+        animate();
 
-        <div class="cartao-remedio" data-name="nimesulida" data-cat="Anti-inflamatório">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-151242855908e-5603564f6252?w=400" alt="Nimesulida">
-            <div class="info">
-                <span class="tag-cat">Anti-inflamatório</span>
-                <h2>Nimesulida</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Insuficiência hepática.</li>
-                        <li>Alergia a AINEs.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+        function init() {
+            // 1. Scene Setup
+            scene = new THREE.Scene();
+            // Dark, moody fog
+            scene.background = new THREE.Color(0x050508);
+            scene.fog = new THREE.FogExp2(0x050508, 0.035);
 
-        <div class="cartao-remedio" data-name="dexametasona decadron" data-cat="Anti-inflamatório">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1576073719710-aa1008d6139c?w=400" alt="Dexametasona">
-            <div class="info">
-                <span class="tag-cat">Corticoide</span>
-                <h2>Dexametasona</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Infecções fúngicas.</li>
-                        <li>Administração de vacinas de vírus vivos.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+            // 2. Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.y = 10; // Player height
 
-        <div class="cartao-remedio" data-name="azitromicina" data-cat="Antibiótico">
-            <img class="foto-remedio" src="https://images.unsplash.com/photo-1555633514-abcee6ad93e1?w=400" alt="Azitromicina">
-            <div class="info">
-                <span class="tag-cat">Antibiótico</span>
-                <h2>Azitromicina</h2>
-                <div class="alergia-alerta">
-                    <b>⚠️ CONTRAINDICAÇÕES:</b>
-                    <ul>
-                        <li>Hipersensibilidade a macrolídeos.</li>
-                        <li>Histórico de icterícia/disfunção hepática.</li>
-                    </ul>
-                </div>
-                <a href="#" class="btn-bula">Ver Bula Online</a>
-            </div>
-        </div>
+            // 3. Lighting
+            const ambientLight = new THREE.AmbientLight(0x202025); // Dim blueish light
+            scene.add(ambientLight);
 
-        <div id="no-results">Poxa, não encontramos nenhum remédio com esse nome... 🔍</div>
+            const directionalLight = new THREE.DirectionalLight(0x444455, 1);
+            directionalLight.position.set(50, 100, 50);
+            scene.add(directionalLight);
 
-    </main>
+            // 4. Environment
+            // Ground
+            const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
+            // Introduce some roughness to the flat plane via vertices (optional, keeping it flat for simplicity in collisions)
+            const floorMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x151515, 
+                roughness: 0.9, 
+                metalness: 0.1 
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
 
-    <script>
-        const searchInput = document.getElementById('mainSearch');
-        const cards = document.querySelectorAll('.cartao-remedio');
-        const noResults = document.getElementById('no-results');
-        const filters = document.querySelectorAll('.btn-filtro');
-
-        // FUNÇÃO DE BUSCA AO APERTAR ENTER
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                executarBusca();
+            // Monoliths / Ruins (Obstacles)
+            const boxGeo = new THREE.BoxGeometry(10, 40, 10);
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1 });
+            for (let i = 0; i < 50; i++) {
+                const box = new THREE.Mesh(boxGeo, boxMat);
+                box.position.x = (Math.random() - 0.5) * 400;
+                box.position.z = (Math.random() - 0.5) * 400;
+                box.position.y = 20; // Half height
+                // Don't spawn too close to center (spawn)
+                if (box.position.distanceTo(new THREE.Vector3(0, 20, 0)) > 50) {
+                    scene.add(box);
+                }
             }
-        });
 
-        function executarBusca() {
-            const term = searchInput.value.toLowerCase().trim();
-            let hasResults = false;
+            // 5. Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('game-container').appendChild(renderer.domElement);
 
-            cards.forEach(card => {
-                const name = card.getAttribute('data-name');
-                if (name.includes(term)) {
-                    card.style.display = 'flex';
-                    hasResults = true;
-                } else {
-                    card.style.display = 'none';
+            // 6. Controls
+            controls = new PointerLockControls(camera, document.body);
+
+            startBtn.addEventListener('click', () => {
+                if(isDead) resetGame();
+                controls.lock();
+            });
+
+            controls.addEventListener('lock', function () {
+                blocker.style.display = 'none';
+            });
+
+            controls.addEventListener('unlock', function () {
+                if(!isDead) {
+                    blocker.style.display = 'flex';
+                    menuTitle.innerText = 'PAUSED';
+                    menuInstructions.innerText = 'Click below to resume.';
+                    startBtn.innerText = 'Resume';
                 }
             });
 
-            noResults.style.display = hasResults ? 'none' : 'block';
-            // Reseta botões de filtro
-            filters.forEach(b => b.classList.remove('ativo'));
+            scene.add(controls.getObject());
+
+            // 7. Input Listeners
+            const onKeyDown = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp':
+                    case 'KeyW': moveForward = true; break;
+                    case 'ArrowLeft':
+                    case 'KeyA': moveLeft = true; break;
+                    case 'ArrowDown':
+                    case 'KeyS': moveBackward = true; break;
+                    case 'ArrowRight':
+                    case 'KeyD': moveRight = true; break;
+                }
+            };
+
+            const onKeyUp = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp':
+                    case 'KeyW': moveForward = false; break;
+                    case 'ArrowLeft':
+                    case 'KeyA': moveLeft = false; break;
+                    case 'ArrowDown':
+                    case 'KeyS': moveBackward = false; break;
+                    case 'ArrowRight':
+                    case 'KeyD': moveRight = false; break;
+                }
+            };
+
+            const onMouseClick = function (event) {
+                if (controls.isLocked && !isDead) {
+                    shoot();
+                }
+            };
+
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousedown', onMouseClick);
+            window.addEventListener('resize', onWindowResize);
+
+            // Initial Enemies
+            for(let i=0; i<5; i++) {
+                spawnEnemy();
+            }
         }
 
-        // FILTRAGEM POR CATEGORIA
-        filters.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const cat = btn.getAttribute('data-filter');
-                
-                // Estilo do botão
-                filters.forEach(b => b.classList.remove('ativo'));
-                btn.classList.add('ativo');
-
-                let hasResults = false;
-                cards.forEach(card => {
-                    const cardCat = card.getAttribute('data-cat');
-                    if (cat === 'todos' || cardCat === cat) {
-                        card.style.display = 'flex';
-                        hasResults = true;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-                
-                noResults.style.display = hasResults ? 'none' : 'block';
-                searchInput.value = ''; // Limpa a busca ao filtrar
+        function spawnEnemy() {
+            // Dark fantasy enemy: A glowing red jagged crystal or sphere
+            const geom = new THREE.IcosahedronGeometry(4, 0); // Low poly sphere
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                emissive: 0xaa0000, // glowing red
+                emissiveIntensity: 0.8,
+                roughness: 0.4
             });
-        });
+            const enemy = new THREE.Mesh(geom, mat);
+            
+            // Spawn in a circle around the player, somewhat far
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 80 + Math.random() * 70;
+            
+            enemy.position.x = controls.getObject().position.x + Math.cos(angle) * distance;
+            enemy.position.z = controls.getObject().position.z + Math.sin(angle) * distance;
+            enemy.position.y = 8; // Float slightly above ground
+            
+            // Add a point light to the enemy for eerie glow
+            const light = new THREE.PointLight(0xff0000, 2, 50);
+            enemy.add(light);
+            
+            // Give them a slightly randomized speed multiplier
+            enemy.userData = { 
+                speedMult: 0.8 + Math.random() * 0.5,
+                bobOffset: Math.random() * Math.PI * 2
+            };
+
+            scene.add(enemy);
+            enemies.push(enemy);
+        }
+
+        function shoot() {
+            // Raycast from center of camera
+            raycaster.setFromCamera(centerCoords, camera);
+
+            // Get intersections with enemies
+            const intersects = raycaster.intersectObjects(enemies, false);
+
+            if (intersects.length > 0) {
+                // Hit the closest enemy
+                const hitEnemy = intersects[0].object;
+                
+                // Remove from scene
+                scene.remove(hitEnemy);
+                
+                // Remove from array
+                const index = enemies.indexOf(hitEnemy);
+                if (index > -1) {
+                    enemies.splice(index, 1);
+                }
+
+                // Grant XP
+                gainXP(1);
+
+                // Spawn a new enemy (or two, scaling difficulty slightly)
+                spawnEnemy();
+                if(Math.random() < 0.3) spawnEnemy(); // 30% chance to spawn an extra enemy
+            }
+        }
+
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= xpToNext) {
+                levelUp();
+            }
+            updateHUD();
+        }
+
+        function levelUp() {
+            level++;
+            xp -= xpToNext;
+            xpToNext = Math.floor(xpToNext * 1.5); // Increase required XP
+            
+            // Heal player slightly or fully on level up
+            currentHealth = maxHealth;
+            
+            // Visual feedback for level up (flash screen)
+            damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(255, 255, 255, 0.4) 100%)';
+            damageOverlay.style.opacity = '1';
+            setTimeout(() => {
+                damageOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(200, 0, 0, 0.4) 100%)';
+                }, 200);
+            }, 150);
+
+        }
+
+        function takeDamage(amount) {
+            const now = performance.now() / 1000;
+            if (now - lastDamageTime < damageCooldown) return; // i-frames
+
+            lastDamageTime = now;
+            currentHealth -= amount;
+            if (currentHealth <= 0) {
+                currentHealth = 0;
+                die();
+            }
+
+            // Visual feedback
+            damageOverlay.style.opacity = '1';
+            setTimeout(() => {
+                if(!isDead) damageOverlay.style.opacity = '0';
+            }, 300);
+
+            updateHUD();
+        }
+
+        function die() {
+            isDead = true;
+            controls.unlock();
+            
+            blocker.style.display = 'flex';
+            menuTitle.innerText = 'YOU DIED';
+            menuTitle.style.color = '#ff0000';
+            menuInstructions.innerHTML = `You reached Level ${level}.<br>The darkness consumed you.`;
+            startBtn.innerText = 'Try Again';
+        }
+
+        function resetGame() {
+            // Reset Stats
+            maxHealth = 100;
+            currentHealth = maxHealth;
+            level = 1;
+            xp = 0;
+            xpToNext = 5;
+            isDead = false;
+            lastDamageTime = 0;
+            damageOverlay.style.opacity = '0';
+
+            // Reset Player Pos
+            controls.getObject().position.set(0, 10, 0);
+
+            // Clear Enemies
+            enemies.forEach(e => scene.remove(e));
+            enemies.length = 0;
+
+            // Spawn Initial Enemies
+            for(let i=0; i<5; i++) {
+                spawnEnemy();
+            }
+
+            updateHUD();
+        }
+
+        function updateHUD() {
+            const hpPercent = Math.max(0, (currentHealth / maxHealth) * 100);
+            healthBar.style.width = hpPercent + '%';
+            
+            lvlVal.innerText = level;
+            
+            const xpPercent = Math.min(100, (xp / xpToNext) * 100);
+            xpBar.style.width = xpPercent + '%';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            // Delta in seconds
+            const delta = Math.min((time - prevTime) / 1000, 0.1); 
+
+            if (controls.isLocked && !isDead) {
+
+                // Player Movement Physics (Friction & Velocity)
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize();
+
+                const speed = 400.0;
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+
+                controls.moveRight(-velocity.x * delta);
+                controls.moveForward(-velocity.z * delta);
+
+                // Fix height (no jumping, stay firmly on ground)
+                controls.getObject().position.y = 10;
+
+                // --- Enemy AI & Collision ---
+                const playerPos = controls.getObject().position;
+                
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    
+                    // Simple pathfinding: move directly towards player (ignoring obstacles for a ghostly feel)
+                    const dirToPlayer = new THREE.Vector3().subVectors(playerPos, enemy.position);
+                    dirToPlayer.y = 0; // Keep horizontal movement
+                    
+                    const dist = dirToPlayer.length();
+                    
+                    if (dist > 0.1) {
+                        dirToPlayer.normalize();
+                        const currentSpeed = enemySpeed * enemy.userData.speedMult * (1 + (level * 0.05)); // Slight speed scale with level
+                        
+                        enemy.position.addScaledVector(dirToPlayer, currentSpeed * delta);
+                        
+                        // Rotate to face player slowly or randomly
+                        enemy.rotation.y += 1 * delta;
+                        enemy.rotation.x += 0.5 * delta;
+
+                        // Bobbing effect
+                        enemy.position.y = 8 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 2;
+                    }
+
+                    // Collision check with player
+                    if (dist < 5.0) {
+                        takeDamage(damageAmount);
+                        // Knockback slightly
+                        velocity.z += dirToPlayer.z * -500;
+                        velocity.x += dirToPlayer.x * -500;
+                    }
+                }
+            }
+
+            prevTime = time;
+            renderer.render(scene, camera);
+        }
     </script>
 </body>
 </html>
