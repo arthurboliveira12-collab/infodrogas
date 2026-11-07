@@ -104,7 +104,7 @@
         #xp-bar {
             width: 0%;
             height: 100%;
-            background-color: #aaa;
+            background-color: #8b5cf6;
             transition: width 0.3s ease;
         }
 
@@ -190,9 +190,9 @@
         <div id="crosshair"></div>
         
         <div id="hud">
-            <div id="level-display">LVL <span id="lvl-val">1</span></div>
+            <div id="level-display">Nível <span id="lvl-val">1</span></div>
             <div id="xp-bar-container"><div id="xp-bar"></div></div>
-            <div class="stat-label">Health</div>
+            <div class="stat-label">Vida</div>
             <div id="health-bar-container">
                 <div id="health-bar"></div>
             </div>
@@ -204,13 +204,13 @@
         <div id="menu-content" class="flex flex-col items-center">
             <div class="title" id="menu-title">Dark Reverie</div>
             <div class="instructions" id="menu-instructions">
-                A dark fantasy survival.<br><br>
-                WASD = Move<br>
-                MOUSE = Look around<br>
-                LEFT CLICK = Banish Spirits<br><br>
-                Survive the encroaching darkness.
+                Uma jornada na escuridão.<br><br>
+                WASD = Mover<br>
+                MOUSE = Olhar<br>
+                CLIQUE ESQUERDO = Atacar<br><br>
+                Explore o mundo sombrio.
             </div>
-            <button class="btn" id="start-btn">Click to Enter</button>
+            <button class="btn" id="start-btn">Clique para Jogar</button>
         </div>
     </div>
 
@@ -238,9 +238,13 @@
         let xpToNext = 5;
         let isDead = false;
 
+        // Weapon Animation State
+        let swordGroup;
+        let isAttacking = false;
+        let attackProgress = 0;
+
         // Entities
         const enemies = [];
-        const enemySpeed = 15.0; // units per second
         const damageAmount = 20;
         const damageCooldown = 1.0; // seconds
         let lastDamageTime = 0;
@@ -265,28 +269,57 @@
         function init() {
             // 1. Scene Setup
             scene = new THREE.Scene();
-            // Dark, moody fog
-            scene.background = new THREE.Color(0x050508);
-            scene.fog = new THREE.FogExp2(0x050508, 0.035);
+            // Dark, moody fog - Brighter to fix pitch black screen
+            scene.background = new THREE.Color(0x13151a);
+            scene.fog = new THREE.FogExp2(0x13151a, 0.025);
 
             // 2. Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
             camera.position.y = 10; // Player height
 
+            // Player Weapon (Asta's Demon-Slayer Sword)
+            swordGroup = new THREE.Group();
+            
+            // Blade (Massive, dark, broad)
+            const bladeGeo = new THREE.BoxGeometry(2.5, 7, 0.4);
+            const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7, metalness: 0.3 });
+            const blade = new THREE.Mesh(bladeGeo, bladeMat);
+            blade.position.y = 3.5;
+            swordGroup.add(blade);
+            
+            // Guard
+            const guardGeo = new THREE.BoxGeometry(3.5, 0.5, 1.0);
+            const guardMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
+            const guard = new THREE.Mesh(guardGeo, guardMat);
+            swordGroup.add(guard);
+
+            // Handle
+            const handleGeo = new THREE.CylinderGeometry(0.3, 0.3, 2, 16);
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a1a1a, roughness: 0.9 });
+            const handle = new THREE.Mesh(handleGeo, handleMat);
+            handle.position.y = -1;
+            swordGroup.add(handle);
+
+            // Position sword on the right side of the screen
+            swordGroup.position.set(2.5, -2.5, -4);
+            swordGroup.rotation.x = -Math.PI / 4;
+            swordGroup.rotation.y = Math.PI / 6; // Angle it so we see the flat blade
+            camera.add(swordGroup);
+            scene.add(camera);
+
             // 3. Lighting
-            const ambientLight = new THREE.AmbientLight(0x202025); // Dim blueish light
+            const ambientLight = new THREE.AmbientLight(0x303545, 2.0); // Moonlit ambient
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0x444455, 1);
+            const directionalLight = new THREE.DirectionalLight(0x8888aa, 1.5);
             directionalLight.position.set(50, 100, 50);
             scene.add(directionalLight);
 
             // 4. Environment
             // Ground
             const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
-            // Introduce some roughness to the flat plane via vertices (optional, keeping it flat for simplicity in collisions)
             const floorMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x151515, 
+                color: 0x111215, 
                 roughness: 0.9, 
                 metalness: 0.1 
             });
@@ -294,17 +327,36 @@
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // Monoliths / Ruins (Obstacles)
-            const boxGeo = new THREE.BoxGeometry(10, 40, 10);
-            const boxMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1 });
-            for (let i = 0; i < 50; i++) {
-                const box = new THREE.Mesh(boxGeo, boxMat);
-                box.position.x = (Math.random() - 0.5) * 400;
-                box.position.z = (Math.random() - 0.5) * 400;
-                box.position.y = 20; // Half height
-                // Don't spawn too close to center (spawn)
-                if (box.position.distanceTo(new THREE.Vector3(0, 20, 0)) > 50) {
-                    scene.add(box);
+            // Grid for visibility
+            const gridHelper = new THREE.GridHelper(1000, 100, 0x000000, 0x000000);
+            gridHelper.position.y = 0.05;
+            gridHelper.material.opacity = 0.3;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            // Scenery (Tombstones and Dead Trees)
+            const tombstoneGeo = new THREE.BoxGeometry(3, 4, 1);
+            const tombstoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 });
+            
+            const treeGeo = new THREE.CylinderGeometry(0.8, 1.5, 20, 7);
+            const treeMat = new THREE.MeshStandardMaterial({ color: 0x1a120e, roughness: 1.0 });
+
+            for (let i = 0; i < 150; i++) {
+                const isTree = Math.random() > 0.5;
+                const mesh = isTree ? new THREE.Mesh(treeGeo, treeMat) : new THREE.Mesh(tombstoneGeo, tombstoneMat);
+                
+                mesh.position.x = (Math.random() - 0.5) * 600;
+                mesh.position.z = (Math.random() - 0.5) * 600;
+                mesh.position.y = isTree ? 10 : 2; 
+                
+                if (isTree) {
+                    mesh.rotation.x = (Math.random() - 0.5) * 0.2;
+                    mesh.rotation.z = (Math.random() - 0.5) * 0.2;
+                }
+
+                // Keep clear of center spawn
+                if (mesh.position.distanceTo(new THREE.Vector3(0, 0, 0)) > 30) {
+                    scene.add(mesh);
                 }
             }
 
@@ -365,85 +417,125 @@
             };
 
             const onMouseClick = function (event) {
-                if (controls.isLocked && !isDead) {
-                    shoot();
+            if (controls.isLocked && !isDead) {
+                if (!isAttacking) {
+                    isAttacking = true;
+                    attackProgress = 0;
+                    attack();
                 }
-            };
+            }
+        };
 
-            document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseClick);
             window.addEventListener('resize', onWindowResize);
 
-            // Initial Enemies
-            for(let i=0; i<5; i++) {
-                spawnEnemy();
+        // Initial Enemies
+        for(let i=0; i<20; i++) {
+            spawnEnemy();
+        }
+    }
+
+    function spawnEnemy() {
+        // Skeleton Group
+        const skeletonGroup = new THREE.Group();
+        const boneMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
+
+        // Skull
+        const skullGeo = new THREE.SphereGeometry(1.2, 16, 16);
+        const skull = new THREE.Mesh(skullGeo, boneMat);
+        skull.position.y = 6;
+        skeletonGroup.add(skull);
+
+        // Spine / Ribcage
+        const spineGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
+        const spine = new THREE.Mesh(spineGeo, boneMat);
+        spine.position.y = 3.5;
+        skeletonGroup.add(spine);
+
+        // Arms
+        const armGeo = new THREE.CylinderGeometry(0.3, 0.3, 2.5, 8);
+        const leftArm = new THREE.Mesh(armGeo, boneMat);
+        leftArm.position.set(-1.2, 4, 0);
+        leftArm.rotation.z = Math.PI / 4;
+        skeletonGroup.add(leftArm);
+
+        const rightArm = new THREE.Mesh(armGeo, boneMat);
+        rightArm.position.set(1.2, 4, 0);
+        rightArm.rotation.z = -Math.PI / 4;
+        skeletonGroup.add(rightArm);
+        
+        // Spawn location
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 15 + Math.random() * 100;
+        
+        skeletonGroup.position.x = controls.getObject().position.x + Math.cos(angle) * distance;
+        skeletonGroup.position.z = controls.getObject().position.z + Math.sin(angle) * distance;
+        skeletonGroup.position.y = 2; // Float slightly above ground
+        
+        skeletonGroup.userData = { 
+            bobOffset: Math.random() * Math.PI * 2,
+            hp: 3,
+            originalMat: boneMat
+        };
+
+        // Face the center roughly
+        skeletonGroup.lookAt(0, 2, 0);
+
+        scene.add(skeletonGroup);
+        enemies.push(skeletonGroup);
+    }
+
+    function attack() {
+        // Melee Raycast from center of camera
+        raycaster.setFromCamera(centerCoords, camera);
+        const attackRange = 18;
+
+        // Check intersections with all parts of the skeletons
+        const intersects = raycaster.intersectObjects(enemies, true);
+
+        if (intersects.length > 0 && intersects[0].distance <= attackRange) {
+            // Find the parent skeleton group
+            let hitEnemy = intersects[0].object;
+            while (hitEnemy.parent && hitEnemy.parent.type !== 'Scene' && !enemies.includes(hitEnemy)) {
+                hitEnemy = hitEnemy.parent;
             }
-        }
 
-        function spawnEnemy() {
-            // Dark fantasy enemy: A glowing red jagged crystal or sphere
-            const geom = new THREE.IcosahedronGeometry(4, 0); // Low poly sphere
-            const mat = new THREE.MeshStandardMaterial({
-                color: 0x000000,
-                emissive: 0xaa0000, // glowing red
-                emissiveIntensity: 0.8,
-                roughness: 0.4
-            });
-            const enemy = new THREE.Mesh(geom, mat);
-            
-            // Spawn in a circle around the player, somewhat far
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 80 + Math.random() * 70;
-            
-            enemy.position.x = controls.getObject().position.x + Math.cos(angle) * distance;
-            enemy.position.z = controls.getObject().position.z + Math.sin(angle) * distance;
-            enemy.position.y = 8; // Float slightly above ground
-            
-            // Add a point light to the enemy for eerie glow
-            const light = new THREE.PointLight(0xff0000, 2, 50);
-            enemy.add(light);
-            
-            // Give them a slightly randomized speed multiplier
-            enemy.userData = { 
-                speedMult: 0.8 + Math.random() * 0.5,
-                bobOffset: Math.random() * Math.PI * 2
-            };
-
-            scene.add(enemy);
-            enemies.push(enemy);
-        }
-
-        function shoot() {
-            // Raycast from center of camera
-            raycaster.setFromCamera(centerCoords, camera);
-
-            // Get intersections with enemies
-            const intersects = raycaster.intersectObjects(enemies, false);
-
-            if (intersects.length > 0) {
-                // Hit the closest enemy
-                const hitEnemy = intersects[0].object;
+            if (enemies.includes(hitEnemy)) {
+                hitEnemy.userData.hp -= 1;
                 
-                // Remove from scene
-                scene.remove(hitEnemy);
-                
-                // Remove from array
-                const index = enemies.indexOf(hitEnemy);
-                if (index > -1) {
-                    enemies.splice(index, 1);
+                // Flash red
+                hitEnemy.children.forEach(child => {
+                    child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                });
+
+                setTimeout(() => {
+                    if (hitEnemy && hitEnemy.parent) {
+                        hitEnemy.children.forEach(child => {
+                            child.material = hitEnemy.userData.originalMat;
+                        });
+                    }
+                }, 150);
+
+                // Die
+                if (hitEnemy.userData.hp <= 0) {
+                    scene.remove(hitEnemy);
+                    const index = enemies.indexOf(hitEnemy);
+                    if (index > -1) {
+                        enemies.splice(index, 1);
+                    }
+                    gainXP(1);
+                    
+                    // Spawn replacement skeletons
+                    spawnEnemy();
+                    if(Math.random() < 0.4) spawnEnemy(); 
                 }
-
-                // Grant XP
-                gainXP(1);
-
-                // Spawn a new enemy (or two, scaling difficulty slightly)
-                spawnEnemy();
-                if(Math.random() < 0.3) spawnEnemy(); // 30% chance to spawn an extra enemy
             }
         }
+    }
 
-        function gainXP(amount) {
+    function gainXP(amount) {
             xp += amount;
             if (xp >= xpToNext) {
                 levelUp();
@@ -492,17 +584,17 @@
         }
 
         function die() {
-            isDead = true;
-            controls.unlock();
-            
-            blocker.style.display = 'flex';
-            menuTitle.innerText = 'YOU DIED';
-            menuTitle.style.color = '#ff0000';
-            menuInstructions.innerHTML = `You reached Level ${level}.<br>The darkness consumed you.`;
-            startBtn.innerText = 'Try Again';
-        }
+        isDead = true;
+        controls.unlock();
+        
+        blocker.style.display = 'flex';
+        menuTitle.innerText = 'VOCÊ MORREU';
+        menuTitle.style.color = '#ff0000';
+        menuInstructions.innerHTML = `Você chegou ao Nível ${level}.<br>A escuridão te consumiu.`;
+        startBtn.innerText = 'Tentar Novamente';
+    }
 
-        function resetGame() {
+    function resetGame() {
             // Reset Stats
             maxHealth = 100;
             currentHealth = maxHealth;
@@ -517,18 +609,18 @@
             controls.getObject().position.set(0, 10, 0);
 
             // Clear Enemies
-            enemies.forEach(e => scene.remove(e));
-            enemies.length = 0;
+        enemies.forEach(e => scene.remove(e));
+        enemies.length = 0;
 
-            // Spawn Initial Enemies
-            for(let i=0; i<5; i++) {
-                spawnEnemy();
-            }
-
-            updateHUD();
+        // Spawn Initial Enemies
+        for(let i=0; i<20; i++) {
+            spawnEnemy();
         }
 
-        function updateHUD() {
+        updateHUD();
+    }
+
+    function updateHUD() {
             const hpPercent = Math.max(0, (currentHealth / maxHealth) * 100);
             healthBar.style.width = hpPercent + '%';
             
@@ -545,72 +637,73 @@
         }
 
         function animate() {
-            requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
 
-            const time = performance.now();
-            // Delta in seconds
-            const delta = Math.min((time - prevTime) / 1000, 0.1); 
+        const time = performance.now();
+        // Delta in seconds
+        const delta = Math.min((time - prevTime) / 1000, 0.1); 
 
-            if (controls.isLocked && !isDead) {
+        if (controls.isLocked && !isDead) {
 
-                // Player Movement Physics (Friction & Velocity)
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
+            // Player Movement Physics
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
 
-                direction.z = Number(moveForward) - Number(moveBackward);
-                direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize();
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
 
-                const speed = 400.0;
+            const speed = 400.0;
 
-                if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-                if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+            if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
 
-                controls.moveRight(-velocity.x * delta);
-                controls.moveForward(-velocity.z * delta);
+            controls.moveRight(-velocity.x * delta);
+            controls.moveForward(-velocity.z * delta);
 
-                // Fix height (no jumping, stay firmly on ground)
-                controls.getObject().position.y = 10;
+            // Fix height
+            controls.getObject().position.y = 10;
 
-                // --- Enemy AI & Collision ---
-                const playerPos = controls.getObject().position;
+            // --- Sword Animation ---
+            if (isAttacking) {
+                attackProgress += delta * 6; // Swing speed
                 
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    const enemy = enemies[i];
-                    
-                    // Simple pathfinding: move directly towards player (ignoring obstacles for a ghostly feel)
-                    const dirToPlayer = new THREE.Vector3().subVectors(playerPos, enemy.position);
-                    dirToPlayer.y = 0; // Keep horizontal movement
-                    
-                    const dist = dirToPlayer.length();
-                    
-                    if (dist > 0.1) {
-                        dirToPlayer.normalize();
-                        const currentSpeed = enemySpeed * enemy.userData.speedMult * (1 + (level * 0.05)); // Slight speed scale with level
-                        
-                        enemy.position.addScaledVector(dirToPlayer, currentSpeed * delta);
-                        
-                        // Rotate to face player slowly or randomly
-                        enemy.rotation.y += 1 * delta;
-                        enemy.rotation.x += 0.5 * delta;
-
-                        // Bobbing effect
-                        enemy.position.y = 8 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 2;
-                    }
-
-                    // Collision check with player
-                    if (dist < 5.0) {
-                        takeDamage(damageAmount);
-                        // Knockback slightly
-                        velocity.z += dirToPlayer.z * -500;
-                        velocity.x += dirToPlayer.x * -500;
-                    }
+                if (attackProgress < 0.5) {
+                    // Swing down
+                    const p = attackProgress * 2;
+                    swordGroup.rotation.x = -Math.PI / 4 - (p * Math.PI / 2.5);
+                    swordGroup.position.z = -4 - (p * 2);
+                } else if (attackProgress < 1.0) {
+                    // Swing back up
+                    const p = (attackProgress - 0.5) * 2;
+                    swordGroup.rotation.x = -Math.PI / 4 - (Math.PI / 2.5) + (p * Math.PI / 2.5);
+                    swordGroup.position.z = -6 + (p * 2);
+                } else {
+                    // End attack
+                    isAttacking = false;
+                    swordGroup.rotation.x = -Math.PI / 4;
+                    swordGroup.position.z = -4;
                 }
             }
 
-            prevTime = time;
-            renderer.render(scene, camera);
+            // --- Enemy AI (Passive Skeletons) ---
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                // Passive idle bobbing
+                enemy.position.y = 2 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 0.5;
+                
+                // Look at player slowly
+                const playerPos = controls.getObject().position;
+                const targetRotation = Math.atan2(playerPos.x - enemy.position.x, playerPos.z - enemy.position.z);
+                // Interpolate rotation for smooth turning
+                const currentRotation = enemy.rotation.y;
+                enemy.rotation.y = currentRotation + (targetRotation - currentRotation) * delta * 2;
+            }
         }
-    </script>
+
+        prevTime = time;
+        renderer.render(scene, camera);
+    }
+</script>
 </body>
 </html>
