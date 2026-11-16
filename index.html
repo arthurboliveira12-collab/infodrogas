@@ -49,6 +49,17 @@
             background-size: 100% 4px, 100% 100%;
         }
 
+        /* Flash vermelho ao sofrer dano */
+        #damage-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            background: radial-gradient(circle at center, transparent 45%, rgba(255, 10, 84, 0.65) 100%);
+            opacity: 0;
+            transition: opacity 0.15s ease-out;
+        }
+
         /* HUD em Primeira Pessoa */
         #hud {
             position: fixed;
@@ -141,6 +152,32 @@
             to { transform: translateX(-50%) scale(1.03); }
         }
 
+        /* Textos Flutuantes de Combate e Level Up */
+        #floating-text-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-msg {
+            position: absolute;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel Decorative', serif;
+            font-weight: 900;
+            text-shadow: 0 0 12px currentColor, 2px 2px 0 #000;
+            animation: floatUpFade 1.5s ease-out forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUpFade {
+            0% { opacity: 0; transform: translate(-50%, -20%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -140%) scale(1.0); }
+        }
+
         /* Painel Status RPG (Canto Inferior Esquerdo) */
         #rpg-stats {
             position: absolute;
@@ -151,7 +188,7 @@
             outline: 2px solid #10002b;
             border-radius: 8px;
             padding: 12px 16px;
-            width: 260px;
+            width: 275px;
             box-shadow: 0 0 20px rgba(123, 44, 191, 0.45);
         }
 
@@ -173,7 +210,9 @@
 
         .char-lvl {
             color: #ffd166;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
+            font-weight: bold;
+            text-shadow: 0 0 6px #ff9e00;
         }
 
         .bar-row {
@@ -189,7 +228,7 @@
 
         .bar-track {
             width: 100%;
-            height: 13px;
+            height: 12px;
             background: #0d021a;
             border: 2px solid #3c096c;
             border-radius: 3px;
@@ -198,10 +237,11 @@
         }
 
         .bar-fill-hp {
-            width: 92%;
+            width: 100%;
             height: 100%;
             background: linear-gradient(90deg, #800f2f, #ff0a54, #ff477e);
             box-shadow: 0 0 8px #ff0a54;
+            transition: width 0.2s ease;
         }
 
         .bar-fill-mp {
@@ -210,6 +250,15 @@
             background: linear-gradient(90deg, #3a0ca3, #4361ee, #00f5d4);
             box-shadow: 0 0 10px #00f5d4;
             animation: manaShimmer 2.5s infinite alternate;
+            transition: width 0.15s ease;
+        }
+
+        .bar-fill-xp {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #b5179e, #f72585, #ffd166);
+            box-shadow: 0 0 8px #ffd166;
+            transition: width 0.25s ease;
         }
 
         @keyframes manaShimmer {
@@ -226,6 +275,7 @@
             height: 360px;
             transform-origin: bottom center;
             filter: drop-shadow(0 0 18px rgba(181, 23, 158, 0.65));
+            transition: transform 0.08s ease-out;
         }
 
         /* Controles rápidos no canto superior direito */
@@ -258,6 +308,26 @@
 
         .retro-mini-btn:active {
             transform: translateY(2px);
+        }
+
+        /* Radar / Minimapa Arcano (Canto Superior Esquerdo) */
+        #minimap-box {
+            position: absolute;
+            top: 20px;
+            left: 22px;
+            width: 136px;
+            height: 136px;
+            background: rgba(14, 4, 28, 0.88);
+            border: 2px solid #9d4edd;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.45);
+            overflow: hidden;
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         /* Dica de controles no canto inferior direito */
@@ -358,7 +428,7 @@
             padding: 2px 8px;
             border-radius: 5px;
             font-weight: bold;
-            min-width: 68px;
+            min-width: 76px;
             text-align: center;
             box-shadow: 0 2px 0 #000;
         }
@@ -414,8 +484,12 @@
                 right: 0;
             }
             #rpg-stats {
-                width: 200px;
+                width: 215px;
                 padding: 8px 10px;
+            }
+            #minimap-box {
+                width: 96px;
+                height: 96px;
             }
         }
     </style>
@@ -427,9 +501,15 @@
 
     <!-- Overlay CRT / PS1 -->
     <div class="crt-overlay"></div>
+    <div id="damage-vignette"></div>
 
     <!-- HUD em Primeira Pessoa -->
     <div id="hud">
+        <!-- Minimapa / Radar Arcano -->
+        <div id="minimap-box">
+            <canvas id="minimap-canvas" width="136" height="136"></canvas>
+        </div>
+
         <!-- Banner de Região -->
         <div id="location-banner">
             <h2 id="location-title">TORRE ARCANA — BIBLIOTECA</h2>
@@ -447,6 +527,9 @@
 
         <!-- Aviso de Interação com a Porta -->
         <div id="interact-prompt">Pressione <span>[E]</span> para Abrir a Porta</div>
+
+        <!-- Camada de Textos Flutuantes (Dano, XP, Level Up) -->
+        <div id="floating-text-layer"></div>
 
         <!-- Cajado Arcano & Orbe Místico (SVG Detalhado Estilo Retro Pixel/PS1) -->
         <div id="viewmodel-container">
@@ -513,24 +596,33 @@
         <div id="rpg-stats">
             <div class="stat-header">
                 <span class="char-title">SHADOW WIZARD</span>
-                <span class="char-lvl">LVL 99</span>
+                <span class="char-lvl" id="hud-lvl">LVL 1</span>
             </div>
             <div class="bar-row">
                 <div class="bar-label">
                     <span style="color:#ff758f;">VITALIDADE</span>
-                    <span>480 / 500</span>
+                    <span id="hud-hp-text">100 / 100</span>
                 </div>
                 <div class="bar-track">
-                    <div class="bar-fill-hp"></div>
+                    <div class="bar-fill-hp" id="hud-hp-bar"></div>
                 </div>
             </div>
             <div class="bar-row">
                 <div class="bar-label">
                     <span style="color:#48bfe3;">MANA ARCANA</span>
-                    <span>999 / 999</span>
+                    <span id="hud-mp-text">100 / 100</span>
                 </div>
                 <div class="bar-track">
-                    <div class="bar-fill-mp"></div>
+                    <div class="bar-fill-mp" id="hud-mp-bar"></div>
+                </div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">
+                    <span style="color:#ffd166;">EXPERIÊNCIA</span>
+                    <span id="hud-xp-text">0 / 50 XP</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill-xp" id="hud-xp-bar"></div>
                 </div>
             </div>
         </div>
@@ -538,7 +630,7 @@
         <!-- Lembrete rápido -->
         <div id="controls-hint">
             [WASD] Mover &bull; [ESPAÇO] Pular<br>
-            [E] Interagir &bull; [MOUSE] Olhar
+            [CLIQUE ESQ] Disparar Orbe &bull; [E] Porta
         </div>
     </div>
 
@@ -548,14 +640,14 @@
             <div class="game-subtitle-tag">PS1 / N64 RETRO 3D EDITION</div>
             <h1 class="game-title">SHADOW TOWER:<br>CHRONICLES</h1>
             <p class="game-lore">
-                Desperte na antiga Biblioteca da Torre Arcana. Abra os portões selados, atravesse a Trilha Sombria e cruze a Ponte do Abismo rumo ao Castelo das Sombras.
+                Desperte na antiga Biblioteca da Torre Arcana. Abra os portões selados, explore as Terras Sombrias expandidas, derrote Duendes e Esqueletos com sua Vara Mágica e evolua seu poder arcano.
             </p>
 
             <div class="controls-grid">
-                <div class="control-item"><span class="key-badge">W A S D</span> <span>Caminhar / Correr</span></div>
+                <div class="control-item"><span class="key-badge">W A S D</span> <span>Caminhar / Explorar</span></div>
                 <div class="control-item"><span class="key-badge">ESPAÇO</span> <span>Pular</span></div>
                 <div class="control-item"><span class="key-badge">TECLA E</span> <span>Abrir / Fechar Porta</span></div>
-                <div class="control-item"><span class="key-badge">MOUSE</span> <span>Controlar Câmera</span></div>
+                <div class="control-item"><span class="key-badge">CLIQUE</span> <span>Disparar Esfera Azul</span></div>
             </div>
 
             <div class="settings-row">
@@ -572,8 +664,74 @@
      * ============================================================================
      * SHADOW TOWER: CHRONICLES
      * Jogo 3D em Primeira Pessoa estilo PS1/N64 Dark Fantasy (Shadow Wizard Vibe)
+     * Atualização Modular: Mundo Expandido 3000x3000, Vara Mágica (Esferas Azuis),
+     * Inimigos (Duendes & Esqueletos) com Spawn Dinâmico e Sistema de XP/Níveis.
      * ============================================================================
      */
+
+    // ============================================================================
+    // 0. CONSTANTES DE BALANCEAMENTO E CONFIGURAÇÃO GLOBAL (FÁCIL AJUSTE)
+    // ============================================================================
+    const GAME_CONFIG = {
+        // 1. Mundo Expandido & Câmera Suave (3000x3000 unidades/pixels de área explorável)
+        MAP_SIZE: 3000,
+        MAP_HALF: 1500,
+        CAMERA_SMOOTHING: 18.0,      // Suavidade de seguimento da câmera nos limites do mundo
+        CAMERA_FOG_DENSITY: 0.0042,  // Alcance de visão ampla para explorar o mapa 3000x3000
+
+        // 2. Jogador & Progressão de Nível (XP)
+        PLAYER_BASE_HP: 100,
+        PLAYER_BASE_MP: 100,
+        PLAYER_MP_REGEN: 18,         // Mana regenerada por segundo
+        PLAYER_SPEED: 22.0,
+        PLAYER_JUMP_FORCE: 12.5,
+        PLAYER_EYE_HEIGHT: 2.6,
+        PLAYER_RADIUS: 0.9,
+        GRAVITY: 30.0,
+        START_XP: 0,
+        START_NEXT_LEVEL_XP: 50,
+        XP_SCALING_FACTOR: 1.45,
+        LEVEL_UP_HP_BONUS: 25,
+        LEVEL_UP_DMG_BONUS: 8,
+
+        // 3. Ataque da Vara Mágica (Projéteis Azuis Esféricos)
+        WAND_BASE_DAMAGE: 22,
+        WAND_MANA_COST: 8,
+        WAND_COOLDOWN: 0.24,         // Segundos entre disparos
+        PROJECTILE_SPEED: 78.0,
+        PROJECTILE_MAX_RANGE: 260.0,
+        PROJECTILE_RADIUS: 0.75,
+
+        // 4. Inimigos & Sistema de Spawn Dinâmico
+        MAX_ACTIVE_ENEMIES: 26,
+        SPAWN_INTERVAL: 2.2,         // Intervalo em segundos para checar novos spawns
+        SPAWN_MIN_DIST_CAMERA: 65,   // Distância mínima fora do campo imediato da câmera
+        SPAWN_MAX_DIST_CAMERA: 380,  // Distância máxima ao redor do jogador
+
+        GOBLIN: {
+            NAME: 'Duende Sombrio',
+            HP: 35,
+            SPEED: 15.5,
+            DAMAGE: 10,
+            XP_REWARD: 15,
+            DETECT_RANGE: 125,
+            ATTACK_RANGE: 2.4,
+            ATTACK_COOLDOWN: 1.0,
+            SCALE: 0.85
+        },
+
+        SKELETON: {
+            NAME: 'Esqueleto Amaldiçoado',
+            HP: 95,
+            SPEED: 8.2,
+            DAMAGE: 24,
+            XP_REWARD: 35,
+            DETECT_RANGE: 145,
+            ATTACK_RANGE: 3.1,
+            ATTACK_COOLDOWN: 1.5,
+            SCALE: 1.15
+        }
+    };
 
     // ============================================================================
     // 1. SINTETIZADOR RETRO WEB AUDIO API (Dungeon Synth + Efeitos Sonoros)
@@ -605,7 +763,6 @@
             return this.isMuted;
         }
 
-        // Som sintetizado de passos na pedra/madeira
         playFootstep(isWood = false) {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
@@ -632,7 +789,6 @@
             osc.stop(now + 0.1);
         }
 
-        // Som de pulo arcano
         playJump() {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
@@ -653,12 +809,89 @@
             osc.stop(now + 0.2);
         }
 
-        // Som pesado de porta medieval abrindo/fechando
+        // Som de disparo da esfera mágica azul
+        playMagicCast() {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(680, now);
+            osc.frequency.exponentialRampToValueAtTime(190, now + 0.22);
+
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.23);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.24);
+        }
+
+        // Som de impacto mágico no inimigo
+        playMagicHit() {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + 0.14);
+
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.16);
+        }
+
+        // Fanfarra arcana ao subir de nível
+        playLevelUp() {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const notes = [293.66, 369.99, 440.00, 587.33]; // Acorde D Maior brilhante
+            notes.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                const t = now + idx * 0.08;
+                osc.frequency.setValueAtTime(freq, t);
+                gain.gain.setValueAtTime(0.14, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.46);
+            });
+        }
+
+        // Som ao jogador sofrer dano
+        playPlayerHurt() {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(115, now);
+            osc.frequency.linearRampToValueAtTime(48, now + 0.25);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.27);
+        }
+
         playDoorSound(opening) {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
 
-            // Rangido grave de madeira e ferro
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             const filter = this.ctx.createBiquadFilter();
@@ -687,7 +920,6 @@
             osc.start(now);
             osc.stop(now + 0.9);
 
-            // Batida metálica da tranca
             const clank = this.ctx.createOscillator();
             const clankGain = this.ctx.createGain();
             clank.type = 'triangle';
@@ -702,11 +934,9 @@
             clank.stop(impactTime + 0.18);
         }
 
-        // Trilha Dungeon Synth Minimalista (Escala Frígia / Menor Harmônica)
         startDungeonSynth() {
             this.isPlayingBgm = true;
-            // Notas em Hz (D menor sombrio / Frígio)
-            const bassNotes = [73.42, 73.42, 77.78, 73.42, 65.41, 65.41, 58.27, 65.41]; // D2, Eb2, C2, Bb1
+            const bassNotes = [73.42, 73.42, 77.78, 73.42, 65.41, 65.41, 58.27, 65.41];
             const leadNotes = [
                 293.66, 0, 349.23, 311.13, 293.66, 0, 220.00, 233.08,
                 293.66, 349.23, 440.00, 466.16, 440.00, 349.23, 311.13, 0
@@ -716,7 +946,6 @@
                 if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
                 const now = this.ctx.currentTime;
 
-                // Baixo Drone a cada 2 passos
                 if (this.stepIndex % 2 === 0) {
                     const bNote = bassNotes[(this.stepIndex / 2) % bassNotes.length];
                     const oscB = this.ctx.createOscillator();
@@ -740,7 +969,6 @@
                     oscB.stop(now + 1.0);
                 }
 
-                // Harpa / Sino Dungeon Synth
                 const lNote = leadNotes[this.stepIndex % leadNotes.length];
                 if (lNote > 0) {
                     const oscL = this.ctx.createOscillator();
@@ -778,7 +1006,6 @@
         drawFn(ctx, width, height);
 
         const tex = new THREE.CanvasTexture(canvas);
-        // NearestFilter garante os pixels estourados autênticos de PS1/N64!
         tex.magFilter = THREE.NearestFilter;
         tex.minFilter = THREE.NearestFilter;
         tex.wrapS = THREE.RepeatWrapping;
@@ -787,9 +1014,34 @@
         return tex;
     }
 
-    // Biblioteca de Texturas Retro
+    // Textura especial de esfera azul brilhante com gradiente radial e brilho
+    function createMagicOrbTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = '#00e5ff';
+
+        const grad = ctx.createRadialGradient(32, 32, 2, 32, 32, 28);
+        grad.addColorStop(0.0, '#ffffff');
+        grad.addColorStop(0.25, '#80ffea');
+        grad.addColorStop(0.55, '#0096ff');
+        grad.addColorStop(0.85, '#1d3557');
+        grad.addColorStop(1.0, 'rgba(0, 119, 255, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(32, 32, 28, 0, Math.PI * 2);
+        ctx.fill();
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+    }
+
     const textures = {
-        // Pedra escura arroxeada da Torre e Castelo
         darkStone: createPixelTexture(64, 64, (ctx, w, h) => {
             ctx.fillStyle = '#1d112b';
             ctx.fillRect(0, 0, w, h);
@@ -799,212 +1051,134 @@
                 for (let x = -16; x < w; x += 32) {
                     ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
                     ctx.fillRect(x + offset + 1, y + 1, 30, 14);
-                    // Realce PS1
                     ctx.fillStyle = '#4e2f70';
                     ctx.fillRect(x + offset + 1, y + 1, 30, 2);
                 }
             }
-            // Ruído pixelado
-            for (let i = 0; i < 220; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.28)' : 'rgba(180,120,255,0.12)';
-                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 2, 2);
-            }
-        }, 4, 4),
+        }, 2, 2),
 
-        // Chão de madeira antiga da Biblioteca
-        woodFloor: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#2b1410';
-            ctx.fillRect(0, 0, w, h);
-            for (let x = 0; x < w; x += 8) {
-                ctx.fillStyle = x % 16 === 0 ? '#3b1c16' : '#24100d';
-                ctx.fillRect(x, 0, 7, h);
-                ctx.fillStyle = '#120604';
-                ctx.fillRect(x + 7, 0, 1, h);
-            }
-            for (let i = 0; i < 150; i++) {
-                ctx.fillStyle = 'rgba(255, 180, 100, 0.08)';
-                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 1, 5);
-            }
-        }, 4, 4),
-
-        // Tapete Arcano Roxo e Dourado
-        arcaneCarpet: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#4a0e4e';
-            ctx.fillRect(0, 0, w, h);
-            // Borda dourada
-            ctx.strokeStyle = '#ffb703';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(4, 4, w - 8, h - 8);
-            // Estrela/Runa central
-            ctx.strokeStyle = '#00f5d4';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(32, 12); ctx.lineTo(52, 32); ctx.lineTo(32, 52); ctx.lineTo(12, 32);
-            ctx.closePath();
-            ctx.stroke();
-            ctx.fillStyle = '#ff0a54';
-            ctx.fillRect(28, 28, 8, 8);
-        }, 1, 2),
-
-        // Estante de Livros Coloridos Saturados
         bookshelf: createPixelTexture(64, 64, (ctx, w, h) => {
-            // Fundo de madeira escura
-            ctx.fillStyle = '#1f0d08';
+            ctx.fillStyle = '#241008';
             ctx.fillRect(0, 0, w, h);
-            const bookColors = ['#ff0a54', '#00f5d4', '#ffd166', '#9d4edd', '#3a86ff', '#fb5607', '#06d6a0'];
+            const bookColors = ['#9b2226', '#005f73', '#ca6702', '#5a189a', '#2b9348', '#ae2012', '#3a0ca3'];
             for (let shelf = 0; shelf < 4; shelf++) {
-                const yBase = shelf * 16;
-                // Prateleira
-                ctx.fillStyle = '#4a2015';
-                ctx.fillRect(0, yBase + 13, w, 3);
+                const sy = shelf * 16;
+                ctx.fillStyle = '#3d1c0e';
+                ctx.fillRect(0, sy + 13, w, 3);
                 let bx = 2;
-                while (bx < w - 5) {
+                while (bx < w - 4) {
                     const bw = 3 + Math.floor(Math.random() * 4);
                     const bh = 9 + Math.floor(Math.random() * 4);
                     ctx.fillStyle = bookColors[Math.floor(Math.random() * bookColors.length)];
-                    ctx.fillRect(bx, yBase + 13 - bh, bw, bh);
-                    // Detalhe dourado na lombada
-                    if (Math.random() > 0.4) {
-                        ctx.fillStyle = '#fff3b0';
-                        ctx.fillRect(bx, yBase + 13 - bh + 2, bw, 1);
+                    ctx.fillRect(bx, sy + (13 - bh), bw, bh);
+                    if (Math.random() > 0.45) {
+                        ctx.fillStyle = '#ffd166';
+                        ctx.fillRect(bx, sy + (13 - bh) + 2, bw, 1);
                     }
                     bx += bw + 1;
                 }
             }
         }, 1, 1),
 
-        // Porta Pesada de Madeira e Ferro Forjado
-        heavyDoor: createPixelTexture(64, 128, (ctx, w, h) => {
-            ctx.fillStyle = '#36150c';
+        // Chão Dark Fantasy variado com musgo, terra sombria e runas antigas
+        darkGround: createPixelTexture(128, 128, (ctx, w, h) => {
+            ctx.fillStyle = '#111c16';
             ctx.fillRect(0, 0, w, h);
-            for (let x = 0; x < w; x += 8) {
-                ctx.fillStyle = x % 16 === 0 ? '#471d11' : '#2b1008';
-                ctx.fillRect(x, 0, 7, h);
-            }
-            // Dobradiças e faixas de ferro escuro
-            ctx.fillStyle = '#1b1b29';
-            ctx.fillRect(0, 14, w, 10);
-            ctx.fillRect(0, h - 24, w, 10);
-            ctx.fillRect(0, h / 2 - 5, w, 10);
-            // Rebites brilhantes
-            ctx.fillStyle = '#9d4edd';
-            for (let x = 6; x < w; x += 12) {
-                ctx.fillRect(x, 17, 3, 3);
-                ctx.fillRect(x, h / 2 - 2, 3, 3);
-                ctx.fillRect(x, h - 21, 3, 3);
-            }
-            // Argola Dourada
-            ctx.strokeStyle = '#ffd166';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(w - 14, h / 2 + 12, 6, 0, Math.PI * 2);
-            ctx.stroke();
-        }, 1, 1),
-
-        // Grama Sombria Noturna (Roxo/Azul-Petróleo Saturado)
-        darkGrass: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#0c1824';
-            ctx.fillRect(0, 0, w, h);
-            const shades = ['#12263a', '#1b1938', '#091f26', '#24173d'];
+            const shades = ['#182920', '#0c1410', '#1f3328', '#22182e', '#2d1f3d'];
             for (let i = 0; i < 420; i++) {
                 ctx.fillStyle = shades[Math.floor(Math.random() * shades.length)];
-                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 2, 3);
+                const px = Math.floor(Math.random() * 32) * 4;
+                const py = Math.floor(Math.random() * 32) * 4;
+                ctx.fillRect(px, py, 4, 4);
             }
-            // Pequenos fungos/flores bioluminescentes raros
-            ctx.fillStyle = '#00f5d4';
-            ctx.fillRect(14, 22, 2, 2);
-            ctx.fillStyle = '#b5179e';
-            ctx.fillRect(48, 50, 2, 2);
-        }, 28, 28),
+            // Pequenas pedrinhas e flores mortas púrpuras
+            for (let i = 0; i < 24; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#3b2854' : '#3a4a40';
+                ctx.fillRect(Math.random() * w, Math.random() * h, 3, 3);
+            }
+        }, 160, 160),
 
-        // Caminho de Lajes de Pedra (Cobblestone)
-        cobblePath: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#140f1f';
+        cobblestone: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#140e1c';
             ctx.fillRect(0, 0, w, h);
-            const stones = ['#3b3355', '#4f4373', '#2e2742', '#5d4e87'];
+            const stoneShades = ['#3c3547', '#4e455c', '#2e2838', '#5e5270'];
             for (let y = 0; y < h; y += 16) {
                 for (let x = 0; x < w; x += 16) {
-                    const ox = (Math.random() - 0.5) * 3;
-                    const oy = (Math.random() - 0.5) * 3;
-                    ctx.fillStyle = stones[Math.floor(Math.random() * stones.length)];
-                    ctx.fillRect(x + 2 + ox, y + 2 + oy, 12, 12);
-                    ctx.fillStyle = '#7b68b0';
-                    ctx.fillRect(x + 2 + ox, y + 2 + oy, 12, 2);
+                    const pad = (x + y) % 32 === 0 ? 1 : 2;
+                    ctx.fillStyle = stoneShades[Math.floor(Math.random() * stoneShades.length)];
+                    ctx.fillRect(x + pad, y + pad, 16 - pad * 2, 16 - pad * 2);
+                    ctx.fillStyle = '#75668c';
+                    ctx.fillRect(x + pad, y + pad, 16 - pad * 2, 2);
                 }
             }
-        }, 2, 14),
+        }, 2, 25),
 
-        // Vitral Gótico Brilhante do Castelo
-        stainedGlass: createPixelTexture(64, 128, (ctx, w, h) => {
-            ctx.fillStyle = '#10002b';
+        ancientWood: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#2b1408';
             ctx.fillRect(0, 0, w, h);
-            const colors = ['#ff0a54', '#9d4edd', '#00f5d4', '#ffb703'];
-            for (let y = 8; y < h - 8; y += 16) {
-                for (let x = 8; x < w - 8; x += 16) {
-                    ctx.fillStyle = colors[(x + y) / 16 % colors.length];
-                    ctx.fillRect(x + 1, y + 1, 14, 14);
-                }
+            for (let x = 0; x < w; x += 8) {
+                ctx.fillStyle = x % 16 === 0 ? '#3b1d0e' : '#241006';
+                ctx.fillRect(x, 0, 7, h);
             }
-            // Cruz central dourada
-            ctx.fillStyle = '#ffd166';
-            ctx.fillRect(w / 2 - 2, 12, 4, h - 24);
-            ctx.fillRect(14, h / 3, w - 28, 4);
+            ctx.fillStyle = '#15151f';
+            ctx.fillRect(0, 10, w, 5);
+            ctx.fillRect(0, 48, w, 5);
+            ctx.fillStyle = '#ffb703';
+            for (let x = 4; x < w; x += 16) {
+                ctx.fillRect(x, 11, 2, 2);
+                ctx.fillRect(x, 49, 2, 2);
+            }
         }, 1, 1),
 
-        // Rio Místico / Abismo Brilhante sob a Ponte
-        abyssWater: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#1a0536';
+        treeBark: createPixelTexture(32, 32, (ctx, w, h) => {
+            ctx.fillStyle = '#1f1024';
             ctx.fillRect(0, 0, w, h);
-            for (let y = 0; y < h; y += 4) {
-                ctx.fillStyle = y % 8 === 0 ? '#5a189a' : '#3c096c';
-                ctx.fillRect(0, y, w, 2);
+            for (let x = 0; x < w; x += 4) {
+                ctx.fillStyle = x % 8 === 0 ? '#2e1836' : '#140917';
+                ctx.fillRect(x, 0, 3, h);
             }
+        }, 1, 3),
+
+        foliage: createPixelTexture(32, 32, (ctx, w, h) => {
+            ctx.fillStyle = '#120824';
+            ctx.fillRect(0, 0, w, h);
+            const colors = ['#240046', '#3c096c', '#10372b', '#5a189a'];
             for (let i = 0; i < 60; i++) {
-                ctx.fillStyle = Math.random() > 0.4 ? '#00f5d4' : '#ff0a54';
-                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 4, 1);
+                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.fillRect(Math.random() * w, Math.random() * h, 6, 6);
             }
-        }, 12, 6)
+        }, 1, 1),
+
+        castleGate: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#180c24';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = '#ff0a54';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(4, 4, w - 8, h - 8);
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, 16, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#00f5d4';
+            ctx.fillRect(w / 2 - 2, 12, 4, 40);
+            ctx.fillRect(12, h / 2 - 2, 40, 4);
+        }, 1, 1),
+
+        magicOrb: createMagicOrbTexture()
     };
 
     // ============================================================================
-    // 3. CONFIGURAÇÃO DA CENA THREE.JS (ESTÉTICA PS1 LOW-RES + FOG DENSO)
+    // 3. SHADER PS1 VERTEX JITTER (TREMEDEIRA DE POLÍGONOS CLÁSSICA DO PLAYSTATION 1)
     // ============================================================================
-    const canvas = document.getElementById('game-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-    // Renderização em resolução retro (estilo PS1/N64) esticada na tela com Nearest-Neighbor
-    const RETRO_SCALE = 0.48;
-    function updateRendererSize() {
-        const w = Math.max(320, Math.floor(window.innerWidth * RETRO_SCALE));
-        const h = Math.max(240, Math.floor(window.innerHeight * RETRO_SCALE));
-        renderer.setSize(w, h, false);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    }
-
-    const scene = new THREE.Scene();
-    // Neblina roxa-azulada profunda típica de jogos dark fantasy anos 90/2000
-    const FOG_COLOR = new THREE.Color(0x160829);
-    scene.background = FOG_COLOR;
-    scene.fog = new THREE.FogExp2(0x160829, 0.024);
-
-    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 140);
-    updateRendererSize();
-    window.addEventListener('resize', updateRendererSize);
-
-    // ============================================================================
-    // 4. SHADER INJECTOR: EFEITO PS1 VERTEX JITTER (TREMEDEIRA DE VÉRTICES RETRO)
-    // ============================================================================
-    function applyPS1Jitter(material) {
+    function applyPS1Material(material) {
         material.onBeforeCompile = (shader) => {
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <project_vertex>',
                 `
                 #include <project_vertex>
-                // Snap dos vértices na grade da tela estilo PlayStation 1
                 vec4 snapped = gl_Position;
                 snapped.xyz = gl_Position.xyz / gl_Position.w;
-                vec2 grid = vec2(220.0, 165.0);
-                snapped.xy = floor(grid * snapped.xy) / grid;
+                vec2 snapRes = vec2(220.0, 165.0);
+                snapped.xy = floor(snapRes * snapped.xy) / snapRes;
                 snapped.xyz *= gl_Position.w;
                 gl_Position = snapped;
                 `
@@ -1013,856 +1187,825 @@
         return material;
     }
 
-    function makePS1Mat(params) {
+    function createRetroMat(params) {
         const mat = new THREE.MeshLambertMaterial(params);
-        return applyPS1Jitter(mat);
+        return applyPS1Material(mat);
     }
 
     // ============================================================================
-    // 5. SISTEMA DE COLISÃO AABB E PLATAFORMAS (CHÃO / PONTE)
+    // 4. CONFIGURAÇÃO DA CENA 3D, RENDERER E CÂMERA
     // ============================================================================
-    const colliders = []; // Caixas sólidas { minX, maxX, minZ, maxZ, minY, maxY, tag }
-    function addCollider(x, z, width, depth, minY = 0, maxY = 10, tag = 'solid') {
-        const box = {
-            minX: x - width / 2,
-            maxX: x + width / 2,
-            minZ: z - depth / 2,
-            maxZ: z + depth / 2,
-            minY,
-            maxY,
-            tag
-        };
-        colliders.push(box);
-        return box;
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: false,
+        powerPreference: 'high-performance'
+    });
+
+    const RENDER_SCALE = 0.45;
+    function updateRendererSize() {
+        const w = Math.floor(window.innerWidth * RENDER_SCALE);
+        const h = Math.floor(window.innerHeight * RENDER_SCALE);
+        renderer.setSize(w, h, false);
     }
+    updateRendererSize();
+    window.addEventListener('resize', () => {
+        updateRendererSize();
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    });
 
-    // ============================================================================
-    // 6. CONSTRUÇÃO DO MUNDO DARK FANTASY
-    // ============================================================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x160729);
+    scene.fog = new THREE.FogExp2(0x1c0836, GAME_CONFIG.CAMERA_FOG_DENSITY);
 
-    // --- ILUMINAÇÃO GLOBAL DRAMÁTICA ---
-    const ambientLight = new THREE.AmbientLight(0x4a2574, 0.75);
-    scene.add(ambientLight);
+    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 800);
+    camera.rotation.order = 'YXZ';
 
-    const moonLight = new THREE.DirectionalLight(0x72efdd, 0.65);
-    moonLight.position.set(25, 45, -55);
+    // Iluminação Dramática & Saturada
+    const hemiLight = new THREE.HemisphereLight(0x8338ec, 0x1b072e, 0.78);
+    scene.add(hemiLight);
+
+    const moonLight = new THREE.DirectionalLight(0x4cc9f0, 0.9);
+    moonLight.position.set(120, 220, -180);
     scene.add(moonLight);
 
-    // --- CÉU ESTRELADO E LUA GIGANTE SATURADA ---
-    const moonGeo = new THREE.SphereGeometry(9, 14, 14);
-    const moonMat = new THREE.MeshBasicMaterial({ color: 0xffd166, fog: false });
+    // Lua Cheia Gigante no Céu
+    const moonGeo = new THREE.SphereGeometry(28, 12, 12);
+    const moonMat = new THREE.MeshBasicMaterial({ color: 0xffe5ec, fog: false });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    moonMesh.position.set(26, 42, -98);
+    moonMesh.position.set(220, 280, -450);
     scene.add(moonMesh);
 
-    // Halo roxo ao redor da lua
-    const haloGeo = new THREE.SphereGeometry(12.5, 14, 14);
-    const haloMat = new THREE.MeshBasicMaterial({ color: 0x9d4edd, transparent: true, opacity: 0.25, fog: false });
-    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
-    haloMesh.position.copy(moonMesh.position);
-    scene.add(haloMesh);
+    const moonHaloGeo = new THREE.SphereGeometry(42, 12, 12);
+    const moonHaloMat = new THREE.MeshBasicMaterial({
+        color: 0x9d4edd,
+        transparent: true,
+        opacity: 0.25,
+        fog: false
+    });
+    const moonHalo = new THREE.Mesh(moonHaloGeo, moonHaloMat);
+    moonHalo.position.copy(moonMesh.position);
+    scene.add(moonHalo);
 
-    // Estrelas pixeladas no céu
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 450;
-    const starPos = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-        starPos[i * 3] = (Math.random() - 0.5) * 240;
-        starPos[i * 3 + 1] = 18 + Math.random() * 65;
-        starPos[i * 3 + 2] = (Math.random() - 0.5) * 240;
+    // ============================================================================
+    // 5. CONSTRUÇÃO DO MUNDO DARK FANTASY EXPANDIDO (3000 x 3000)
+    // ============================================================================
+    const colliders = [];
+    const pointLights = [];
+    const mapLandmarks = []; // Para desenhar no minimapa
+
+    function addBoxCollider(minX, maxX, minZ, maxZ, label = '') {
+        colliders.push({ minX, maxX, minZ, maxZ, label });
     }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xe0aaff, size: 0.75, fog: false });
-    scene.add(new THREE.Points(starGeo, starMat));
 
-    // ============================================================================
-    // ÁREA A: BIBLIOTECA DENTRO DA TORRE ARCANA (Centro em X=0, Z=0)
-    // ============================================================================
+    // --- 5.1 TERRENO EXPANDIDO (3000 x 3000) COM VARIAÇÃO DE BIOMAS E TRILHAS ---
+    const groundGeo = new THREE.PlaneGeometry(GAME_CONFIG.MAP_SIZE, GAME_CONFIG.MAP_SIZE, 64, 64);
+    const groundMat = createRetroMat({ map: textures.darkGround });
+    const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.position.y = 0;
+    scene.add(groundMesh);
+
+    // Muros/Abismo de fronteira nas bordas do mapa 3000x3000
+    const borderMat = createRetroMat({ map: textures.darkStone, color: 0x3c096c });
+    const halfMap = GAME_CONFIG.MAP_HALF;
+    const borderThickness = 20;
+    const borderHeight = 40;
+    [
+        { x: 0, z: -halfMap, w: GAME_CONFIG.MAP_SIZE, d: borderThickness },
+        { x: 0, z: halfMap, w: GAME_CONFIG.MAP_SIZE, d: borderThickness },
+        { x: -halfMap, z: 0, w: borderThickness, d: GAME_CONFIG.MAP_SIZE },
+        { x: halfMap, z: 0, w: borderThickness, d: GAME_CONFIG.MAP_SIZE }
+    ].forEach(b => {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(b.w, borderHeight, b.d), borderMat);
+        wall.position.set(b.x, borderHeight / 2, b.z);
+        scene.add(wall);
+    });
+
+    // --- 5.2 BIBLIOTECA DENTRO DA TORRE ARCANA (Origem do Jogador: 0, 0) ---
     const towerGroup = new THREE.Group();
     scene.add(towerGroup);
+    mapLandmarks.push({ x: 0, z: 0, color: '#00f5d4', size: 5 });
 
-    const TOWER_RADIUS = 8.5;
-    const TOWER_HEIGHT = 11.5;
+    const towerRadius = 11.5;
+    const towerHeight = 13;
+    const wallMat = createRetroMat({ map: textures.darkStone });
+    const shelfMat = createRetroMat({ map: textures.bookshelf });
+    const floorTowerMat = createRetroMat({ map: textures.cobblestone.clone() });
+    floorTowerMat.map.repeat.set(6, 6);
 
-    // Chão de madeira da torre
-    const towerFloorMat = makePS1Mat({ map: textures.woodFloor });
-    const towerFloor = new THREE.Mesh(new THREE.CylinderGeometry(TOWER_RADIUS, TOWER_RADIUS, 0.4, 12), towerFloorMat);
-    towerFloor.position.set(0, -0.15, 0);
+    const towerFloor = new THREE.Mesh(new THREE.CylinderGeometry(towerRadius, towerRadius, 0.4, 12), floorTowerMat);
+    towerFloor.position.set(0, 0.2, 0);
     towerGroup.add(towerFloor);
 
-    // Tapete Arcano Ornamentado no centro
-    const carpetMat = makePS1Mat({ map: textures.arcaneCarpet });
-    const carpet = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.06, 9.5), carpetMat);
-    carpet.position.set(0, 0.06, -1.2);
-    towerGroup.add(carpet);
+    const rugMat = createRetroMat({ color: 0x7209b7 });
+    const rugMesh = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.44, 16), rugMat);
+    rugMesh.position.set(0, 0.21, 0);
+    towerGroup.add(rugMesh);
 
-    // Teto abobadado da torre
-    const stoneWallMat = makePS1Mat({ map: textures.darkStone });
-    const towerCeiling = new THREE.Mesh(new THREE.ConeGeometry(TOWER_RADIUS + 0.6, 5.5, 10), stoneWallMat);
-    towerCeiling.position.set(0, TOWER_HEIGHT + 2.5, 0);
-    towerGroup.add(towerCeiling);
+    const rugTrim = new THREE.Mesh(
+        new THREE.RingGeometry(4.3, 4.7, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffd166, side: THREE.DoubleSide })
+    );
+    rugTrim.rotation.x = -Math.PI / 2;
+    rugTrim.position.y = 0.45;
+    towerGroup.add(rugTrim);
 
-    // Paredes da Torre em 10 segmentos (deixando a abertura frontal em Z = -8.2 para a porta!)
-    const segments = 10;
-    for (let i = 0; i < segments; i++) {
-        const angle = (i / segments) * Math.PI * 2;
-        const wx = Math.sin(angle) * TOWER_RADIUS;
-        const wz = Math.cos(angle) * TOWER_RADIUS;
+    const towerRoof = new THREE.Mesh(new THREE.ConeGeometry(towerRadius + 1.2, 7, 10), wallMat);
+    towerRoof.position.set(0, towerHeight + 3.2, 0);
+    towerGroup.add(towerRoof);
 
-        // O segmento i = 5 aponta diretamente para -Z (Z = -8.5), onde fica a porta!
-        if (i === 5) {
-            // Verga de pedra acima da porta
-            const lintel = new THREE.Mesh(new THREE.BoxGeometry(5.6, TOWER_HEIGHT - 4.4, 1.1), stoneWallMat);
-            lintel.position.set(0, 4.4 + (TOWER_HEIGHT - 4.4) / 2, -TOWER_RADIUS + 0.3);
-            towerGroup.add(lintel);
+    const numSegments = 10;
+    for (let i = 0; i < numSegments; i++) {
+        if (i === 5) continue; // Saída Sul-Norte (-Z)
+        const angle = (i / numSegments) * Math.PI * 2;
+        const wx = Math.sin(angle) * (towerRadius - 0.5);
+        const wz = Math.cos(angle) * (towerRadius - 0.5);
 
-            // Pilares laterais da moldura da porta
-            const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, TOWER_HEIGHT, 1.3), stoneWallMat);
-            leftFrame.position.set(-2.3, TOWER_HEIGHT / 2, -TOWER_RADIUS + 0.3);
-            towerGroup.add(leftFrame);
-            addCollider(-2.3, -TOWER_RADIUS + 0.3, 1.4, 1.3);
+        const wallSeg = new THREE.Mesh(new THREE.BoxGeometry(7.2, towerHeight, 1.2), wallMat);
+        wallSeg.position.set(wx, towerHeight / 2, wz);
+        wallSeg.rotation.y = angle;
+        towerGroup.add(wallSeg);
 
-            const rightFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, TOWER_HEIGHT, 1.3), stoneWallMat);
-            rightFrame.position.set(2.3, TOWER_HEIGHT / 2, -TOWER_RADIUS + 0.3);
-            towerGroup.add(rightFrame);
-            addCollider(2.3, -TOWER_RADIUS + 0.3, 1.4, 1.3);
-            continue;
-        }
-
-        const wallW = 5.6;
-        const wall = new THREE.Mesh(new THREE.BoxGeometry(wallW, TOWER_HEIGHT, 1.0), stoneWallMat);
-        wall.position.set(wx, TOWER_HEIGHT / 2, wz);
-        wall.rotation.y = angle;
-        towerGroup.add(wall);
-
-        // Colisão aproximada da parede da torre
-        addCollider(wx, wz, 3.6, 3.6);
-
-        // Estantes altas de livros encostadas nas paredes internas (exceto perto da porta)
         if (i !== 4 && i !== 6) {
-            const shelfMat = makePS1Mat({ map: textures.bookshelf });
-            const shelf = new THREE.Mesh(new THREE.BoxGeometry(3.8, 5.2, 0.85), shelfMat);
-            const innerR = TOWER_RADIUS - 1.05;
-            shelf.position.set(Math.sin(angle) * innerR, 2.6, Math.cos(angle) * innerR);
+            const shelf = new THREE.Mesh(new THREE.BoxGeometry(5.6, 7.5, 0.9), shelfMat);
+            shelf.position.set(
+                Math.sin(angle) * (towerRadius - 1.4),
+                3.9,
+                Math.cos(angle) * (towerRadius - 1.4)
+            );
             shelf.rotation.y = angle;
             towerGroup.add(shelf);
-            addCollider(shelf.position.x, shelf.position.z, 2.2, 2.2);
         }
     }
 
-    // Mesas de Alquimia com Velas / Candelabros Brilhantes dentro da Biblioteca
-    const candleLights = [];
+    addBoxCollider(-12, -3.2, -12, 12, 'Parede Oeste Torre');
+    addBoxCollider(3.2, 12, -12, 12, 'Parede Leste Torre');
+    addBoxCollider(-12, 12, 8.5, 12, 'Parede Traseira Torre');
+
+    const archLeft = new THREE.Mesh(new THREE.BoxGeometry(2.2, towerHeight, 2.2), wallMat);
+    archLeft.position.set(-3.4, towerHeight / 2, -10.8);
+    towerGroup.add(archLeft);
+
+    const archRight = new THREE.Mesh(new THREE.BoxGeometry(2.2, towerHeight, 2.2), wallMat);
+    archRight.position.set(3.4, towerHeight / 2, -10.8);
+    towerGroup.add(archRight);
+
+    const archTop = new THREE.Mesh(new THREE.BoxGeometry(9.0, 5.8, 2.2), wallMat);
+    archTop.position.set(0, 10.1, -10.8);
+    towerGroup.add(archTop);
+
+    // Mesas de Estudo & Velas
     function createStudyTable(x, z, rotY) {
         const tableGroup = new THREE.Group();
-        tableGroup.position.set(x, 0, z);
-        tableGroup.rotation.y = rotY;
-
-        const woodMat = makePS1Mat({ color: 0x3b1810 });
-        const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.16, 1.2), woodMat);
-        top.position.y = 1.15;
+        const wood = createRetroMat({ color: 0x3b180b });
+        const top = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.25, 1.6), wood);
+        top.position.y = 1.4;
         tableGroup.add(top);
 
-        // Pernas da mesa
-        [[-1.0, -0.45], [1.0, -0.45], [-1.0, 0.45], [1.0, 0.45]].forEach(([lx, lz]) => {
-            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.15, 0.16), woodMat);
-            leg.position.set(lx, 0.575, lz);
-            tableGroup.add(leg);
-        });
+        for (const lx of [-1.3, 1.3]) {
+            for (const lz of [-0.6, 0.6]) {
+                const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.4, 0.22), wood);
+                leg.position.set(lx, 0.7, lz);
+                tableGroup.add(leg);
+            }
+        }
 
-        // Livro aberto sobre a mesa
-        const bookPage = new THREE.Mesh(
-            new THREE.BoxGeometry(0.55, 0.06, 0.4),
-            makePS1Mat({ color: 0xfff3b0 })
-        );
-        bookPage.position.set(-0.3, 1.26, 0.05);
-        bookPage.rotation.y = 0.2;
-        tableGroup.add(bookPage);
-
-        // Vela e Chama Brilhante
         const candle = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.06, 0.07, 0.35, 6),
-            new THREE.MeshBasicMaterial({ color: 0xffe5d9 })
+            new THREE.CylinderGeometry(0.1, 0.12, 0.5, 6),
+            new THREE.MeshBasicMaterial({ color: 0xfff3b0 })
         );
-        candle.position.set(0.55, 1.4, -0.15);
+        candle.position.set(0.8, 1.75, 0);
         tableGroup.add(candle);
 
         const flame = new THREE.Mesh(
-            new THREE.ConeGeometry(0.07, 0.18, 5),
-            new THREE.MeshBasicMaterial({ color: 0xffb703 })
+            new THREE.OctahedronGeometry(0.14, 0),
+            new THREE.MeshBasicMaterial({ color: 0xff9e00 })
         );
-        flame.position.set(0.55, 1.65, -0.15);
+        flame.position.set(0.8, 2.1, 0);
         tableGroup.add(flame);
 
-        const pLight = new THREE.PointLight(0xff9e00, 1.5, 10);
-        pLight.position.set(x + 0.4, 2.0, z);
-        scene.add(pLight);
-        candleLights.push({ light: pLight, flame, baseIntensity: 1.5, phase: Math.random() * 10 });
+        const book = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.16, 0.6),
+            createRetroMat({ color: 0x9b2226 })
+        );
+        book.position.set(-0.4, 1.6, 0.1);
+        book.rotation.y = 0.25;
+        tableGroup.add(book);
 
+        tableGroup.position.set(x, 0.2, z);
+        tableGroup.rotation.y = rotY;
         towerGroup.add(tableGroup);
-        addCollider(x, z, 2.3, 1.2);
+
+        addBoxCollider(x - 1.5, x + 1.5, z - 1.2, z + 1.2, 'Mesa Biblioteca');
     }
 
-    createStudyTable(-4.2, -1.2, 0.35);
-    createStudyTable(4.2, -1.2, -0.35);
+    createStudyTable(-5.5, -2.5, Math.PI / 2);
+    createStudyTable(5.5, -2.5, -Math.PI / 2);
 
-    // Orbe Arcano Flutuante no centro-lateral da Biblioteca (Vibe Shadow Wizard Money Gang)
-    const orbPedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 1.2, 8), stoneWallMat);
-    orbPedestal.position.set(-3.3, 0.6, -4.6);
+    const orbPedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 1.8, 8), wallMat);
+    orbPedestal.position.set(-5.8, 1.1, 3.5);
     towerGroup.add(orbPedestal);
-    addCollider(-3.3, -4.6, 1.1, 1.1);
 
-    const crystalOrb = new THREE.Mesh(
-        new THREE.OctahedronGeometry(0.42, 1),
-        new THREE.MeshBasicMaterial({ color: 0x00f5d4, wireframe: false })
+    const floatingCrystal = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.55, 0),
+        new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
     );
-    crystalOrb.position.set(-3.3, 1.85, -4.6);
-    towerGroup.add(crystalOrb);
+    floatingCrystal.position.set(-5.8, 2.7, 3.5);
+    towerGroup.add(floatingCrystal);
 
-    const orbWire = new THREE.Mesh(
-        new THREE.OctahedronGeometry(0.52, 0),
-        new THREE.MeshBasicMaterial({ color: 0xb5179e, wireframe: true })
-    );
-    orbWire.position.copy(crystalOrb.position);
-    towerGroup.add(orbWire);
+    const towerCenterLight = new THREE.PointLight(0xff9e00, 1.9, 24);
+    towerCenterLight.position.set(0, 5.5, 0);
+    towerGroup.add(towerCenterLight);
+    pointLights.push({ light: towerCenterLight, baseIntensity: 1.9, speed: 5.5 });
 
-    const towerMagicLight = new THREE.PointLight(0x9d4edd, 2.2, 15);
-    towerMagicLight.position.set(0, 5.5, 0);
-    scene.add(towerMagicLight);
+    const crystalLight = new THREE.PointLight(0x00f5d4, 1.6, 15);
+    crystalLight.position.set(-5.8, 2.8, 3.5);
+    towerGroup.add(crystalLight);
+    pointLights.push({ light: crystalLight, baseIntensity: 1.6, speed: 3.2 });
 
-    // ============================================================================
-    // PORTA DUPLA INTERATIVA DA TORRE (TECLA [E])
-    // ============================================================================
-    const doorSystem = {
+    // --- 5.3 PORTA DUPLA INTERATIVA (TECLA E) ---
+    const doorState = {
         isOpen: false,
         currentAngle: 0,
         targetAngle: 0,
-        doorZ: -8.2
+        colliderIndex: -1
     };
 
-    const doorMat = makePS1Mat({ map: textures.heavyDoor });
-
-    // Folha Esquerda (Pivô em X = -1.6)
+    const doorMat = createRetroMat({ map: textures.ancientWood });
     const leftDoorPivot = new THREE.Group();
-    leftDoorPivot.position.set(-1.6, 0, doorSystem.doorZ);
-    const leftDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.35, 0.24), doorMat);
-    leftDoorMesh.position.set(0.8, 2.175, 0);
-    leftDoorPivot.add(leftDoorMesh);
+    leftDoorPivot.position.set(-2.3, 0.2, -10.8);
     scene.add(leftDoorPivot);
 
-    // Folha Direita (Pivô em X = +1.6)
+    const leftDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.25, 6.8, 0.35), doorMat);
+    leftDoorMesh.position.set(1.125, 3.4, 0);
+    leftDoorPivot.add(leftDoorMesh);
+
     const rightDoorPivot = new THREE.Group();
-    rightDoorPivot.position.set(1.6, 0, doorSystem.doorZ);
-    const rightDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.35, 0.24), doorMat);
-    rightDoorMesh.position.set(-0.8, 2.175, 0);
-    rightDoorPivot.add(rightDoorMesh);
+    rightDoorPivot.position.set(2.3, 0.2, -10.8);
     scene.add(rightDoorPivot);
 
-    // Colisor dinâmico da porta fechada
-    const doorCollider = addCollider(0, doorSystem.doorZ, 3.2, 0.45, 0, 4.4, 'door');
+    const rightDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(2.25, 6.8, 0.35), doorMat);
+    rightDoorMesh.position.set(-1.125, 3.4, 0);
+    rightDoorPivot.add(rightDoorMesh);
+
+    addBoxCollider(-2.4, 2.4, -11.4, -10.2, 'Porta da Torre');
+    doorState.colliderIndex = colliders.length - 1;
 
     function toggleTowerDoor() {
-        doorSystem.isOpen = !doorSystem.isOpen;
-        doorSystem.targetAngle = doorSystem.isOpen ? Math.PI * 0.56 : 0;
-        audio.playDoorSound(doorSystem.isOpen);
+        doorState.isOpen = !doorState.isOpen;
+        doorState.targetAngle = doorState.isOpen ? Math.PI * 0.48 : 0;
+        audio.playDoorSound(doorState.isOpen);
 
-        // Ativa ou desativa colisão física da passagem
-        if (doorSystem.isOpen) {
-            doorCollider.maxY = -10; // Libera passagem
+        const doorCol = colliders[doorState.colliderIndex];
+        if (doorState.isOpen) {
+            doorCol.minX = 9999;
+            doorCol.maxX = 9999;
         } else {
-            doorCollider.maxY = 4.4; // Bloqueia passagem
+            doorCol.minX = -2.4;
+            doorCol.maxX = 2.4;
         }
     }
 
-    // ============================================================================
-    // ÁREA B: TERRENO EXTERNO, CAMINHO DE PEDRAS E FLORESTA DARK FANTASY
-    // ============================================================================
-    // Terreno antes do abismo (de Z = +20 até Z = -46)
-    const groundBeforeMat = makePS1Mat({ map: textures.darkGrass });
-    const groundBefore = new THREE.Mesh(new THREE.PlaneGeometry(160, 68), groundBeforeMat);
-    groundBefore.rotation.x = -Math.PI / 2;
-    groundBefore.position.set(0, 0, -12);
-    scene.add(groundBefore);
+    // --- 5.4 CAMINHO DE PEDRAS PRINCIPAL & ESTRADAS SECUNDÁRIAS NO MAPA 3000x3000 ---
+    const pathMat = createRetroMat({ map: textures.cobblestone });
 
-    // Terreno após o abismo (Castelo, de Z = -74 até Z = -140)
-    const groundAfter = new THREE.Mesh(new THREE.PlaneGeometry(160, 68), groundBeforeMat);
-    groundAfter.rotation.x = -Math.PI / 2;
-    groundAfter.position.set(0, 0, -108);
-    scene.add(groundAfter);
-
-    // Caminho de Pedras (Cobblestone) guiando da saída da Torre (Z = -8.5) até a Ponte (Z = -46)
-    const pathMat = makePS1Mat({ map: textures.cobblePath });
-    const stonePath = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.08, 37.5), pathMat);
-    stonePath.position.set(0, 0.02, -27.2);
+    // Estrada Norte (Torre -> Ponte -> Castelo)
+    const stonePath = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.16, 46), pathMat);
+    stonePath.position.set(0, 0.08, -34);
     scene.add(stonePath);
 
-    // Pedras soltas decorativas nas bordas do caminho
-    const edgeStoneMat = makePS1Mat({ color: 0x3b3355 });
-    for (let z = -10; z >= -45; z -= 2.4) {
-        [-2.25, 2.25].forEach((sideX) => {
-            const pebble = new THREE.Mesh(
-                new THREE.DodecahedronGeometry(0.32 + Math.random() * 0.2, 0),
-                edgeStoneMat
-            );
-            pebble.position.set(sideX + (Math.random() - 0.5) * 0.35, 0.14, z);
-            pebble.rotation.set(Math.random(), Math.random(), 0);
-            scene.add(pebble);
-        });
+    // Estradas de exploração Leste-Oeste cruzando o reino sombrio
+    const crossRoadEW = new THREE.Mesh(new THREE.BoxGeometry(1400, 0.12, 8), pathMat);
+    crossRoadEW.position.set(0, 0.06, -34);
+    scene.add(crossRoadEW);
+
+    const crossRoadNS = new THREE.Mesh(new THREE.BoxGeometry(8, 0.12, 1400), pathMat);
+    crossRoadNS.position.set(0, 0.06, 200);
+    scene.add(crossRoadNS);
+
+    for (let z = -14; z >= -55; z -= 2.4) {
+        const slab = new THREE.Mesh(
+            new THREE.BoxGeometry(3.8 + Math.sin(z) * 0.5, 0.22, 1.5),
+            createRetroMat({ color: 0x4a3f5c })
+        );
+        slab.position.set(Math.cos(z * 0.7) * 0.45, 0.11, z);
+        slab.rotation.y = Math.sin(z) * 0.08;
+        scene.add(slab);
     }
 
-    // Função para criar Árvores Dark Fantasy Retorcidas (Low-Poly PS1)
-    const trunkMat = makePS1Mat({ color: 0x1b0d24 });
-    const foliageColors = [0x240046, 0x3c096c, 0x102a43, 0x1b4332];
+    // --- 5.5 PONTE SOBRE O ABISMO E CASTELO DARK ---
+    const chasmMat = new THREE.MeshBasicMaterial({ color: 0x05010a });
+    const chasmMesh = new THREE.Mesh(new THREE.PlaneGeometry(240, 26), chasmMat);
+    chasmMesh.rotation.x = -Math.PI / 2;
+    chasmMesh.position.set(0, 0.02, -70);
+    scene.add(chasmMesh);
 
-    function createDarkTree(x, z, scale = 1.0) {
-        const tree = new THREE.Group();
-        tree.position.set(x, 0, z);
+    const riverGlowMat = new THREE.MeshBasicMaterial({ color: 0x5a189a });
+    const riverGlow = new THREE.Mesh(new THREE.PlaneGeometry(240, 8), riverGlowMat);
+    riverGlow.rotation.x = -Math.PI / 2;
+    riverGlow.position.set(0, 0.04, -70);
+    scene.add(riverGlow);
 
-        const trunkH = 3.8 * scale;
-        const trunk = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.22 * scale, 0.48 * scale, trunkH, 5),
-            trunkMat
+    const bridgeGroup = new THREE.Group();
+    scene.add(bridgeGroup);
+
+    const bridgeDeck = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.6, 28), pathMat);
+    bridgeDeck.position.set(0, 0.35, -70);
+    bridgeGroup.add(bridgeDeck);
+
+    const postMat = createRetroMat({ map: textures.darkStone });
+    for (let z = -57; z >= -83; z -= 4.3) {
+        for (const side of [-2.85, 2.85]) {
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.9, 0.55), postMat);
+            post.position.set(side, 1.3, z);
+            bridgeGroup.add(post);
+        }
+    }
+    for (const side of [-2.85, 2.85]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 27.5), postMat);
+        rail.position.set(side, 1.85, -70);
+        bridgeGroup.add(rail);
+    }
+
+    addBoxCollider(-120, -3.1, -83, -57, 'Abismo Oeste');
+    addBoxCollider(3.1, 120, -83, -57, 'Abismo Leste');
+
+    // Castelo Dark ao Norte
+    const castleGroup = new THREE.Group();
+    castleGroup.position.set(0, 0, -108);
+    scene.add(castleGroup);
+    mapLandmarks.push({ x: 0, z: -108, color: '#ff0a54', size: 6 });
+
+    const castleWallMat = createRetroMat({ map: textures.darkStone });
+    const castleRoofMat = createRetroMat({ color: 0x240046 });
+
+    const frontWallLeft = new THREE.Mesh(new THREE.BoxGeometry(14, 18, 3), castleWallMat);
+    frontWallLeft.position.set(-10.5, 9, 14);
+    castleGroup.add(frontWallLeft);
+
+    const frontWallRight = new THREE.Mesh(new THREE.BoxGeometry(14, 18, 3), castleWallMat);
+    frontWallRight.position.set(10.5, 9, 14);
+    castleGroup.add(frontWallRight);
+
+    const gateArch = new THREE.Mesh(new THREE.BoxGeometry(8, 9, 3.2), castleWallMat);
+    gateArch.position.set(0, 13.5, 14);
+    castleGroup.add(gateArch);
+
+    const gatePortal = new THREE.Mesh(
+        new THREE.BoxGeometry(6.8, 8.8, 0.6),
+        new THREE.MeshBasicMaterial({ map: textures.castleGate })
+    );
+    gatePortal.position.set(0, 4.4, 14.2);
+    castleGroup.add(gatePortal);
+
+    const gateLight = new THREE.PointLight(0xff0a54, 2.4, 28);
+    gateLight.position.set(0, 6, 17);
+    castleGroup.add(gateLight);
+    pointLights.push({ light: gateLight, baseIntensity: 2.4, speed: 3.8 });
+
+    const keepBody = new THREE.Mesh(new THREE.BoxGeometry(24, 34, 22), castleWallMat);
+    keepBody.position.set(0, 17, -2);
+    castleGroup.add(keepBody);
+
+    const keepRoof = new THREE.Mesh(new THREE.ConeGeometry(18, 16, 4), castleRoofMat);
+    keepRoof.position.set(0, 42, -2);
+    keepRoof.rotation.y = Math.PI / 4;
+    castleGroup.add(keepRoof);
+
+    const spirePositions = [
+        [-16, 14, 24], [16, 14, 24],
+        [-15, -12, 30], [15, -12, 30],
+        [0, -4, 44]
+    ];
+
+    spirePositions.forEach(([tx, tz, th]) => {
+        const spire = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.3, th, 8), castleWallMat);
+        spire.position.set(tx, th / 2, tz);
+        castleGroup.add(spire);
+
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(3.6, 9, 8), castleRoofMat);
+        cone.position.set(tx, th + 4.5, tz);
+        castleGroup.add(cone);
+
+        const win = new THREE.Mesh(
+            new THREE.BoxGeometry(0.9, 2.2, 0.4),
+            new THREE.MeshBasicMaterial({ color: 0xffbe0b })
         );
-        trunk.position.y = trunkH / 2;
+        win.position.set(tx, th * 0.72, tz + 2.9);
+        castleGroup.add(win);
+    });
+
+    addBoxCollider(-20, 20, -122, -92.5, 'Castelo Dark');
+
+    // --- 5.6 ELEMENTOS DE CENÁRIO DARK FANTASY PELO MAPA EXPANDIDO (3000 x 3000) ---
+    const barkMat = createRetroMat({ map: textures.treeBark });
+    const leavesMat = createRetroMat({ map: textures.foliage });
+    const tombStoneMat = createRetroMat({ map: textures.darkStone, color: 0x7b728a });
+    const rockMat = createRetroMat({ map: textures.cobblestone, color: 0x524863 });
+
+    // Árvore Sombria com copa ou Árvore Seca Retorcida
+    function createDarkTree(x, z, scale = 1, isDeadTree = false) {
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.32 * scale, 0.68 * scale, 5.5 * scale, 6),
+            barkMat
+        );
+        trunk.position.y = 2.75 * scale;
         trunk.rotation.z = (Math.random() - 0.5) * 0.14;
         tree.add(trunk);
 
-        const fColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
-        const leafMat = makePS1Mat({ color: fColor });
-
-        // 3 camadas pontiagudas góticas
-        for (let tier = 0; tier < 3; tier++) {
-            const cone = new THREE.Mesh(
-                new THREE.ConeGeometry((2.1 - tier * 0.45) * scale, (2.6 - tier * 0.3) * scale, 6),
-                leafMat
-            );
-            cone.position.y = trunkH + tier * 1.25 * scale;
-            cone.rotation.y = Math.random() * Math.PI;
-            tree.add(cone);
-        }
-
-        scene.add(tree);
-        addCollider(x, z, 1.3 * scale, 1.3 * scale);
-    }
-
-    // Povoar Floresta Densa ao redor da Torre e do Caminho de Pedras
-    for (let z = -6; z >= -44; z -= 4.2) {
-        // Lado Esquerdo
-        createDarkTree(-5.2 - Math.random() * 2.5, z + (Math.random() - 0.5) * 1.5, 0.95 + Math.random() * 0.4);
-        createDarkTree(-11.0 - Math.random() * 5.0, z + (Math.random() - 0.5) * 2.0, 1.1 + Math.random() * 0.5);
-        // Lado Direito
-        createDarkTree(5.2 + Math.random() * 2.5, z + (Math.random() - 0.5) * 1.5, 0.95 + Math.random() * 0.4);
-        createDarkTree(11.0 + Math.random() * 5.0, z + (Math.random() - 0.5) * 2.0, 1.1 + Math.random() * 0.5);
-    }
-    // Árvores atrás da torre
-    for (let x = -22; x <= 22; x += 5) {
-        if (Math.abs(x) > 9) {
-            createDarkTree(x, 12 + Math.random() * 4, 1.2);
-        }
-    }
-
-    // Barreiras invisíveis laterais na trilha para impedir que o jogador se perca no vazio infinito
-    addCollider(-16, -25, 2, 50);
-    addCollider(16, -25, 2, 50);
-    addCollider(0, 15, 36, 2);
-
-    // Tochas / Lanternas Mágicas iluminando a Trilha Sombria e a Ponte
-    function createMagicTorch(x, z, colorHex = 0xff9e00) {
-        const post = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.11, 0.15, 2.5, 6),
-            makePS1Mat({ color: 0x1a1a2e })
-        );
-        post.position.set(x, 1.25, z);
-        scene.add(post);
-
-        const brazier = new THREE.Mesh(
-            new THREE.BoxGeometry(0.36, 0.28, 0.36),
-            makePS1Mat({ color: 0xffb703 })
-        );
-        brazier.position.set(x, 2.55, z);
-        scene.add(brazier);
-
-        const flame = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.24, 0),
-            new THREE.MeshBasicMaterial({ color: colorHex })
-        );
-        flame.position.set(x, 2.88, z);
-        scene.add(flame);
-
-        const light = new THREE.PointLight(colorHex, 1.85, 13);
-        light.position.set(x, 3.2, z);
-        scene.add(light);
-
-        candleLights.push({ light, flame, baseIntensity: 1.85, phase: Math.random() * 10 });
-    }
-
-    // Lanternas ao longo do caminho de pedras
-    createMagicTorch(-2.7, -13, 0xff9e00);
-    createMagicTorch(2.7, -13, 0xff9e00);
-    createMagicTorch(-2.7, -25, 0x00f5d4);
-    createMagicTorch(2.7, -25, 0x00f5d4);
-    createMagicTorch(-2.7, -37, 0xff0a54);
-    createMagicTorch(2.7, -37, 0xff0a54);
-
-    // ============================================================================
-    // ÁREA C: ABISMO MÍSTICO E PONTE MEDIEVAL DE PEDRA (Z = -46 até Z = -74)
-    // ============================================================================
-    // Rio / Abismo luminoso abaixo da ponte (Y = -8)
-    const abyssMat = makePS1Mat({ map: textures.abyssWater });
-    const abyssRiver = new THREE.Mesh(new THREE.PlaneGeometry(160, 28), abyssMat);
-    abyssRiver.rotation.x = -Math.PI / 2;
-    abyssRiver.position.set(0, -7.5, -60);
-    scene.add(abyssRiver);
-
-    // Paredes do penhasco do abismo
-    const cliffNorth = new THREE.Mesh(new THREE.BoxGeometry(160, 8, 1), stoneWallMat);
-    cliffNorth.position.set(0, -4, -46);
-    scene.add(cliffNorth);
-
-    const cliffSouth = new THREE.Mesh(new THREE.BoxGeometry(160, 8, 1), stoneWallMat);
-    cliffSouth.position.set(0, -4, -74);
-    scene.add(cliffSouth);
-
-    // Plataforma da Ponte de Pedra (Largura 4.6, Comprimento 28, de Z = -46 a Z = -74)
-    const BRIDGE_Z_START = -46;
-    const BRIDGE_Z_END = -74;
-    const BRIDGE_WIDTH = 4.6;
-
-    const bridgeDeck = new THREE.Mesh(
-        new THREE.BoxGeometry(BRIDGE_WIDTH, 0.7, 28.4),
-        stoneWallMat
-    );
-    bridgeDeck.position.set(0, -0.25, -60);
-    scene.add(bridgeDeck);
-
-    // Arcos de sustentação sob a ponte
-    for (let bz = -51; bz >= -69; bz -= 9) {
-        const pillar = new THREE.Mesh(new THREE.BoxGeometry(4.2, 7.5, 1.8), stoneWallMat);
-        pillar.position.set(0, -4.0, bz);
-        scene.add(pillar);
-    }
-
-    // Parapeitos e Pilares da Ponte (com colisão sólida para não cair no abismo!)
-    const parapetLeft = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 28.4), stoneWallMat);
-    parapetLeft.position.set(-BRIDGE_WIDTH / 2 + 0.2, 0.65, -60);
-    scene.add(parapetLeft);
-    addCollider(-BRIDGE_WIDTH / 2 + 0.1, -60, 0.6, 28.6);
-
-    const parapetRight = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 28.4), stoneWallMat);
-    parapetRight.position.set(BRIDGE_WIDTH / 2 - 0.2, 0.65, -60);
-    scene.add(parapetRight);
-    addCollider(BRIDGE_WIDTH / 2 - 0.1, -60, 0.6, 28.6);
-
-    // Pilares ornamentados com tochas roxas/cianas na ponte
-    [-46.5, -55.5, -64.5, -73.5].forEach((pz, idx) => {
-        [-BRIDGE_WIDTH / 2 + 0.2, BRIDGE_WIDTH / 2 - 0.2].forEach((px) => {
-            const post = new THREE.Mesh(new THREE.BoxGeometry(0.75, 2.2, 0.75), stoneWallMat);
-            post.position.set(px, 1.1, pz);
-            scene.add(post);
-        });
-        if (idx % 2 === 0) {
-            createMagicTorch(-BRIDGE_WIDTH / 2 + 0.2, pz, 0x9d4edd);
-            createMagicTorch(BRIDGE_WIDTH / 2 - 0.2, pz, 0x9d4edd);
-        }
-    });
-
-    // ============================================================================
-    // ÁREA D: O CASTELO DARK FANTASY MONUMENTAL (Ao fim da ponte, Z <= -77)
-    // ============================================================================
-    const castleGroup = new THREE.Group();
-    scene.add(castleGroup);
-
-    const castleDarkMat = makePS1Mat({ map: textures.darkStone });
-    const roofMat = makePS1Mat({ color: 0x240046 });
-    const vitralMat = new THREE.MeshBasicMaterial({ map: textures.stainedGlass });
-
-    // Caminho final até o portão do castelo (Z = -74 até -81)
-    const castleApproach = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.1, 7.5), pathMat);
-    castleApproach.position.set(0, 0.03, -77.5);
-    castleGroup.add(castleApproach);
-
-    // Muralha Frontal Monumental
-    const mainWall = new THREE.Mesh(new THREE.BoxGeometry(34, 15, 4), castleDarkMat);
-    mainWall.position.set(0, 7.5, -83);
-    castleGroup.add(mainWall);
-    addCollider(0, -83, 34, 4);
-
-    // Portão Monumental do Castelo (Arco com grade dourada/roxa)
-    const gateRecess = new THREE.Mesh(
-        new THREE.BoxGeometry(5.2, 6.8, 4.3),
-        new THREE.MeshBasicMaterial({ color: 0x090212 })
-    );
-    gateRecess.position.set(0, 3.4, -83);
-    castleGroup.add(gateRecess);
-
-    // Barras da Grade Portcullis
-    const goldGateMat = makePS1Mat({ color: 0xffb703 });
-    for (let gx = -2.2; gx <= 2.2; gx += 0.55) {
-        const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 6.8, 5), goldGateMat);
-        bar.position.set(gx, 3.4, -80.9);
-        castleGroup.add(bar);
-    }
-    for (let gy = 1.2; gy <= 6.2; gy += 1.25) {
-        const hBar = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.14, 0.14), goldGateMat);
-        hBar.position.set(0, gy, -80.9);
-        castleGroup.add(hBar);
-    }
-
-    // Estandartes Roxos e Carmesim flanqueando o Portão
-    const bannerMat = makePS1Mat({ color: 0x9d0208 });
-    [-4.2, 4.2].forEach((bx) => {
-        const banner = new THREE.Mesh(new THREE.BoxGeometry(1.4, 5.5, 0.15), bannerMat);
-        banner.position.set(bx, 6.5, -80.85);
-        castleGroup.add(banner);
-    });
-
-    // Torres Pontiagudas Góticas do Castelo
-    function createCastleSpire(x, z, radius, height, hasVitral = true) {
-        const spireGroup = new THREE.Group();
-        spireGroup.position.set(x, 0, z);
-
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.08, height, 8), castleDarkMat);
-        body.position.y = height / 2;
-        spireGroup.add(body);
-
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.25, height * 0.45, 8), roofMat);
-        roof.position.y = height + (height * 0.45) / 2;
-        spireGroup.add(roof);
-
-        if (hasVitral) {
-            const win = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.2, 0.3), vitralMat);
-            win.position.set(0, height * 0.62, radius + 0.02);
-            spireGroup.add(win);
-        }
-
-        castleGroup.add(spireGroup);
-        addCollider(x, z, radius * 2, radius * 2);
-    }
-
-    // Torres gêmeas do portão
-    createCastleSpire(-4.2, -80.5, 2.2, 18, true);
-    createCastleSpire(4.2, -80.5, 2.2, 18, true);
-
-    // Torres laterais das muralhas
-    createCastleSpire(-16.5, -82.5, 3.0, 22, true);
-    createCastleSpire(16.5, -82.5, 3.0, 22, true);
-
-    // Torreão Central Gigante ao fundo do Castelo
-    createCastleSpire(0, -93, 5.2, 29, true);
-
-    // Iluminação Dramática no Portão do Castelo
-    const castleGateLight = new THREE.PointLight(0xff0a54, 2.8, 22);
-    castleGateLight.position.set(0, 5.5, -78.5);
-    scene.add(castleGateLight);
-
-    const castleTopGlow = new THREE.PointLight(0x9d4edd, 3.2, 35);
-    castleTopGlow.position.set(0, 20, -82);
-    scene.add(castleTopGlow);
-
-    // ============================================================================
-    // 7. CONTROLES DO JOGADOR (WASD, PULO COM ESPAÇO, POINTER LOCK, INTERAÇÃO [E])
-    // ============================================================================
-    const player = {
-        pos: new THREE.Vector3(0, 1.75, 2.5), // Começa dentro da Biblioteca olhando para a porta (-Z)
-        vel: new THREE.Vector3(0, 0, 0),
-        yaw: 0,
-        pitch: 0,
-        height: 1.75,
-        radius: 0.55,
-        speed: 7.4,
-        jumpForce: 8.6,
-        gravity: 21.0,
-        onGround: true,
-        bobTimer: 0,
-        stepAccumulator: 0
-    };
-
-    const keys = {
-        KeyW: false,
-        KeyA: false,
-        KeyS: false,
-        KeyD: false,
-        Space: false
-    };
-
-    let isPointerLocked = false;
-    let mouseSensitivity = 0.0022;
-
-    const menuScreen = document.getElementById('menu-screen');
-    const hud = document.getElementById('hud');
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const muteBtn = document.getElementById('mute-btn');
-    const sensSlider = document.getElementById('sens-slider');
-    const sensVal = document.getElementById('sens-val');
-    const interactPrompt = document.getElementById('interact-prompt');
-    const crosshair = document.getElementById('crosshair');
-    const locationTitle = document.getElementById('location-title');
-    const locationSub = document.getElementById('location-sub');
-    const viewmodel = document.getElementById('viewmodel-container');
-
-    sensSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        sensVal.textContent = val.toFixed(1) + 'x';
-        mouseSensitivity = 0.0022 * val;
-    });
-
-    playBtn.addEventListener('click', () => {
-        audio.init();
-        canvas.requestPointerLock();
-    });
-
-    pauseBtn.addEventListener('click', () => {
-        if (document.pointerLockElement === canvas) {
-            document.exitPointerLock();
-        }
-        menuScreen.style.display = 'flex';
-        hud.style.display = 'none';
-    });
-
-    muteBtn.addEventListener('click', () => {
-        audio.init();
-        const muted = audio.toggleMute();
-        muteBtn.textContent = muted ? '🔇 SOM: OFF' : '🔊 SOM: ON';
-    });
-
-    document.addEventListener('pointerlockchange', () => {
-        isPointerLocked = document.pointerLockElement === canvas;
-        if (isPointerLocked) {
-            menuScreen.style.display = 'none';
-            hud.style.display = 'block';
+        if (isDeadTree) {
+            // Galhos secos retorcidos sem folhas
+            for (let b = 0; b < 3; b++) {
+                const branch = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.1 * scale, 0.24 * scale, 3.2 * scale, 5),
+                    barkMat
+                );
+                branch.position.set(
+                    Math.cos(b * 2.1) * 0.9 * scale,
+                    (4.2 + b * 0.5) * scale,
+                    Math.sin(b * 2.1) * 0.9 * scale
+                );
+                branch.rotation.z = (b % 2 === 0 ? 1 : -1) * 0.65;
+                branch.rotation.x = 0.35;
+                tree.add(branch);
+            }
         } else {
-            menuScreen.style.display = 'flex';
-            hud.style.display = 'none';
-            // Limpar teclas presas
-            Object.keys(keys).forEach(k => keys[k] = false);
-        }
-    });
+            const tier1 = new THREE.Mesh(new THREE.ConeGeometry(2.6 * scale, 4.2 * scale, 6), leavesMat);
+            tier1.position.y = 5.4 * scale;
+            tree.add(tier1);
 
-    // Rotação da câmera pelo Mouse
-    document.addEventListener('mousemove', (e) => {
-        if (!isPointerLocked) return;
-        player.yaw -= e.movementX * mouseSensitivity;
-        player.pitch -= e.movementY * mouseSensitivity;
-        const maxPitch = Math.PI / 2 - 0.08;
-        player.pitch = Math.max(-maxPitch, Math.min(maxPitch, player.pitch));
-    });
-
-    // Teclado (WASD, Espaço, E)
-    window.addEventListener('keydown', (e) => {
-        if (e.code in keys) {
-            keys[e.code] = true;
+            const tier2 = new THREE.Mesh(new THREE.ConeGeometry(1.9 * scale, 3.5 * scale, 6), leavesMat);
+            tier2.position.y = 7.4 * scale;
+            tree.add(tier2);
         }
-        if (e.code === 'Space' && isPointerLocked && player.onGround) {
-            player.vel.y = player.jumpForce;
-            player.onGround = false;
-            audio.playJump();
-        }
-        if (e.code === 'KeyE' && isPointerLocked) {
-            if (canInteractWithDoor()) {
-                toggleTowerDoor();
-            }
-        }
-    });
 
-    window.addEventListener('keyup', (e) => {
-        if (e.code in keys) {
-            keys[e.code] = false;
-        }
-    });
-
-    // Verifica se o jogador está perto da porta e olhando na direção dela
-    function canInteractWithDoor() {
-        const doorCenter = new THREE.Vector3(0, 1.8, doorSystem.doorZ);
-        const dist = player.pos.distanceTo(doorCenter);
-        if (dist > 4.6) return false;
-
-        const lookDir = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
-        const toDoor = doorCenter.clone().sub(player.pos).normalize();
-        return lookDir.dot(toDoor) > 0.55;
+        tree.position.set(x, 0, z);
+        scene.add(tree);
+        addBoxCollider(x - 0.8 * scale, x + 0.8 * scale, z - 0.8 * scale, z + 0.8 * scale, 'Árvore');
     }
 
-    // Verificação de Colisão Cilindro vs AABB
-    function checkCollision(nx, ny, nz) {
-        const feetY = ny - player.height;
-        const headY = ny + 0.15;
-        const r = player.radius;
+    // Lápide Gótica
+    function createTombstone(x, z, rotY) {
+        const tombGroup = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.35, 0.7), tombStoneMat);
+        base.position.y = 0.175;
+        tombGroup.add(base);
 
-        for (let i = 0; i < colliders.length; i++) {
-            const b = colliders[i];
-            if (headY < b.minY || feetY > b.maxY) continue;
+        const slab = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.8, 0.32), tombStoneMat);
+        slab.position.y = 1.1;
+        slab.rotation.z = (Math.random() - 0.5) * 0.16;
+        tombGroup.add(slab);
 
-            const closestX = Math.max(b.minX, Math.min(nx, b.maxX));
-            const closestZ = Math.max(b.minZ, Math.min(nz, b.maxZ));
-            const dx = nx - closestX;
-            const dz = nz - closestZ;
-
-            if ((dx * dx + dz * dz) < (r * r)) {
-                return true;
-            }
+        // Cruz ou runa brilhante ocasional
+        if (Math.random() > 0.55) {
+            const rune = new THREE.Mesh(
+                new THREE.BoxGeometry(0.25, 0.65, 0.36),
+                new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
+            );
+            rune.position.y = 1.15;
+            tombGroup.add(rune);
         }
+
+        tombGroup.position.set(x, 0, z);
+        tombGroup.rotation.y = rotY;
+        scene.add(tombGroup);
+    }
+
+    // Ruínas Antigas (Pilares quebrados e arcos)
+    function createAncientRuin(x, z, rotY) {
+        const ruinGroup = new THREE.Group();
+        for (let p = -1; p <= 1; p += 2) {
+            const h = 4.5 + Math.random() * 4.5;
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, h, 7), wallMat);
+            pillar.position.set(p * 3.2, h / 2, 0);
+            ruinGroup.add(pillar);
+            addBoxCollider(x + p * 3.2 - 0.9, x + p * 3.2 + 0.9, z - 0.9, z + 0.9, 'Pilar Ruína');
+        }
+        if (Math.random() > 0.4) {
+            const lintel = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.9, 1.4), wallMat);
+            lintel.position.set(0, 6.2, 0);
+            lintel.rotation.z = 0.08;
+            ruinGroup.add(lintel);
+        }
+        ruinGroup.position.set(x, 0, z);
+        ruinGroup.rotation.y = rotY;
+        scene.add(ruinGroup);
+        mapLandmarks.push({ x, z, color: '#9d4edd', size: 3 });
+    }
+
+    // Rochas Sombrias
+    function createDarkRock(x, z, scale = 1) {
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4 * scale, 0), rockMat);
+        rock.position.set(x, 0.85 * scale, z);
+        rock.rotation.set(Math.random() * 2, Math.random() * 2, 0);
+        scene.add(rock);
+        if (scale > 1.1) {
+            addBoxCollider(x - 1.1 * scale, x + 1.1 * scale, z - 1.1 * scale, z + 1.1 * scale, 'Rocha');
+        }
+    }
+
+    // Árvores ao longo da trilha principal
+    const pathTrees = [
+        [-6.5, -17, 1.1], [6.8, -19, 1.0],
+        [-8.0, -25, 1.3], [7.5, -27, 1.2],
+        [-6.2, -33, 0.95], [8.8, -35, 1.35],
+        [-9.2, -41, 1.25], [6.4, -43, 1.05],
+        [-7.0, -50, 1.15], [7.8, -51, 1.2],
+        [-14, -22, 1.4], [14, -24, 1.3],
+        [-16, -38, 1.5], [15, -40, 1.4],
+        [-13, -48, 1.2], [16, -49, 1.35]
+    ];
+    pathTrees.forEach(([x, z, s]) => createDarkTree(x, z, s, false));
+
+    // Povoando o mapa expandido 3000x3000 com árvores secas, lápides, ruínas e pedras
+    function isSafeZone(x, z) {
+        // Evita bloquear o interior da torre, a trilha principal, a ponte e o castelo
+        if (Math.abs(x) < 16 && z > -130 && z < 16) return true;
+        if (z > -85 && z < -55 && Math.abs(x) < 125) return true; // Abismo
+        if (Math.abs(x) < 8 || Math.abs(z + 34) < 8) return true; // Estradas
         return false;
     }
 
-    // Atualiza o nome da área no HUD conforme a coordenada Z
-    let currentZoneId = '';
-    function updateZoneHUD() {
-        let zoneId = 'tower';
-        let title = 'TORRE ARCANA — BIBLIOTECA';
-        let sub = 'Santuário do Arquimago';
+    for (let i = 0; i < 340; i++) {
+        const rx = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 120);
+        const rz = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 120);
+        if (isSafeZone(rx, rz)) continue;
 
-        if (player.pos.z < -8.3 && player.pos.z >= -45.5) {
-            zoneId = 'forest';
-            title = 'TRILHA SOMBRIA';
-            sub = 'Bosque dos Ecos Arcanos';
-        } else if (player.pos.z < -45.5 && player.pos.z >= -74.5) {
-            zoneId = 'bridge';
-            title = 'PONTE DO ABISMO';
-            sub = 'Travessia das Almas Perdidas';
-        } else if (player.pos.z < -74.5) {
-            zoneId = 'castle';
-            title = 'PORTÕES DO CASTELO DARK';
-            sub = 'Cidadela do Rei Feiticeiro';
-        }
-
-        if (zoneId !== currentZoneId) {
-            currentZoneId = zoneId;
-            locationTitle.textContent = title;
-            locationSub.textContent = sub;
-        }
-    }
-
-    // ============================================================================
-    // 8. LOOP PRINCIPAL DE ANIMAÇÃO E FÍSICA
-    // ============================================================================
-    const clock = new THREE.Clock();
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const dt = Math.min(clock.getDelta(), 0.05);
-        const elapsed = clock.getElapsedTime();
-
-        // Animação suave da Porta abrindo/fechando
-        doorSystem.currentAngle += (doorSystem.targetAngle - doorSystem.currentAngle) * Math.min(1, dt * 6.5);
-        leftDoorPivot.rotation.y = -doorSystem.currentAngle;
-        rightDoorPivot.rotation.y = doorSystem.currentAngle;
-
-        // Animação do Orbe Flutuante na Biblioteca e Luzes das Velas/Tochas
-        crystalOrb.rotation.y = elapsed * 1.4;
-        crystalOrb.position.y = 1.85 + Math.sin(elapsed * 2.5) * 0.12;
-        orbWire.rotation.y = -elapsed * 1.1;
-        orbWire.rotation.x = elapsed * 0.7;
-        orbWire.position.y = crystalOrb.position.y;
-
-        for (let i = 0; i < candleLights.length; i++) {
-            const c = candleLights[i];
-            const flicker = Math.sin(elapsed * 11 + c.phase) * 0.18 + Math.cos(elapsed * 19 + c.phase) * 0.1;
-            c.light.intensity = c.baseIntensity + flicker;
-            if (c.flame) {
-                c.flame.scale.y = 1 + flicker * 0.4;
-            }
-        }
-
-        // Animação da água mística no fundo do abismo
-        textures.abyssWater.offset.x = (elapsed * 0.06) % 1;
-        textures.abyssWater.offset.y = (elapsed * 0.03) % 1;
-
-        // Lógica de Movimento em Primeira Pessoa quando ativo
-        if (isPointerLocked) {
-            // Vetores direcionais no plano horizontal
-            const forward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
-            const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
-
-            const moveDir = new THREE.Vector3(0, 0, 0);
-            if (keys.KeyW) moveDir.add(forward);
-            if (keys.KeyS) moveDir.sub(forward);
-            if (keys.KeyD) moveDir.add(right);
-            if (keys.KeyA) moveDir.sub(right);
-
-            const isMoving = moveDir.lengthSq() > 0;
-            if (isMoving) {
-                moveDir.normalize();
-            }
-
-            // Aplicar movimento horizontal com deslizamento nas paredes (sliding collision)
-            const nextX = player.pos.x + moveDir.x * player.speed * dt;
-            if (!checkCollision(nextX, player.pos.y, player.pos.z)) {
-                player.pos.x = nextX;
-            }
-
-            const nextZ = player.pos.z + moveDir.z * player.speed * dt;
-            if (!checkCollision(player.pos.x, player.pos.y, nextZ)) {
-                player.pos.z = nextZ;
-            }
-
-            // Gravidade e Pulo
-            player.vel.y -= player.gravity * dt;
-            player.pos.y += player.vel.y * dt;
-
-            // Altura do chão (0.0 no terreno/biblioteca, 0.10 na ponte)
-            const floorHeight = (player.pos.z < -45.8 && player.pos.z > -74.2) ? 0.10 : 0.0;
-            if (player.pos.y <= floorHeight + player.height) {
-                player.pos.y = floorHeight + player.height;
-                player.vel.y = 0;
-                player.onGround = true;
-            }
-
-            // Head-bobbing (balanço da câmera e do cajado ao andar) + som de passos
-            let bobOffsetY = 0;
-            if (isMoving && player.onGround) {
-                player.bobTimer += dt * 11.5;
-                bobOffsetY = Math.sin(player.bobTimer) * 0.075;
-
-                // Balanço do Cajado Arcano no HUD
-                const staffX = Math.cos(player.bobTimer * 0.5) * 14;
-                const staffY = Math.abs(Math.sin(player.bobTimer * 0.5)) * 16;
-                viewmodel.style.transform = `translate(${staffX}px, ${staffY}px)`;
-
-                player.stepAccumulator += dt * player.speed;
-                if (player.stepAccumulator >= 3.1) {
-                    player.stepAccumulator = 0;
-                    const insideTower = player.pos.z > -8.2;
-                    audio.playFootstep(insideTower);
-                }
-            } else {
-                // Respiração suave do cajado parado
-                const idleY = Math.sin(elapsed * 2.4) * 6;
-                viewmodel.style.transform = `translate(0px, ${idleY}px)`;
-            }
-
-            // Atualizar Câmera
-            camera.position.set(player.pos.x, player.pos.y + bobOffsetY, player.pos.z);
-            camera.rotation.order = 'YXZ';
-            camera.rotation.y = player.yaw;
-            camera.rotation.x = player.pitch;
-
-            // Prompt de Interação com a Porta [E]
-            if (canInteractWithDoor()) {
-                interactPrompt.style.display = 'block';
-                interactPrompt.innerHTML = doorSystem.isOpen
-                    ? 'Pressione <span>[E]</span> para Fechar a Porta'
-                    : 'Pressione <span>[E]</span> para Abrir a Porta';
-                crosshair.classList.add('interact-active');
-            } else {
-                interactPrompt.style.display = 'none';
-                crosshair.classList.remove('interact-active');
-            }
-
-            updateZoneHUD();
+        const roll = Math.random();
+        if (roll < 0.45) {
+            createDarkTree(rx, rz, 0.9 + Math.random() * 0.9, Math.random() > 0.45);
+        } else if (roll < 0.72) {
+            createTombstone(rx, rz, Math.random() * Math.PI * 2);
+        } else if (roll < 0.90) {
+            createDarkRock(rx, rz, 0.8 + Math.random() * 1.4);
         } else {
-            // Câmera inicial posicionada dentro da Biblioteca mirando a porta
-            camera.position.set(player.pos.x, player.pos.y, player.pos.z);
-            camera.rotation.order = 'YXZ';
-            camera.rotation.y = player.yaw;
-            camera.rotation.x = player.pitch;
+            createAncientRuin(rx, rz, Math.random() * Math.PI * 2);
         }
-
-        renderer.render(scene, camera);
     }
 
-    // Iniciar loop ao carregar janela
-    window.onload = function () {
-        animate();
-    };
-    </script>
-</body>
-</html>
+    // Lanternas Mágicas
+    function createMagicLantern(x, z, colorHex) {
+        const group = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 3.6, 5), postMat);
+        pole.position.y = 1.8;
+        group.add(pole);
+
+        const gem = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.32, 0),
+            new THREE.MeshBasicMaterial({ color: colorHex })
+        );
+        gem.position.y = 3.7;
+        group.add(gem);
+
+        group.position.set(x, 0, z);
+        scene.add(group);
+
+        const l = new THREE.PointLight(colorHex, 1.45, 16);
+        l.position.set(x, 3.8, z);
+        scene.add(l);
+        pointLights.push({ light: l, baseIntensity: 1.45, speed: 4.0 + Math.random() * 2 });
+    }
+
+    createMagicLantern(-4.2, -16, 0x00f5d4);
+    createMagicLantern(4.2, -16, 0x00f5d4);
+    createMagicLantern(-4.2, -36, 0x9d4edd);
+    createMagicLantern(4.2, -36, 0x9d4edd);
+    createMagicLantern(-4.0, -54, 0xffbe0b);
+    createMagicLantern(4.0, -54, 0xffbe0b);
+    createMagicLantern(-4.0, -86, 0xff0a54);
+    createMagicLantern(4.0, -86, 0xff0a54);
+
+    // ============================================================================
+    // 6. SISTEMA DE VARA MÁGICA (PROJÉTEIS AZUIS ESFÉRICOS COM PARTÍCULAS)
+    // ============================================================================
+    const activeProjectiles = [];
+    const magicParticles = [];
+
+    const projectileGeo = new THREE.SphereGeometry(0.32, 10, 10);
+    const projectileMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, fog: false });
+    const particleGeo = new THREE.BoxGeometry(0.16, 0.16, 0.16);
+
+    function spawnMagicTrailParticle(pos, colorHex = 0x38b6ff, speedScale = 1.0) {
+        const mat = new THREE.MeshBasicMaterial({
+            color: colorHex,
+            transparent: true,
+            opacity: 0.95,
+            fog: false
+        });
+        const mesh = new THREE.Mesh(particleGeo, mat);
+        mesh.position.copy(pos);
+        mesh.position.x += (Math.random() - 0.5) * 0.35;
+        mesh.position.y += (Math.random() - 0.5) * 0.35;
+        mesh.position.z += (Math.random() - 0.5) * 0.35;
+
+        scene.add(mesh);
+        magicParticles.push({
+            mesh,
+            vel: new THREE.Vector3(
+                (Math.random() - 0.5) * 3.5 * speedScale,
+                (Math.random() - 0.2) * 3.5 * speedScale,
+                (Math.random() - 0.5) * 3.5 * speedScale
+            ),
+            life: 0.35 + Math.random() * 0.2,
+            maxLife: 0.55
+        });
+    }
+
+    function castBlueMagicOrb() {
+        if (!player.isPlaying || player.attackTimer > 0) return;
+        if (player.mp < GAME_CONFIG.WAND_MANA_COST) {
+            showFloatingText('MANA INSUFICIENTE!', '#48bfe3');
+            return;
+        }
+
+        player.mp -= GAME_CONFIG.WAND_MANA_COST;
+        player.attackTimer = GAME_CONFIG.WAND_COOLDOWN;
+        audio.playMagicCast();
+
+        // Animação de recuo do cajado na HUD
+        const vm = document.getElementById('viewmodel-container');
+        vm.style.transform = 'translateY(-18px) rotate(-6deg) scale(1.04)';
+        setTimeout(() => {
+            vm.style.transform = '';
+        }, 110);
+
+        // Direção do disparo: usa o cursor do mouse (convertido para coordenadas normalizadas NDC)
+        // Em Pointer Lock, o cursor fica travado no centro (0, 0); fora dele, segue a posição real do mouse na tela
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouseNDC, camera);
+        const targetPoint = new THREE.Vector3();
+        raycaster.ray.at(80, targetPoint);
+
+        // Ponto de origem ligeiramente à frente e à direita da câmera (ponta do cajado)
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        const spawnPos = camera.position.clone()
+            .addScaledVector(forward, 1.4)
+            .addScaledVector(right, 0.55)
+            .add(new THREE.Vector3(0, -0.35, 0));
+
+        const direction = targetPoint.sub(spawnPos).normalize();
+
+        // Grupo visual do projétil (Núcleo brilhante + Halo Sprite azul radial + Luz dinâmica)
+        const orbGroup = new THREE.Group();
+        orbGroup.position.copy(spawnPos);
+
+        const coreMesh = new THREE.Mesh(projectileGeo, projectileMat);
+        orbGroup.add(coreMesh);
+
+        const spriteMat = new THREE.SpriteMaterial({
+            map: textures.magicOrb,
+            color: 0x00d9ff,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            fog: false
+        });
+        const haloSprite = new THREE.Sprite(spriteMat);
+        haloSprite.scale.set(2.1, 2.1, 1);
+        orbGroup.add(haloSprite);
+
+        const orbLight = new THREE.PointLight(0x00b4d8, 2.2, 14);
+        orbGroup.add(orbLight);
+
+        scene.add(orbGroup);
+
+        activeProjectiles.push({
+            mesh: orbGroup,
+            velocity: direction.multiplyScalar(GAME_CONFIG.PROJECTILE_SPEED),
+            distanceTraveled: 0,
+            damage: player.magicDamage,
+            trailTimer: 0
+        });
+    }
+
+    function updateProjectiles(dt) {
+        for (let i = activeProjectiles.length - 1; i >= 0; i--) {
+            const proj = activeProjectiles[i];
+            const step = proj.velocity.clone().multiplyScalar(dt);
+            proj.mesh.position.add(step);
+            proj.distanceTraveled += step.length();
+
+            // Rastro de partículas azuis brilhantes
+            proj.trailTimer += dt;
+            if (proj.trailTimer >= 0.02) {
+                proj.trailTimer = 0;
+                spawnMagicTrailParticle(proj.mesh.position, Math.random() > 0.4 ? 0x00f5d4 : 0x0096ff, 0.7);
+            }
+
+            let hit = false;
+
+            // 1. Verifica colisão com inimigos
+            for (let j = activeEnemies.length - 1; j >= 0; j--) {
+                const enemy = activeEnemies[j];
+                const enemyCenter = enemy.mesh.position.clone().add(new THREE.Vector3(0, enemy.height * 0.5, 0));
+                const dist = proj.mesh.position.distanceTo(enemyCenter);
+                if (dist <= enemy.hitRadius + GAME_CONFIG.PROJECTILE_RADIUS) {
+                    damageEnemy(enemy, j, proj.damage);
+                    hit = true;
+                    break;
+                }
+            }
+
+            // 2. Verifica alcance máximo ou colisão com chão/paredes
+            if (!hit) {
+                const pos = proj.mesh.position;
+                if (
+                    proj.distanceTraveled >= GAME_CONFIG.PROJECTILE_MAX_RANGE ||
+                    pos.y <= 0.2 ||
+                    checkCollision(pos.x, pos.z, 0.25)
+                ) {
+                    hit = true;
+                }
+            }
+
+            if (hit) {
+                // Explosão de partículas azuis ao impactar
+                for (let p = 0; p < 8; p++) {
+                    spawnMagicTrailParticle(proj.mesh.position, 0x00f5d4, 2.2);
+                }
+                scene.remove(proj.mesh);
+                activeProjectiles.splice(i, 1);
+            }
+        }
+
+        // Atualiza partículas mágicas
+        for (let i = magicParticles.length - 1; i >= 0; i--) {
+            const pt = magicParticles[i];
+            pt.life -= dt;
+            if (pt.life <= 0) {
+                scene.remove(pt.mesh);
+                magicParticles.splice(i, 1);
+            } else {
+                pt.mesh.position.addScaledVector(pt.vel, dt);
+                const scale = pt.life / pt.maxLife;
+                pt.mesh.scale.setScalar(scale);
+                pt.mesh.material.opacity = scale;
+            }
+        }
+    }
+
+    // ============================================================================
+    // 7. NOVOS INIMIGOS (DUENDES E ESQUELETOS) + SPAWN DINÂMICO
+    // ============================================================================
+    const activeEnemies = [];
+    let spawnTimer = 0;
+
+    // Materiais dos inimigos com shader PS1
+    const goblinSkinMat = createRetroMat({ color: 0x2b9348 });
+    const goblinClothMat = createRetroMat({ color: 0x4a1942 });
+    const goblinEyeMat = new THREE.MeshBasicMaterial({ color: 0xff0a54 });
+
+    const skeletonBoneMat = createRetroMat({ color: 0xe9ecef });
+    const skeletonArmorMat = createRetroMat({ color: 0x2b2d42 });
+    const skeletonEyeMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
+
+    function createEnemyMesh(type) {
+        const group = new THREE.Group();
+
+        if (type === 'goblin') {
+            const s = GAME_CONFIG.GOBLIN.SCALE;
+            // Corpo agachado e ágil
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9 * s, 1.0 * s, 0.65 * s), goblinClothMat);
+            torso.position.y = 0.95 * s;
+            group.add(torso);
+
+            // Cabeça grande com orelhas pontudas
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.85 * s, 0.75 * s, 0.8 * s), goblinSkinMat);
+            head.position.set(0, 1.75 * s, 0.15 * s);
+            group.add(head);
+
+            for (const side of [-1, 1]) {
+                const ear = new THREE.Mesh(new THREE.ConeGeometry(0.18 * s, 0.65 * s, 4), goblinSkinMat);
+                ear.position.set(side * 0.6 * s, 1.8 * s, 0.1 * s);
+                ear.rotation.z = -side * 1.1;
+                group.add(ear);
+
+                const eye = new THREE.Mesh(new THREE.BoxGeometry(0.16 * s, 0.12 * s, 0.1 * s), goblinEyeMat);
+                eye.position.set(side * 0.2 * s, 1.8 * s, 0.56 * s);
+                group.add(eye);
+            }
+
+            // Adaga enferrujada
+            const blade = new THREE.Mesh(
+                new THREE.BoxGeometry(0.12 * s, 0.15 * s, 0.95 * s),
+                createRetroMat({ color: 0xadb5bd })
+            );
+            blade.position.set(0.55 * s, 0.95 * s, 0.6 * s);
+            group.add(blade);
+        } else {
+            // Esqueleto: alto, ossudo, caixa torácica e crânio com brilho espectral
+            const s = GAME_CONFIG.SKELETON.SCALE;
+            // Pernas finas de osso
+            for (const side of [-0.25, 0.25]) {
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * s, 0.1 * s, 1.1 * s, 5), skeletonBoneMat);
+                leg.position.set(side * s, 0.55 * s, 0);
+                group.add(leg);
+            }
+
+            // Costelas / Armadura sombria
+            const ribs
