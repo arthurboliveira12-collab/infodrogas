@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTRAL TORII: SHADOW CHRONICLES — PS1/PS2 Cosmic Oriental Dark Fantasy 3D</title>
+    <title>ASTRAL ECLIPSE: SHATTERED MOON — Souls-like Cosmic Oriental Dark Fantasy 3D</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=VT323&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #06010f;
+            background-color: #05010d;
             font-family: 'VT323', monospace;
             color: #f3e8ff;
         }
@@ -34,15 +34,15 @@
             image-rendering: crisp-edges;
         }
 
-        /* Efeito CRT / Scanlines PS1 + Vinheta Cósmica */
+        /* Vinheta escura nas bordas + Scanlines PS1/PS2 */
         .crt-overlay {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 10;
             background:
-                linear-gradient(rgba(18, 12, 28, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
-                radial-gradient(circle at center, transparent 56%, rgba(7, 1, 18, 0.85) 100%);
+                linear-gradient(rgba(16, 10, 26, 0) 50%, rgba(0, 0, 0, 0.32) 50%),
+                radial-gradient(circle at center, transparent 52%, rgba(4, 1, 12, 0.9) 100%);
             background-size: 100% 4px, 100% 100%;
         }
 
@@ -51,19 +51,9 @@
             inset: 0;
             pointer-events: none;
             z-index: 15;
-            background: radial-gradient(circle at center, transparent 42%, rgba(255, 10, 84, 0.72) 100%);
+            background: radial-gradient(circle at center, transparent 38%, rgba(255, 10, 84, 0.78) 100%);
             opacity: 0;
-            transition: opacity 0.15s ease-out;
-        }
-
-        #blood-moon-tint {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9;
-            background: radial-gradient(circle at center, rgba(160, 0, 45, 0.08), rgba(120, 0, 35, 0.34));
-            opacity: 0;
-            transition: opacity 1.2s ease;
+            transition: opacity 0.16s ease-out;
         }
 
         #hud {
@@ -74,17 +64,17 @@
             display: none;
         }
 
-        /* Mira Arcana em 3ª Pessoa */
+        /* Mira Arcana */
         #crosshair {
             position: absolute;
             top: 46%;
             left: 50%;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             transform: translate(-50%, -50%);
             border: 2px solid #00f5d4;
             border-radius: 50%;
-            box-shadow: 0 0 10px #00f5d4, inset 0 0 6px #ff007f;
+            box-shadow: 0 0 12px #00f5d4, inset 0 0 6px #f72585;
             transition: transform 0.12s ease, border-color 0.12s ease;
         }
 
@@ -95,113 +85,137 @@
             left: 50%;
             width: 4px;
             height: 4px;
-            background: #ffbe0b;
+            background: #ffd166;
             transform: translate(-50%, -50%);
             border-radius: 50%;
         }
 
         #crosshair.interact-active {
-            transform: translate(-50%, -50%) scale(1.65) rotate(45deg);
+            transform: translate(-50%, -50%) scale(1.7) rotate(45deg);
             border-color: #ffd166;
             border-radius: 2px;
-            box-shadow: 0 0 16px #ffd166;
+            box-shadow: 0 0 18px #ffd166;
         }
 
-        /* Banner Superior de Região & Eclipse */
-        #location-banner {
+        /* Rastreador de Missão Principal & Região (Topo Central) */
+        #quest-tracker {
             position: absolute;
-            top: 18px;
+            top: 14px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            background: linear-gradient(90deg, transparent, rgba(20, 5, 42, 0.9) 22%, rgba(20, 5, 42, 0.9) 78%, transparent);
-            padding: 7px 46px;
-            border-top: 2px solid #b5179e;
+            background: linear-gradient(90deg, transparent, rgba(16, 4, 34, 0.94) 18%, rgba(16, 4, 34, 0.94) 82%, transparent);
+            padding: 8px 48px;
+            border-top: 2px solid #f72585;
             border-bottom: 2px solid #00f5d4;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.85);
+            box-shadow: 0 6px 26px rgba(0, 0, 0, 0.9);
+            min-width: min(560px, 90vw);
         }
 
         #location-title {
             font-family: 'Cinzel Decorative', serif;
-            font-size: clamp(1.05rem, 2.1vw, 1.55rem);
+            font-size: clamp(1.0rem, 1.9vw, 1.45rem);
             color: #ffd166;
-            text-shadow: 0 0 12px #ff007f, 2px 2px 0 #140224;
+            text-shadow: 0 0 12px #f72585, 2px 2px 0 #10002b;
             letter-spacing: 2px;
             margin: 0;
         }
 
-        #location-sub {
-            font-size: 1.05rem;
+        #quest-objective {
+            font-size: 1.18rem;
             color: #00f5d4;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(0, 245, 212, 0.65);
+            margin-top: 2px;
+            letter-spacing: 0.8px;
         }
 
-        #event-banner {
-            display: none;
-            margin-top: 4px;
-            font-size: 1rem;
-            color: #ff4d6d;
-            text-shadow: 0 0 8px #ff0a54;
-            font-weight: bold;
-            animation: pulseText 1s infinite alternate;
-        }
-
-        @keyframes pulseText {
-            from { opacity: 0.75; }
-            to { opacity: 1; }
-        }
-
-        /* Barra de Vida do Chefe (Boss) */
-        #boss-hud {
+        /* Barra de Ritual de Purificação (15s) */
+        #ritual-hud {
             position: absolute;
-            top: 96px;
+            top: 94px;
             left: 50%;
             transform: translateX(-50%);
-            width: min(460px, 84vw);
-            background: rgba(16, 3, 28, 0.92);
+            width: min(440px, 84vw);
+            background: rgba(18, 4, 36, 0.94);
+            border: 2px solid #00f5d4;
+            border-radius: 6px;
+            padding: 6px 14px;
+            box-shadow: 0 0 22px rgba(0, 245, 212, 0.6);
+            display: none;
+        }
+
+        #ritual-title {
+            font-family: 'Cinzel Decorative', serif;
+            color: #00f5d4;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        #ritual-track {
+            width: 100%;
+            height: 11px;
+            background: #090114;
+            border: 1px solid #9d4edd;
+        }
+
+        #ritual-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #7209b7, #f72585, #00f5d4);
+        }
+
+        /* Barra Gigante do Chefe Final: Lorde Malakor */
+        #boss-hud {
+            position: absolute;
+            top: 94px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(560px, 90vw);
+            background: rgba(16, 2, 26, 0.95);
             border: 2px solid #ff0a54;
             border-radius: 6px;
-            padding: 6px 12px;
-            box-shadow: 0 0 20px rgba(255, 10, 84, 0.6);
+            padding: 8px 14px;
+            box-shadow: 0 0 28px rgba(255, 10, 84, 0.75);
             display: none;
         }
 
         #boss-name {
             font-family: 'Cinzel Decorative', serif;
             color: #ff758f;
-            font-size: 1.05rem;
+            font-size: 1.12rem;
             text-align: center;
-            margin-bottom: 4px;
-            text-shadow: 0 0 8px #ff0a54;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px #ff0a54;
+            letter-spacing: 1px;
         }
 
         #boss-hp-track {
             width: 100%;
-            height: 12px;
-            background: #0b0114;
+            height: 14px;
+            background: #090112;
             border: 1px solid #ff4d6d;
         }
 
         #boss-hp-fill {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #590d22, #ff0a54, #ffbe0b);
-            transition: width 0.15s ease;
+            background: linear-gradient(90deg, #590d22, #ff0a54, #ffd166);
+            transition: width 0.14s ease;
         }
 
-        /* Prompt de Interação [E] */
+        /* Prompt Contextual [E] */
         #interact-prompt {
             position: absolute;
             top: 56%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(14, 4, 28, 0.94);
+            background: rgba(14, 4, 28, 0.95);
             border: 2px solid #ffd166;
-            box-shadow: 0 0 18px rgba(255, 209, 102, 0.55), inset 0 0 10px rgba(181, 23, 158, 0.55);
+            box-shadow: 0 0 20px rgba(255, 209, 102, 0.6), inset 0 0 10px rgba(181, 23, 158, 0.55);
             padding: 8px 20px;
             border-radius: 6px;
-            font-size: 1.32rem;
+            font-size: 1.3rem;
             color: #fff;
             text-shadow: 2px 2px 0 #000;
             display: none;
@@ -222,35 +236,56 @@
             to { transform: translateX(-50%) scale(1.03); }
         }
 
-        /* Modal de Grimório / Lore */
+        /* Caixa de Lore / Pergaminho Estilizada */
         #lore-modal {
-            position: absolute;
-            bottom: 205px;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 540px;
-            width: 90%;
-            background: rgba(12, 3, 26, 0.95);
-            border: 2px solid #00f5d4;
-            box-shadow: 0 0 26px rgba(0, 245, 212, 0.5);
-            border-radius: 8px;
-            padding: 14px 20px;
-            text-align: center;
+            position: fixed;
+            inset: 0;
+            z-index: 26;
+            background: rgba(5, 1, 14, 0.84);
             display: none;
-            z-index: 22;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            pointer-events: auto;
+        }
+
+        .lore-scroll-card {
+            max-width: 580px;
+            width: 100%;
+            background: linear-gradient(180deg, #24083b 0%, #120321 100%);
+            border: 3px solid #ffd166;
+            outline: 3px solid #3c096c;
+            border-radius: 10px;
+            padding: 24px 26px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 209, 102, 0.45);
         }
 
         #lore-modal-title {
             font-family: 'Cinzel Decorative', serif;
             color: #ffd166;
-            font-size: 1.15rem;
-            margin-bottom: 4px;
+            font-size: 1.45rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #f72585;
         }
 
         #lore-modal-text {
-            color: #e0aaff;
-            font-size: 1.2rem;
-            line-height: 1.3;
+            color: #f3e8ff;
+            font-size: 1.28rem;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+
+        #close-lore-btn {
+            font-family: 'Cinzel Decorative', serif;
+            background: #ffd166;
+            color: #10002b;
+            border: 2px solid #fff;
+            padding: 8px 22px;
+            border-radius: 6px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         #floating-text-layer {
@@ -268,28 +303,28 @@
             font-family: 'Cinzel Decorative', serif;
             font-weight: 900;
             text-shadow: 0 0 12px currentColor, 2px 2px 0 #000;
-            animation: floatUpFade 1.55s ease-out forwards;
+            animation: floatUpFade 1.5s ease-out forwards;
             white-space: nowrap;
         }
 
         @keyframes floatUpFade {
-            0% { opacity: 0; transform: translate(-50%, -20%) scale(0.8); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            0% { opacity: 0; transform: translate(-50%, -20%) scale(0.82); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
             100% { opacity: 0; transform: translate(-50%, -145%) scale(1.0); }
         }
 
         /* Painel RPG Inferior Esquerdo */
         #rpg-stats {
             position: absolute;
-            bottom: 18px;
-            left: 18px;
-            background: linear-gradient(135deg, rgba(16, 4, 32, 0.94), rgba(38, 10, 66, 0.9));
+            bottom: 16px;
+            left: 16px;
+            background: linear-gradient(135deg, rgba(16, 4, 32, 0.95), rgba(36, 9, 64, 0.92));
             border: 3px solid #9d4edd;
             outline: 2px solid #090114;
             border-radius: 8px;
             padding: 11px 15px;
-            width: 295px;
-            box-shadow: 0 0 22px rgba(157, 78, 221, 0.5);
+            width: 305px;
+            box-shadow: 0 0 24px rgba(157, 78, 221, 0.55);
         }
 
         .stat-header {
@@ -304,7 +339,7 @@
         .char-title {
             font-family: 'Cinzel Decorative', serif;
             color: #ff70a6;
-            font-size: 0.98rem;
+            font-size: 0.96rem;
             font-weight: bold;
         }
 
@@ -313,43 +348,6 @@
             font-size: 1.15rem;
             font-weight: bold;
             text-shadow: 0 0 6px #ff9e00;
-        }
-
-        .souls-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0, 245, 212, 0.12);
-            border: 1px solid #00f5d4;
-            border-radius: 4px;
-            padding: 3px 8px;
-            margin-top: 6px;
-            font-size: 1.05rem;
-            color: #80ffdb;
-        }
-
-        .weapon-row {
-            margin-top: 5px;
-            padding: 3px 8px;
-            background: rgba(181, 23, 158, 0.22);
-            border: 1px solid #f72585;
-            border-radius: 4px;
-            font-size: 0.98rem;
-            color: #ffccd5;
-            text-align: center;
-        }
-
-        .floor-badge {
-            display: inline-block;
-            margin-top: 5px;
-            padding: 2px 8px;
-            background: #240046;
-            border: 1px solid #9d4edd;
-            border-radius: 4px;
-            color: #e0aaff;
-            font-size: 0.95rem;
-            width: 100%;
-            text-align: center;
         }
 
         .bar-row {
@@ -377,7 +375,7 @@
             height: 100%;
             background: linear-gradient(90deg, #800f2f, #ff0a54, #ff477e);
             box-shadow: 0 0 8px #ff0a54;
-            transition: width 0.2s ease;
+            transition: width 0.18s ease;
         }
 
         .bar-fill-mp {
@@ -385,7 +383,7 @@
             height: 100%;
             background: linear-gradient(90deg, #3a0ca3, #4361ee, #00f5d4);
             box-shadow: 0 0 10px #00f5d4;
-            transition: width 0.15s ease;
+            transition: width 0.14s ease;
         }
 
         .bar-fill-xp {
@@ -396,47 +394,72 @@
             transition: width 0.25s ease;
         }
 
-        /* Relíquias Passivas Ativas */
-        #relics-bar {
-            position: absolute;
-            bottom: 18px;
-            left: 325px;
+        .souls-row {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            max-width: 340px;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 245, 212, 0.12);
+            border: 1px solid #00f5d4;
+            border-radius: 4px;
+            padding: 3px 8px;
+            margin-top: 6px;
+            font-size: 1.04rem;
+            color: #80ffdb;
         }
 
-        .relic-chip {
-            background: rgba(20, 6, 38, 0.9);
-            border: 1px solid #ffd166;
-            color: #ffd166;
+        .weapon-row {
+            margin-top: 5px;
             padding: 3px 8px;
+            background: rgba(181, 23, 158, 0.22);
+            border: 1px solid #f72585;
             border-radius: 4px;
-            font-size: 0.95rem;
-            box-shadow: 0 0 8px rgba(255, 209, 102, 0.35);
+            font-size: 0.96rem;
+            color: #ffccd5;
+            text-align: center;
+        }
+
+        /* Cooldowns de Dash [ESPAÇO] e Nova Arcana [BOTÃO DIR] */
+        .abilities-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .ability-pill {
+            background: #140426;
+            border: 1px solid #00f5d4;
+            border-radius: 4px;
+            padding: 3px 6px;
+            text-align: center;
+            font-size: 0.92rem;
+            color: #00f5d4;
+        }
+
+        .ability-pill.cooldown {
+            border-color: #5a189a;
+            color: #9d4edd;
         }
 
         #top-controls {
             position: absolute;
-            top: 18px;
-            right: 18px;
+            top: 16px;
+            right: 16px;
             pointer-events: auto;
             display: flex;
             gap: 8px;
         }
 
         .retro-mini-btn {
-            background: rgba(24, 8, 44, 0.92);
+            background: rgba(24, 8, 44, 0.94);
             border: 2px solid #9d4edd;
             color: #ffd166;
             font-family: 'VT323', monospace;
-            font-size: 1.12rem;
+            font-size: 1.1rem;
             padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             box-shadow: 0 3px 0 #240046;
-            transition: transform 0.1s, background 0.15s;
         }
 
         .retro-mini-btn:hover {
@@ -446,14 +469,14 @@
 
         #minimap-box {
             position: absolute;
-            top: 18px;
-            left: 18px;
-            width: 142px;
-            height: 142px;
-            background: rgba(12, 3, 24, 0.9);
+            top: 16px;
+            left: 16px;
+            width: 146px;
+            height: 146px;
+            background: rgba(12, 3, 24, 0.92);
             border: 2px solid #00f5d4;
             border-radius: 8px;
-            box-shadow: 0 0 16px rgba(0, 245, 212, 0.45);
+            box-shadow: 0 0 18px rgba(0, 245, 212, 0.45);
             overflow: hidden;
         }
 
@@ -465,9 +488,9 @@
 
         #controls-hint {
             position: absolute;
-            bottom: 18px;
-            right: 18px;
-            background: rgba(14, 5, 26, 0.84);
+            bottom: 16px;
+            right: 16px;
+            background: rgba(14, 5, 26, 0.86);
             border: 1px solid #7209b7;
             padding: 6px 12px;
             border-radius: 6px;
@@ -481,7 +504,7 @@
             position: fixed;
             inset: 0;
             z-index: 28;
-            background: radial-gradient(circle at center, rgba(24, 5, 48, 0.8), rgba(4, 1, 10, 0.94));
+            background: radial-gradient(circle at center, rgba(24, 5, 48, 0.84), rgba(4, 1, 10, 0.96));
             display: none;
             align-items: center;
             justify-content: center;
@@ -490,13 +513,13 @@
         }
 
         .pause-card {
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
-            background: linear-gradient(180deg, rgba(26, 8, 50, 0.97), rgba(12, 3, 24, 0.99));
+            background: linear-gradient(180deg, rgba(26, 8, 50, 0.98), rgba(12, 3, 24, 0.99));
             border: 3px solid #00f5d4;
             outline: 3px solid #240046;
             border-radius: 12px;
-            padding: 26px 24px;
+            padding: 24px 24px;
             text-align: center;
             box-shadow: 0 0 42px rgba(0, 245, 212, 0.55);
             pointer-events: auto;
@@ -504,37 +527,36 @@
 
         .pause-title {
             font-family: 'Cinzel Decorative', serif;
-            font-size: 2.2rem;
+            font-size: 2.1rem;
             color: #ffd166;
-            text-shadow: 0 0 14px #ff007f, 3px 3px 0 #240046;
-            margin: 0 0 6px;
+            text-shadow: 0 0 14px #f72585, 3px 3px 0 #240046;
+            margin: 0 0 4px;
         }
 
         .pause-sub {
             color: #00f5d4;
             font-size: 1.15rem;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .pause-actions {
             display: flex;
-            flex-direction: column;
             gap: 10px;
+            justify-content: center;
             margin-bottom: 14px;
         }
 
         .pause-btn {
             font-family: 'Cinzel Decorative', serif;
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            padding: 11px 18px;
+            padding: 10px 18px;
             border-radius: 8px;
             border: 2px solid #9d4edd;
             background: #240046;
             color: #f0e6ff;
             cursor: pointer;
             box-shadow: 0 4px 0 #10002b;
-            transition: transform 0.1s, background 0.15s, border-color 0.15s;
         }
 
         .pause-btn:hover {
@@ -547,18 +569,19 @@
             background: linear-gradient(180deg, #ffe169 0%, #ffb703 60%, #fb8500 100%);
             color: #10002b;
             border-color: #fff3b0;
-            box-shadow: 0 4px 0 #7f4f24;
         }
 
         #pause-info-box {
-            background: rgba(10, 2, 20, 0.88);
+            background: rgba(10, 2, 20, 0.9);
             border: 1px solid #7209b7;
             border-radius: 8px;
-            padding: 12px;
+            padding: 12px 14px;
             text-align: left;
-            font-size: 1.08rem;
+            font-size: 1.06rem;
             color: #e0aaff;
-            line-height: 1.4;
+            line-height: 1.42;
+            max-height: 52vh;
+            overflow-y: auto;
         }
 
         /* Menu Inicial */
@@ -566,7 +589,7 @@
             position: fixed;
             inset: 0;
             z-index: 30;
-            background: radial-gradient(circle at 50% 35%, rgba(72, 12, 168, 0.82), rgba(6, 1, 15, 0.96));
+            background: radial-gradient(circle at 50% 35%, rgba(72, 12, 168, 0.84), rgba(5, 1, 14, 0.97));
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -577,13 +600,13 @@
         }
 
         .menu-card {
-            max-width: 680px;
+            max-width: 710px;
             width: 100%;
-            background: linear-gradient(180deg, rgba(24, 7, 46, 0.96), rgba(11, 2, 22, 0.99));
+            background: linear-gradient(180deg, rgba(24, 7, 46, 0.97), rgba(11, 2, 22, 0.99));
             border: 3px solid #f72585;
             outline: 3px solid #240046;
             border-radius: 12px;
-            padding: 30px 26px;
+            padding: 28px 26px;
             box-shadow: 0 0 50px rgba(247, 37, 133, 0.55), inset 0 0 28px rgba(0, 245, 212, 0.18);
             position: relative;
             z-index: 35;
@@ -596,15 +619,14 @@
             border: 1px solid #00f5d4;
             padding: 3px 14px;
             border-radius: 20px;
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            margin-bottom: 8px;
         }
 
         .game-title {
             font-family: 'Cinzel Decorative', serif;
-            font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+            font-size: clamp(1.85rem, 4.3vw, 3.1rem);
             font-weight: 900;
             margin: 6px 0;
             background: linear-gradient(180deg, #fff3b0 0%, #ff70a6 50%, #9d4edd 100%);
@@ -616,20 +638,20 @@
 
         .game-lore {
             color: #e0aaff;
-            font-size: 1.22rem;
-            margin: 12px 0 20px;
-            line-height: 1.35;
+            font-size: 1.2rem;
+            margin: 12px 0 18px;
+            line-height: 1.38;
         }
 
         .controls-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            background: rgba(10, 2, 20, 0.78);
+            gap: 9px;
+            background: rgba(10, 2, 20, 0.82);
             border: 2px solid #7209b7;
             border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 18px;
+            padding: 13px;
+            margin-bottom: 16px;
             text-align: left;
         }
 
@@ -637,7 +659,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.15rem;
+            font-size: 1.12rem;
         }
 
         .key-badge {
@@ -647,18 +669,16 @@
             padding: 2px 8px;
             border-radius: 5px;
             font-weight: bold;
-            min-width: 82px;
+            min-width: 90px;
             text-align: center;
-            box-shadow: 0 2px 0 #000;
         }
 
         .settings-row {
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: 18px;
-            margin-bottom: 22px;
+            gap: 16px;
+            margin-bottom: 20px;
             font-size: 1.15rem;
             color: #e0aaff;
         }
@@ -670,16 +690,15 @@
 
         #play-btn {
             font-family: 'Cinzel Decorative', serif;
-            font-size: 1.42rem;
+            font-size: 1.38rem;
             font-weight: 900;
             color: #10002b;
             background: linear-gradient(180deg, #ffe169 0%, #ffb703 55%, #f72585 100%);
             border: 3px solid #fff3b0;
             border-radius: 8px;
-            padding: 14px 38px;
+            padding: 13px 36px;
             cursor: pointer;
             box-shadow: 0 6px 0 #590d22, 0 0 28px rgba(247, 37, 133, 0.75);
-            transition: transform 0.1s, filter 0.15s;
             letter-spacing: 1.5px;
             pointer-events: auto;
         }
@@ -691,61 +710,58 @@
 
         @media (max-width: 650px) {
             .controls-grid { grid-template-columns: 1fr; }
-            #rpg-stats { width: 230px; padding: 8px 10px; }
-            #relics-bar { display: none; }
-            #minimap-box { width: 100px; height: 100px; }
+            #rpg-stats { width: 245px; padding: 8px 10px; }
+            #minimap-box { width: 105px; height: 105px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Canvas 3D PS1/PS2 -->
     <canvas id="game-canvas"></canvas>
-
-    <!-- Efeitos Atmosféricos -->
-    <div id="blood-moon-tint"></div>
     <div class="crt-overlay"></div>
     <div id="damage-vignette"></div>
 
-    <!-- HUD em Terceira Pessoa -->
+    <!-- HUD Principal -->
     <div id="hud">
         <div id="minimap-box">
-            <canvas id="minimap-canvas" width="142" height="142"></canvas>
+            <canvas id="minimap-canvas" width="146" height="146"></canvas>
         </div>
 
-        <div id="location-banner">
-            <h2 id="location-title">BOSQUE DAS SAKURAS CÓSMICAS</h2>
-            <div id="location-sub">Terras Sombrias do Oriente Astral</div>
-            <div id="event-banner">🌑 EVENTO: ECLIPSE DA LUA DE SANGUE ATIVO! (2x ALMAS & XP)</div>
+        <!-- Rastreador de Região & Missão Principal -->
+        <div id="quest-tracker">
+            <h2 id="location-title">BOSQUE DAS SAKURAS SOMBRIAS</h2>
+            <div id="quest-objective">📜 Objetivo: Purifique os 3 Altares Corrompidos (0/3)</div>
         </div>
 
-        <!-- Barra de Chefe (Boss) -->
+        <!-- Barra de Ritual dos Selos (15 segundos) -->
+        <div id="ritual-hud">
+            <div id="ritual-title">🔮 RITUAL DE PURIFICAÇÃO EM ANDAMENTO — SOBREVIVA!</div>
+            <div id="ritual-track">
+                <div id="ritual-fill"></div>
+            </div>
+        </div>
+
+        <!-- Barra Gigante do Chefe Final: Lorde Malakor -->
         <div id="boss-hud">
-            <div id="boss-name">ONRYŌ KAGE-SAMURAI — SENHOR DA ILHA ACORRENTADA</div>
+            <div id="boss-name">LORDE MALAKOR, O ARQUITETO DO ECLIPSE</div>
             <div id="boss-hp-track">
                 <div id="boss-hp-fill"></div>
             </div>
         </div>
 
         <div id="top-controls">
-            <button id="mute-btn" class="retro-mini-btn" title="Alternar Áudio">🔊 SOM: ON</button>
-            <button id="pause-btn" class="retro-mini-btn" title="Pausar Jogo (ESC)">⏸️ PAUSE [ESC]</button>
+            <button id="mute-btn" class="retro-mini-btn">🔊 SOM: ON</button>
+            <button id="pause-btn" class="retro-mini-btn">⏸️ PAUSE [ESC]</button>
         </div>
 
         <div id="crosshair"></div>
         <div id="interact-prompt">Pressione <span>[E]</span> para Interagir</div>
         <div id="floating-text-layer"></div>
 
-        <!-- Modal de Grimório / Lore -->
-        <div id="lore-modal">
-            <div id="lore-modal-title">PERGAMINHO ASTRAL</div>
-            <div id="lore-modal-text">...</div>
-        </div>
-
-        <!-- Painel RPG do Feiticeiro Astral -->
+        <!-- Painel RPG Souls-like -->
         <div id="rpg-stats">
             <div class="stat-header">
-                <span class="char-title">ONMYOJI ASTRAL</span>
+                <span class="char-title">ANDARILHO ASTRAL</span>
                 <span class="char-lvl" id="hud-lvl">LVL 1</span>
             </div>
             <div class="bar-row">
@@ -769,7 +785,7 @@
             <div class="bar-row">
                 <div class="bar-label">
                     <span style="color:#ffd166;">EXPERIÊNCIA</span>
-                    <span id="hud-xp-text">0 / 50 XP</span>
+                    <span id="hud-xp-text">0 / 100 XP</span>
                 </div>
                 <div class="bar-track">
                     <div class="bar-fill-xp" id="hud-xp-bar"></div>
@@ -779,47 +795,59 @@
                 <span>🔮 ESSÊNCIAS ESPIRITUAIS:</span>
                 <strong id="hud-souls-text">0</strong>
             </div>
-            <div class="weapon-row" id="hud-weapon-badge">✨ FORMA: ESFERAS AZUIS RÁPIDAS</div>
-            <div class="floor-badge" id="hud-floor-badge">CAMADA: REINO EXTERIOR / TÉRREO (ANDAR 0)</div>
+            <div class="weapon-row" id="hud-wand-badge">✨ BASTÃO ASTRAL +0 (DANO: 14)</div>
+            <div class="abilities-row">
+                <div class="ability-pill" id="hud-dash-pill">[ESPAÇO] DASH: PRONTO</div>
+                <div class="ability-pill" id="hud-nova-pill">[BOTÃO DIR] NOVA: PRONTO</div>
+            </div>
         </div>
 
-        <div id="relics-bar"></div>
-
         <div id="controls-hint">
-            [WASD] Mover &bull; [ESPAÇO] Pular &bull; [ESC] Pausar<br>
-            [SEGURAR CLIQUE] Disparar &bull; [1-3] Forma Mágica &bull; [E] Interagir
+            [WASD] Mover &bull; [ESPAÇO] Dash (Invuln.) &bull; [ESC] Pausar<br>
+            [SEGURAR ESQ] Disparo &bull; [CLIQUE DIR] Explosão Arcana &bull; [E] Interagir
         </div>
     </div>
 
-    <!-- Tela de Pause (ESC) -->
+    <!-- Modal de Pergaminho de Lore -->
+    <div id="lore-modal">
+        <div class="lore-scroll-card">
+            <div id="lore-modal-title">PERGAMINHO ANTIGO</div>
+            <div id="lore-modal-text">...</div>
+            <button id="close-lore-btn" type="button">FECHAR PERGAMINHO [E / ESC]</button>
+        </div>
+    </div>
+
+    <!-- Menu de Pause (ESC) -->
     <div id="pause-screen">
         <div class="pause-card">
-            <h2 class="pause-title">JOGO PAUSADO</h2>
-            <div class="pause-sub">Selo Temporal do Santuário Astral</div>
+            <h2 class="pause-title">SANTUÁRIO TEMPORAL</h2>
+            <div class="pause-sub">A Maldição da Lua Fragmentada</div>
 
             <div class="pause-actions">
                 <button id="resume-btn" class="pause-btn primary" type="button">▶ CONTINUAR JORNADA</button>
-                <button id="restart-btn" class="pause-btn" type="button">🔄 REINICIAR MUNDO</button>
+                <button id="restart-btn" class="pause-btn" type="button">🔄 REINICIAR REINO</button>
             </div>
 
             <div id="pause-info-box"></div>
         </div>
     </div>
 
-    <!-- Menu Inicial -->
+    <!-- Tela Inicial -->
     <div id="menu-screen">
         <div class="menu-card">
-            <div class="game-subtitle-tag">PS1 / PS2 COSMIC ORIENTAL DARK FANTASY 3D</div>
-            <h1 class="game-title">ASTRAL TORII:<br>SHADOW CHRONICLES</h1>
+            <div class="game-subtitle-tag">SOULS-LIKE ACTION RPG &bull; PS1/PS2 DARK FANTASY</div>
+            <h1 class="game-title">ASTRAL ECLIPSE:<br>SHATTERED MOON</h1>
             <p class="game-lore">
-                Sob a Lua Gigante e as cerejeiras sombrias de pétalas neon, atravesse Portões Torii amaldiçoados, faça oferendas em Pagodes antigos, forje seu cajado na Roda de Espadas Místicas e conquiste a Ilha Flutuante Acorrentada.
+                A Lua Fragmentada derrama trevas sobre o Oriente Cósmico. Como um <strong>Andarilho Astral</strong>, você deve purificar os <strong>3 Selos Corrompidos</strong> nos biomas sombrios, forjar seu cajado e ascender ao Trono do Eclipse para enfrentar <strong>Lorde Malakor</strong>.
             </p>
 
             <div class="controls-grid">
-                <div class="control-item"><span class="key-badge">W A S D</span> <span>Explorar em 3ª Pessoa</span></div>
-                <div class="control-item"><span class="key-badge">ESPAÇO</span> <span>Pular</span></div>
-                <div class="control-item"><span class="key-badge">TECLA E</span> <span>Torii / Pagode / Forja / Escada</span></div>
-                <div class="control-item"><span class="key-badge">SEGURAR</span> <span>Disparo Mágico Contínuo</span></div>
+                <div class="control-item"><span class="key-badge">W A S D</span> <span>Mover Personagem</span></div>
+                <div class="control-item"><span class="key-badge">ESPAÇO</span> <span>Dash Arcano (Esquiva)</span></div>
+                <div class="control-item"><span class="key-badge">SEGURAR ESQ</span> <span>Disparo Mágico Contínuo</span></div>
+                <div class="control-item"><span class="key-badge">CLIQUE DIR</span> <span>Explosão Arcana em Área</span></div>
+                <div class="control-item"><span class="key-badge">TECLA E</span> <span>Purificar / Forja / Checkpoint</span></div>
+                <div class="control-item"><span class="key-badge">ESC</span> <span>Menu de Pause & História</span></div>
             </div>
 
             <div class="settings-row">
@@ -827,26 +855,24 @@
                 <input type="range" id="sens-slider" min="0.3" max="2.5" step="0.1" value="1.0">
             </div>
 
-            <button id="play-btn" type="button">ENTRAR NO REINO ASTRAL</button>
+            <button id="play-btn" type="button">INICIAR PEREGRINAÇÃO</button>
         </div>
     </div>
 
     <script>
     // ============================================================================
-    // 0. CONSTANTES DE BALANCEAMENTO, PALETA CÓSMICA E SPAWNS
+    // 0. CONFIGURAÇÕES DE BALANCEAMENTO SOULS-LIKE, BIOMAS E PALETA CÓSMICA
     // ============================================================================
     const GAME_CONFIG = {
-        MAP_SIZE: 3000,
-        MAP_HALF: 1500,
-        RENDER_SCALE: 0.46,          // Baixa resolução pixelada estilo PS1/PS2
-        PS1_SNAP_RES: [240.0, 180.0],// Quantização de vértices estilo PS1
+        MAP_SIZE: 2800,
+        MAP_HALF: 1400,
+        RENDER_SCALE: 0.48,          // Resolução baixa retrô PS1/PS2
+        PS1_SNAP_RES: [256.0, 192.0],// Quantização de vértices PS1
 
-        // Paleta Dark Fantasy Oriental Cósmico
         COLORS: {
-            SKY_BG: 0x0b021c,
-            FOG: 0x150430,
+            SKY_BG: 0x080117,
+            FOG: 0x13042b,
             MOON_CORE: 0xfff0f6,
-            MOON_HALO: 0xb5179e,
             ELECTRIC_BLUE: 0x00f5d4,
             NEON_MAGENTA: 0xf72585,
             COSMIC_PURPLE: 0x7209b7,
@@ -854,198 +880,199 @@
             GOLD_RUNE: 0xffd166
         },
 
-        // Câmera em Terceira Pessoa (Over-the-Shoulder / Action RPG PS2)
         THIRD_PERSON: {
-            DISTANCE: 7.4,
-            HEIGHT_OFFSET: 2.35,
+            DISTANCE: 7.6,
+            HEIGHT_OFFSET: 2.45,
             SHOULDER_OFFSET: 0.85,
             SMOOTHING: 18.0
         },
 
-        // Camadas Isoladas da Ilha/Fortaleza Flutuante Acorrentada (2 Andares)
-        SECOND_FLOOR_HEIGHT: 20.0,
+        SECOND_FLOOR_HEIGHT: 21.0,
 
-        // Atributos Base do Jogador (Onmyoji Astral)
-        PLAYER_BASE_HP: 110,
-        PLAYER_BASE_MP: 110,
-        PLAYER_MP_REGEN: 24,
-        PLAYER_SPEED: 23.0,
-        PLAYER_JUMP_FORCE: 13.0,
-        PLAYER_HEIGHT: 2.4,
+        // Balanceamento Souls-Like do Jogador (Fim do Hit-Kill!)
+        PLAYER_BASE_HP: 100,
+        PLAYER_BASE_MP: 100,
+        PLAYER_MP_REGEN: 15,
+        PLAYER_SPEED: 21.5,
         PLAYER_RADIUS: 0.85,
-        GRAVITY: 31.0,
-        START_XP: 0,
-        START_NEXT_LEVEL_XP: 50,
+
+        // Curva Exponencial de XP: xpProximoNivel = Math.floor(100 * Math.pow(1.45, nivel - 1))
+        START_NEXT_LEVEL_XP: 100,
         XP_SCALING_FACTOR: 1.45,
-        LEVEL_UP_HP_BONUS: 25,
-        LEVEL_UP_DMG_BONUS: 8,
+        LEVEL_UP_HP_BONUS: 14,
+        LEVEL_UP_MP_BONUS: 10,
+        LEVEL_UP_DMG_BONUS: 2, // Ganho sutil por nível: evolução real vem da Forja Astral!
 
-        // Bastão Encantado (3 Formas Mágicas Desbloqueáveis na Forja Astral)
-        WAND_BASE_DAMAGE: 24,
-        WAND_FIRE_RATE_MS: 230,      // Tiro contínuo ao segurar botão esquerdo
-        PROJECTILE_MAX_RANGE: 270.0,
+        // Bastão Mágico Inicial (Dano reduzido para exigir tática e esquiva)
+        WAND_BASE_DAMAGE: 14,
+        WAND_FIRE_RATE_MS: 270,
+        PROJECTILE_SPEED: 78.0,
+        PROJECTILE_MAX_RANGE: 240.0,
+        PRIMARY_MANA_COST: 7,
 
-        SPELL_FORMS: [
-            {
-                id: 0,
-                name: 'ESFERAS AZUIS RÁPIDAS',
-                color: 0x00f5d4,
-                coreColor: 0xffffff,
-                speed: 86.0,
-                damageMult: 1.0,
-                manaCost: 6,
-                scale: 1.8,
-                fireRateMs: 210,
-                ricochet: false
-            },
-            {
-                id: 1,
-                name: 'CHAMAS ESPIRITUAIS ROXAS',
-                color: 0xf72585,
-                coreColor: 0xffbe0b,
-                speed: 68.0,
-                damageMult: 1.55,
-                manaCost: 11,
-                scale: 2.7,
-                fireRateMs: 290,
-                ricochet: false
-            },
-            {
-                id: 2,
-                name: 'RAIOS CÓSMICOS RICOCHETEANTES',
-                color: 0x4cc9f0,
-                coreColor: 0xe0aaff,
-                speed: 105.0,
-                damageMult: 1.35,
-                manaCost: 9,
-                scale: 2.1,
-                fireRateMs: 195,
-                ricochet: true
-            }
-        ],
+        // Dash / Esquiva (Tecla ESPAÇO ou SHIFT)
+        DASH_SPEED: 54.0,
+        DASH_DURATION: 0.22,
+        DASH_INVULN_DURATION: 0.32,
+        DASH_COOLDOWN: 1.35,
 
-        // Multiplicadores de Velocidade dos Mobs (Combate Tático)
-        GLOBAL_MOB_SPEED_MULTIPLIER: 0.65,
+        // Habilidade Secundária: Explosão Arcana em Área (Botão Direito do Mouse)
+        NOVA_MANA_COST: 35,
+        NOVA_COOLDOWN: 4.5,
+        NOVA_RADIUS: 13.5,
+        NOVA_DAMAGE_MULT: 2.6,
 
-        // Spawns & Bestiário Oriental
-        MAX_ACTIVE_ENEMIES: 28,
-        SPAWN_INTERVAL: 2.3,
-        SPAWN_MIN_DIST: 62,
-        SPAWN_MAX_DIST: 360,
-
+        // Bestiário por Bioma (Vida alta, comportamento tático e recompensas justas)
         BESTIARY: {
+            // Bioma 1: Bosque das Sakuras Sombrias (Nível 1-2)
             goblin: {
-                NAME: 'Duende Oni-Imp',
-                HP: 38,
-                SPEED: 15.0,
-                DAMAGE: 10,
-                XP: 16,
-                SOULS: 3,
-                DETECT: 120,
-                RANGE: 2.4,
-                CD: 1.15,
-                SCALE: 0.85
+                NAME: 'Duende Saqueador',
+                HP: 52,            // Exige ~4 disparos iniciais (sem hit-kill!)
+                SPEED: 11.2,
+                DAMAGE: 14,
+                XP: 24,
+                SOULS: 5,
+                AGGRO_RADIUS: 34,
+                LEASH_RADIUS: 58,
+                ATTACK_RANGE: 2.4,
+                ATTACK_CD: 1.35,
+                SCALE: 0.92
             },
+            // Bioma 2: Cemitério dos Esquecidos & Criptas (Nível 3-4)
             skeleton: {
-                NAME: 'Esqueleto Samurai',
+                NAME: 'Esqueleto Guerreiro',
                 HP: 95,
-                SPEED: 9.2,
+                SPEED: 8.8,
                 DAMAGE: 22,
-                XP: 35,
-                SOULS: 7,
-                DETECT: 145,
-                RANGE: 3.1,
-                CD: 1.55,
+                XP: 45,
+                SOULS: 9,
+                AGGRO_RADIUS: 38,
+                LEASH_RADIUS: 65,
+                ATTACK_RANGE: 3.0,
+                ATTACK_CD: 1.5,
+                HAS_SHIELD: true,  // Reduz 60% do dano frontal! Exige flanquear ou usar Explosão Arcana
                 SCALE: 1.12
             },
-            oni: {
-                NAME: 'Espírito Yokai Oni',
-                HP: 185,
-                SPEED: 6.4,
-                DAMAGE: 32,
-                XP: 65,
+            necromancer: {
+                NAME: 'Necromante da Cripta',
+                HP: 85,
+                SPEED: 6.5,
+                DAMAGE: 20,
+                XP: 60,
                 SOULS: 14,
-                DETECT: 140,
-                RANGE: 4.5, // Ataque em área
-                CD: 2.0,
-                SCALE: 1.55
+                AGGRO_RADIUS: 42,
+                LEASH_RADIUS: 70,
+                ATTACK_RANGE: 28.0,
+                ATTACK_CD: 3.2,
+                SCALE: 1.15
             },
-            wisp: {
-                NAME: 'Fogo-Fátuo Hostil',
-                HP: 52,
-                SPEED: 11.5,
-                DAMAGE: 16,
-                XP: 28,
-                SOULS: 6,
-                DETECT: 155,
-                RANGE: 28.0, // Dispara magia à distância
-                CD: 2.2,
-                SCALE: 1.0
+            // Bioma 3: Pontes Acorrentadas & Santuário Torii (Nível 5-6)
+            yokai: {
+                NAME: 'Samurai Yokai Amaldiçoado',
+                HP: 145,
+                SPEED: 13.4,
+                DAMAGE: 28,
+                XP: 85,
+                SOULS: 18,
+                AGGRO_RADIUS: 42,
+                LEASH_RADIUS: 72,
+                ATTACK_RANGE: 3.4,
+                ATTACK_CD: 1.15,
+                SCALE: 1.22
             },
-            boss: {
-                NAME: 'ONRYŌ KAGE-SAMURAI',
-                HP: 650,
-                SPEED: 10.5,
+            // Bioma 4: Castelo Flutuante — 1º Andar (Nível 7+)
+            black_knight: {
+                NAME: 'Cavaleiro de Armadura Negra',
+                HP: 220,
+                SPEED: 9.6,
                 DAMAGE: 36,
-                XP: 300,
-                SOULS: 60,
-                DETECT: 65,
-                RANGE: 4.8,
-                CD: 1.4,
-                SCALE: 1.85
+                XP: 130,
+                SOULS: 26,
+                AGGRO_RADIUS: 36,
+                LEASH_RADIUS: 52,
+                ATTACK_RANGE: 3.6,
+                ATTACK_CD: 1.45,
+                SCALE: 1.38
+            },
+            // Chefe Final: 2º Andar — Trono do Eclipse
+            malakor: {
+                NAME: 'LORDE MALAKOR, O ARQUITETO DO ECLIPSE',
+                HP: 950,
+                SPEED: 10.2,
+                DAMAGE: 42,
+                XP: 600,
+                SOULS: 120,
+                AGGRO_RADIUS: 55,
+                LEASH_RADIUS: 90,
+                ATTACK_RANGE: 4.5,
+                ATTACK_CD: 1.5,
+                SCALE: 1.95
             }
         }
     };
 
     // Estado Global
     const keys = {};
-    const mouseNDC = new THREE.Vector2(0, 0);
+    const mouseNDC = new THREE.Vector2(0, 0.08);
     let isPaused = false;
+    let isLoreOpen = false;
     let isMouseDown = false;
     let lastFireTimestamp = 0;
 
-    // Eventos Dinâmicos (Eclipse / Lua de Sangue)
-    const worldEvent = {
-        bloodMoonActive: false,
-        timer: 45.0 // Primeiro eclipse após 45s ou ativado por Torii
+    // Estado da História & Missão Principal
+    const questState = {
+        sealsPurified: 0,
+        totalSeals: 3,
+        barrierBroken: false,
+        malakorDefeated: false,
+        activeRitual: null // { sealObj, timer, duration: 15.0, waveSpawned: 0 }
     };
 
     const player = {
-        pos: new THREE.Vector3(0, 0, 8),
+        pos: new THREE.Vector3(0, 0, 14),
+        respawnPos: new THREE.Vector3(0, 0, 14),
         vel: new THREE.Vector3(0, 0, 0),
         yaw: 0,
         pitch: 0.14,
-        andar: 0, // 0 = Mundo Exterior / Térreo | 1 = 2º Andar da Ilha Acorrentada
+        andar: 0,
         speed: GAME_CONFIG.PLAYER_SPEED,
-        jumpForce: GAME_CONFIG.PLAYER_JUMP_FORCE,
-        gravity: GAME_CONFIG.GRAVITY,
         radius: GAME_CONFIG.PLAYER_RADIUS,
-        onGround: true,
         isPlaying: false,
         sensitivity: 1.0,
         walkAnimTime: 0,
         stepSoundTimer: 0,
 
-        // Progressão RPG & Economia de Essências
+        // Dash & Invulnerabilidade
+        dashTimer: 0,
+        dashCooldownTimer: 0,
+        invulnTimer: 0,
+        dashDir: new THREE.Vector3(),
+
+        // Habilidade Secundária (Explosão Arcana)
+        novaCooldownTimer: 0,
+
+        // Progressão RPG
         nivel: 1,
-        xp: GAME_CONFIG.START_XP,
+        xp: 0,
         xpProximoNivel: GAME_CONFIG.START_NEXT_LEVEL_XP,
-        souls: 15, // Começa com 15 Essências Espirituais para testar oferendas
+        souls: 10,
         hp: GAME_CONFIG.PLAYER_BASE_HP,
         maxHp: GAME_CONFIG.PLAYER_BASE_HP,
         mp: GAME_CONFIG.PLAYER_BASE_MP,
         maxMp: GAME_CONFIG.PLAYER_BASE_MP,
-        magicDamage: GAME_CONFIG.WAND_BASE_DAMAGE,
 
-        // Encantamentos do Bastão & Relíquias Passivas
-        currentSpellIndex: 0,
-        unlockedSpells: [0],
-        relics: [], // Ex: 'Vampirismo Astral', 'Passos do Vento', 'Orbes Ricocheteantes'
+        // Melhorias do Bastão na Forja Astral
+        wandLevel: 0,
+        magicDamage: GAME_CONFIG.WAND_BASE_DAMAGE,
+        projectileCount: 1,
+        fireRateMs: GAME_CONFIG.WAND_FIRE_RATE_MS,
+
+        blessings: [],
         stairCooldown: 0
     };
 
     // ============================================================================
-    // 1. SINTETIZADOR RETRO WEB AUDIO API (DUNGEON SYNTH ORIENTAL)
+    // 1. SINTETIZADOR RETRO WEB AUDIO API (DUNGEON SYNTH SOMBRIO)
     // ============================================================================
     class RetroAudioEngine {
         constructor() {
@@ -1063,7 +1090,7 @@
                     if (AudioCtx) this.ctx = new AudioCtx();
                 }
                 if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-                if (this.ctx && !this.isPlayingBgm) this.startOrientalCosmicSynth();
+                if (this.ctx && !this.isPlayingBgm) this.startDungeonSynth();
             } catch (err) {}
         }
 
@@ -1078,9 +1105,9 @@
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = isStone ? 'triangle' : 'sawtooth';
-            osc.frequency.setValueAtTime(isStone ? 125 + Math.random() * 25 : 80 + Math.random() * 20, now);
-            osc.frequency.exponentialRampToValueAtTime(30, now + 0.08);
-            gain.gain.setValueAtTime(0.1, now);
+            osc.frequency.setValueAtTime(isStone ? 120 + Math.random() * 20 : 75 + Math.random() * 20, now);
+            osc.frequency.exponentialRampToValueAtTime(28, now + 0.08);
+            gain.gain.setValueAtTime(0.09, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
@@ -1088,53 +1115,70 @@
             osc.stop(now + 0.095);
         }
 
-        playJump() {
+        playDash() {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(160, now);
-            osc.frequency.exponentialRampToValueAtTime(380, now + 0.16);
-            gain.gain.setValueAtTime(0.08, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.23);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
-            osc.stop(now + 0.18);
+            osc.stop(now + 0.24);
         }
 
-        playMagicCast(spellIdx = 0) {
+        playArcaneNova() {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = spellIdx === 1 ? 'sawtooth' : (spellIdx === 2 ? 'square' : 'sine');
-            const startFreq = spellIdx === 1 ? 420 : (spellIdx === 2 ? 880 : 690);
-            osc.frequency.setValueAtTime(startFreq, now);
-            osc.frequency.exponentialRampToValueAtTime(180, now + 0.2);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.21);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.22);
+            [220, 440, 880].forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = idx === 0 ? 'sawtooth' : 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.35, now + 0.45);
+                gain.gain.setValueAtTime(0.14, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.48);
+            });
         }
 
-        playMagicHit() {
+        playMagicCast() {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(280, now);
-            osc.frequency.exponentialRampToValueAtTime(55, now + 0.14);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(740, now);
+            osc.frequency.exponentialRampToValueAtTime(210, now + 0.18);
+            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
-            osc.stop(now + 0.16);
+            osc.stop(now + 0.2);
+        }
+
+        playMagicHit(blocked = false) {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = blocked ? 'square' : 'triangle';
+            osc.frequency.setValueAtTime(blocked ? 520 : 260, now);
+            osc.frequency.exponentialRampToValueAtTime(blocked ? 680 : 50, now + 0.13);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
         }
 
         playSoulPickup() {
@@ -1143,20 +1187,19 @@
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(587.33, now);
-            osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.14);
-            gain.gain.setValueAtTime(0.11, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.frequency.setValueAtTime(620, now);
+            osc.frequency.exponentialRampToValueAtTime(1240, now + 0.13);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
-            osc.stop(now + 0.16);
+            osc.stop(now + 0.15);
         }
 
         playShrineChime() {
             if (this.isMuted || !this.ctx) return;
             const now = this.ctx.currentTime;
-            // Escala Pentatônica Hirajoshi (Oriental)
             [293.66, 329.63, 440.00, 587.33, 659.25].forEach((freq, idx) => {
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -1178,8 +1221,8 @@
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(110, now);
-            osc.frequency.linearRampToValueAtTime(45, now + 0.24);
+            osc.frequency.setValueAtTime(105, now);
+            osc.frequency.linearRampToValueAtTime(42, now + 0.24);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
             osc.connect(gain);
@@ -1188,17 +1231,15 @@
             osc.stop(now + 0.26);
         }
 
-        startOrientalCosmicSynth() {
+        startDungeonSynth() {
             this.isPlayingBgm = true;
-            // Escala In-Sen / Hirajoshi Dark Cosmic (D, Eb, G, A, C)
-            const bassNotes = [73.42, 73.42, 77.78, 73.42, 65.41, 65.41, 58.27, 65.41];
+            const bassNotes = [65.41, 65.41, 73.42, 65.41, 58.27, 58.27, 49.00, 58.27];
             const kotoLead = [
                 293.66, 311.13, 0, 392.00, 440.00, 0, 523.25, 440.00,
                 392.00, 311.13, 293.66, 0, 220.00, 261.63, 293.66, 0
             ];
-
             this.bgmInterval = setInterval(() => {
-                if (this.isMuted || isPaused || !this.ctx || this.ctx.state !== 'running') return;
+                if (this.isMuted || isPaused || isLoreOpen || !this.ctx || this.ctx.state !== 'running') return;
                 const now = this.ctx.currentTime;
 
                 if (this.stepIndex % 2 === 0) {
@@ -1209,7 +1250,7 @@
                     oscB.type = 'sawtooth';
                     oscB.frequency.setValueAtTime(bNote, now);
                     filterB.type = 'lowpass';
-                    filterB.frequency.setValueAtTime(200, now);
+                    filterB.frequency.setValueAtTime(185, now);
                     gainB.gain.setValueAtTime(0.001, now);
                     gainB.gain.linearRampToValueAtTime(0.055, now + 0.14);
                     gainB.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
@@ -1227,7 +1268,7 @@
                     oscL.type = 'triangle';
                     oscL.frequency.setValueAtTime(lNote, now);
                     gainL.gain.setValueAtTime(0.001, now);
-                    gainL.gain.linearRampToValueAtTime(0.036, now + 0.03);
+                    gainL.gain.linearRampToValueAtTime(0.035, now + 0.03);
                     gainL.gain.exponentialRampToValueAtTime(0.0008, now + 0.52);
                     oscL.connect(gainL);
                     gainL.connect(this.ctx.destination);
@@ -1235,24 +1276,24 @@
                     oscL.stop(now + 0.55);
                 }
                 this.stepIndex++;
-            }, 460);
+            }, 470);
         }
     }
 
     const audio = new RetroAudioEngine();
 
     // ============================================================================
-    // 2. GERADOR PROCEDURAL DE TEXTURAS PIXELADAS (PS1 NEAREST-NEIGHBOR)
+    // 2. TEXTURAS PROCEDURAIS DETALHADAS (OFFSCREEN CANVAS PS1 NEAREST-NEIGHBOR)
     // ============================================================================
     function createPixelTexture(width, height, drawFn, repeatX = 1, repeatY = 1) {
-        const texCanvas = document.createElement('canvas');
-        texCanvas.width = width;
-        texCanvas.height = height;
-        const ctx = texCanvas.getContext('2d');
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext('2d');
         ctx.imageSmoothingEnabled = false;
         drawFn(ctx, width, height);
 
-        const tex = new THREE.CanvasTexture(texCanvas);
+        const tex = new THREE.CanvasTexture(c);
         tex.magFilter = THREE.NearestFilter;
         tex.minFilter = THREE.NearestFilter;
         tex.wrapS = THREE.RepeatWrapping;
@@ -1261,7 +1302,7 @@
         return tex;
     }
 
-    function createMagicGlowSpriteTexture(innerHex, midHex, outerHex) {
+    function createRadialGlowTexture(innerHex, midHex, outerHex) {
         const c = document.createElement('canvas');
         c.width = 64;
         c.height = 64;
@@ -1279,119 +1320,106 @@
     }
 
     const textures = {
-        // Pedra antiga oriental com musgo índigo
-        ancientStone: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#180c2e';
+        // Pedra rachada com musgo índigo/ciano
+        crackedMossStone: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#140926';
             ctx.fillRect(0, 0, w, h);
-            const tones = ['#261447', '#321b5c', '#130824', '#3f2373'];
+            const tones = ['#231242', '#2f1957', '#1a0c33', '#3b206b'];
             for (let y = 0; y < h; y += 16) {
                 const off = (y / 16) % 2 === 0 ? 0 : 16;
                 for (let x = -16; x < w; x += 32) {
                     ctx.fillStyle = tones[Math.floor(Math.random() * tones.length)];
                     ctx.fillRect(x + off + 1, y + 1, 30, 14);
-                    ctx.fillStyle = '#563299';
-                    ctx.fillRect(x + off + 1, y + 1, 30, 2);
+                    // Rachaduras escuras e musgo místico
+                    ctx.fillStyle = '#0b0417';
+                    ctx.fillRect(x + off + 8, y + 4, 2, 8);
+                    if (Math.random() > 0.45) {
+                        ctx.fillStyle = '#115e59';
+                        ctx.fillRect(x + off + 2, y + 11, 9, 4);
+                    }
                 }
             }
         }, 2, 2),
 
-        // Madeira escura laqueada (Torii & Pagodes)
-        darkWood: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#240715';
+        // Madeira envelhecida escura
+        agedWood: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#1f0714';
             ctx.fillRect(0, 0, w, h);
-            for (let x = 0; x < w; x += 6) {
-                ctx.fillStyle = x % 12 === 0 ? '#3b0b22' : '#1a040f';
-                ctx.fillRect(x, 0, 5, h);
+            for (let x = 0; x < w; x += 4) {
+                ctx.fillStyle = x % 8 === 0 ? '#2e0b1d' : '#17040e';
+                ctx.fillRect(x, 0, 3, h);
             }
-            ctx.fillStyle = '#ff0a54';
-            ctx.fillRect(0, 8, w, 3);
-            ctx.fillRect(0, 52, w, 3);
+            ctx.fillStyle = '#590d22';
+            ctx.fillRect(0, 10, w, 3);
+            ctx.fillRect(0, 50, w, 3);
         }, 1, 1),
 
-        // Grama roxa/azulada cósmica com flores estelares
-        cosmicGrass: createPixelTexture(128, 128, (ctx, w, h) => {
-            ctx.fillStyle = '#120726';
+        // Grama roxa sombria com pétalas caídas
+        darkCosmicGrass: createPixelTexture(128, 128, (ctx, w, h) => {
+            ctx.fillStyle = '#0f0621';
             ctx.fillRect(0, 0, w, h);
-            const shades = ['#1a0b38', '#220f4a', '#0e1330', '#2b1259', '#160930'];
-            for (let i = 0; i < 460; i++) {
+            const shades = ['#170933', '#1f0d42', '#0c1029', '#271052', '#120729'];
+            for (let i = 0; i < 520; i++) {
                 ctx.fillStyle = shades[Math.floor(Math.random() * shades.length)];
                 ctx.fillRect(Math.floor(Math.random() * 32) * 4, Math.floor(Math.random() * 32) * 4, 4, 4);
             }
-            // Pétalas de sakura caídas e pontos azuis
-            for (let i = 0; i < 36; i++) {
-                ctx.fillStyle = Math.random() > 0.35 ? '#f72585' : '#00f5d4';
+            for (let i = 0; i < 42; i++) {
+                ctx.fillStyle = Math.random() > 0.3 ? '#f72585' : '#00f5d4';
                 ctx.fillRect(Math.random() * w, Math.random() * h, 3, 3);
             }
-        }, 170, 170),
+        }, 160, 160),
 
-        // Água estrelada cintilante dos rios astrais
+        // Água estrelada animada
         starryWater: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#090b2e';
+            ctx.fillStyle = '#070926';
             ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = '#141b5e';
-            for (let y = 0; y < h; y += 8) {
-                ctx.fillRect(0, y, w, 3);
-            }
-            for (let i = 0; i < 45; i++) {
+            ctx.fillStyle = '#111852';
+            for (let y = 0; y < h; y += 8) ctx.fillRect(0, y, w, 3);
+            for (let i = 0; i < 55; i++) {
                 ctx.fillStyle = i % 3 === 0 ? '#ffffff' : (i % 2 === 0 ? '#00f5d4' : '#f72585');
                 ctx.fillRect(Math.floor(Math.random() * 64), Math.floor(Math.random() * 64), 2, 2);
             }
-        }, 40, 8),
+        }, 42, 8),
 
-        // Caminho de pedra oriental
-        stonePath: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#130824';
+        // Estrada de pedra rúnica
+        runeStonePath: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#110721';
             ctx.fillRect(0, 0, w, h);
-            const st = ['#362854', '#483570', '#271c3d', '#5c448f'];
+            const st = ['#2d2047', '#3c2b5e', '#211736', '#4d3778'];
             for (let y = 0; y < h; y += 16) {
                 for (let x = 0; x < w; x += 16) {
                     ctx.fillStyle = st[Math.floor(Math.random() * st.length)];
                     ctx.fillRect(x + 1, y + 1, 14, 14);
-                    ctx.fillStyle = '#00f5d4';
-                    if ((x + y) % 32 === 0) ctx.fillRect(x + 7, y + 7, 2, 2);
+                    if ((x + y) % 32 === 0) {
+                        ctx.fillStyle = '#00f5d4';
+                        ctx.fillRect(x + 7, y + 7, 2, 2);
+                    }
                 }
             }
         }, 2, 24),
 
-        // Tronco retorcido escuro
         sakuraBark: createPixelTexture(32, 32, (ctx, w, h) => {
-            ctx.fillStyle = '#16071c';
+            ctx.fillStyle = '#14051a';
             ctx.fillRect(0, 0, w, h);
             for (let x = 0; x < w; x += 4) {
-                ctx.fillStyle = x % 8 === 0 ? '#290d33' : '#0f0414';
+                ctx.fillStyle = x % 8 === 0 ? '#240a2e' : '#0d0312';
                 ctx.fillRect(x, 0, 3, h);
             }
         }, 1, 3),
 
-        // Folhagem Sakura Sombria (Roxo/Magenta Neon)
         sakuraLeaves: createPixelTexture(32, 32, (ctx, w, h) => {
-            ctx.fillStyle = '#590d42';
+            ctx.fillStyle = '#4a0a36';
             ctx.fillRect(0, 0, w, h);
             const cols = ['#f72585', '#b5179e', '#ff70a6', '#7209b7', '#ff9ebb'];
-            for (let i = 0; i < 85; i++) {
+            for (let i = 0; i < 90; i++) {
                 ctx.fillStyle = cols[Math.floor(Math.random() * cols.length)];
                 ctx.fillRect(Math.random() * w, Math.random() * h, 5, 5);
             }
         }, 1, 1),
 
-        // Grimórios / Pergaminhos
-        bookshelf: createPixelTexture(64, 64, (ctx, w, h) => {
-            ctx.fillStyle = '#1f0914';
-            ctx.fillRect(0, 0, w, h);
-            const cols = ['#f72585', '#00f5d4', '#ffd166', '#7209b7', '#ff0a54'];
-            for (let s = 0; s < 4; s++) {
-                ctx.fillStyle = '#3b1024';
-                ctx.fillRect(0, s * 16 + 13, w, 3);
-                for (let x = 2; x < w - 4; x += 6) {
-                    ctx.fillStyle = cols[Math.floor(Math.random() * cols.length)];
-                    ctx.fillRect(x, s * 16 + 3, 4, 10);
-                }
-            }
-        }, 1, 1),
-
-        orbBlue: createMagicGlowSpriteTexture('#ffffff', '#00f5d4', '#3a0ca3'),
-        orbMagenta: createMagicGlowSpriteTexture('#fff3b0', '#f72585', '#590d22'),
-        orbCosmic: createMagicGlowSpriteTexture('#ffffff', '#4cc9f0', '#7209b7')
+        orbBlue: createRadialGlowTexture('#ffffff', '#00f5d4', '#3a0ca3'),
+        orbMagenta: createRadialGlowTexture('#fff3b0', '#f72585', '#590d22'),
+        orbBlood: createRadialGlowTexture('#ffffff', '#ff0a54', '#370617')
     };
 
     // ============================================================================
@@ -1438,67 +1466,51 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(GAME_CONFIG.COLORS.SKY_BG);
-    scene.fog = new THREE.FogExp2(GAME_CONFIG.COLORS.FOG, 0.0038);
+    scene.fog = new THREE.FogExp2(GAME_CONFIG.COLORS.FOG, 0.0042);
 
     const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 950);
     camera.rotation.order = 'YXZ';
 
-    // Iluminação Cósmica Índigo + Magenta + Azul Elétrico
-    const hemiLight = new THREE.HemisphereLight(0xb5179e, 0x10002b, 0.88);
+    const hemiLight = new THREE.HemisphereLight(0xb5179e, 0x0d0221, 0.85);
     scene.add(hemiLight);
 
-    const moonLight = new THREE.DirectionalLight(0x4cc9f0, 1.05);
+    const moonLight = new THREE.DirectionalLight(0x4cc9f0, 1.0);
     moonLight.position.set(160, 260, -240);
     scene.add(moonLight);
 
-    // Lua Cheia Gigante e Brilhante no Horizonte
+    // Lua Cheia Fragmentada Gigante no Horizonte
     const giantMoon = new THREE.Mesh(
-        new THREE.SphereGeometry(56, 18, 18),
+        new THREE.SphereGeometry(58, 18, 18),
         new THREE.MeshBasicMaterial({ color: GAME_CONFIG.COLORS.MOON_CORE, fog: false })
     );
-    giantMoon.position.set(0, 240, -680);
+    giantMoon.position.set(0, 235, -680);
     scene.add(giantMoon);
 
-    const moonAuraInner = new THREE.Mesh(
-        new THREE.SphereGeometry(74, 18, 18),
-        new THREE.MeshBasicMaterial({ color: 0xf72585, transparent: true, opacity: 0.28, fog: false })
+    const moonHalo = new THREE.Mesh(
+        new THREE.SphereGeometry(82, 18, 18),
+        new THREE.MeshBasicMaterial({ color: 0xf72585, transparent: true, opacity: 0.25, fog: false })
     );
-    moonAuraInner.position.copy(giantMoon.position);
-    scene.add(moonAuraInner);
+    moonHalo.position.copy(giantMoon.position);
+    scene.add(moonHalo);
 
-    const moonAuraOuter = new THREE.Mesh(
-        new THREE.SphereGeometry(98, 18, 18),
-        new THREE.MeshBasicMaterial({ color: 0x3a0ca3, transparent: true, opacity: 0.18, fog: false })
-    );
-    moonAuraOuter.position.copy(giantMoon.position);
-    scene.add(moonAuraOuter);
-
-    // Estrelas e Poeira Cósmica Flutuante no Céu
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 900;
-    const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
-    const paletteStars = [new THREE.Color(0xffffff), new THREE.Color(0x00f5d4), new THREE.Color(0xf72585), new THREE.Color(0xffd166)];
-
-    for (let i = 0; i < starCount; i++) {
-        starPositions[i * 3] = (Math.random() - 0.5) * 1600;
-        starPositions[i * 3 + 1] = 25 + Math.random() * 380;
-        starPositions[i * 3 + 2] = (Math.random() - 0.5) * 1600;
-        const c = paletteStars[i % paletteStars.length];
-        starColors[i * 3] = c.r;
-        starColors[i * 3 + 1] = c.g;
-        starColors[i * 3 + 2] = c.b;
+    // Pétalas de Sakura Roxa/Magenta caindo pelo ar (Cenário Vivo)
+    const petalCount = 450;
+    const petalGeo = new THREE.BufferGeometry();
+    const petalPos = new Float32Array(petalCount * 3);
+    for (let i = 0; i < petalCount; i++) {
+        petalPos[i * 3] = (Math.random() - 0.5) * 240;
+        petalPos[i * 3 + 1] = Math.random() * 45;
+        petalPos[i * 3 + 2] = (Math.random() - 0.5) * 240;
     }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
-    const starField = new THREE.Points(
-        starGeo,
-        new THREE.PointsMaterial({ size: 2.8, vertexColors: true, fog: false })
+    petalGeo.setAttribute('position', new THREE.BufferAttribute(petalPos, 3));
+    const sakuraPetalsSystem = new THREE.Points(
+        petalGeo,
+        new THREE.PointsMaterial({ color: 0xff70a6, size: 0.65, transparent: true, opacity: 0.85 })
     );
-    scene.add(starField);
+    scene.add(sakuraPetalsSystem);
 
     // ============================================================================
-    // 4. SISTEMA DE CAMADAS ISOLADAS (ANDAR 0 vs ANDAR 1)
+    // 4. CAMADAS ISOLADAS DO MUNDO (ANDAR 0 vs ANDAR 1 DO CASTELO FLUTUANTE)
     // ============================================================================
     const collidersByFloor = { 0: [], 1: [] };
     const floorGroups = { 0: new THREE.Group(), 1: new THREE.Group() };
@@ -1506,514 +1518,505 @@
     scene.add(floorGroups[1]);
     floorGroups[1].visible = false;
 
-    const pointLights = [];
     const mapLandmarks = [];
     const interactiveObjects = [];
-    const toriiGates = [];
+    const sealAltars = [];
     const rotatingBlades = [];
     const floatingWisps = [];
     const soulOrbs = [];
 
-    function addBoxCollider(minX, maxX, minZ, maxZ, andar = 0, label = '') {
-        collidersByFloor[andar].push({ minX, maxX, minZ, maxZ, andar, label });
+    function addBoxCollider(minX, maxX, minZ, maxZ, andar = 0, tag = '') {
+        collidersByFloor[andar].push({ minX, maxX, minZ, maxZ, andar, tag });
+    }
+
+    function removeColliderByTag(tag, andar = 0) {
+        const list = collidersByFloor[andar];
+        for (let i = list.length - 1; i >= 0; i--) {
+            if (list[i].tag === tag) list.splice(i, 1);
+        }
     }
 
     // ============================================================================
-    // 5. CONSTRUÇÃO DO AVATAR EM TERCEIRA PESSOA (ONMYOJI ASTRAL COM CAJADO)
+    // 5. PERSONAGEM DETALHADO EM 3ª PESSOA (CAPA ESVOAÇANTE, CHAPÉU & CAJADO)
     // ============================================================================
     const playerAvatar = new THREE.Group();
     scene.add(playerAvatar);
 
-    const robeMat = createRetroMat({ color: 0x240046 });
-    const trimNeonMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
-    const hatMat = createRetroMat({ color: 0x10002b });
-    const skinMat = createRetroMat({ color: 0xffe5ec });
+    // Túnica e Capa Esvoaçante articulada
+    const tunicMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.68, 1.55, 8),
+        createRetroMat({ color: 0x1a0536 })
+    );
+    tunicMesh.position.y = 0.85;
+    playerAvatar.add(tunicMesh);
 
-    // Manto / Kimono Astral
-    const avatarBody = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.72, 1.55, 8), robeMat);
-    avatarBody.position.y = 0.85;
-    playerAvatar.add(avatarBody);
+    const beltMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.52, 0.22, 8),
+        new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
+    );
+    beltMesh.position.y = 1.05;
+    playerAvatar.add(beltMesh);
 
-    const avatarSash = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.56, 0.24, 8), trimNeonMat);
-    avatarSash.position.y = 1.05;
-    playerAvatar.add(avatarSash);
+    // Capa Esvoaçante nas Costas
+    const flowingCape = new THREE.Mesh(
+        new THREE.BoxGeometry(0.95, 1.45, 0.12),
+        createRetroMat({ color: 0x590d22 })
+    );
+    flowingCape.position.set(0, 1.05, 0.42);
+    flowingCape.rotation.x = 0.22;
+    playerAvatar.add(flowingCape);
 
-    // Cabeça & Chapéu Cônico Oriental (Kasa Astral)
-    const avatarHead = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.55), skinMat);
-    avatarHead.position.y = 1.85;
-    playerAvatar.add(avatarHead);
+    // Cabeça & Chapéu de Mago/Andarilho Astral
+    const headMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.52, 0.52, 0.52),
+        createRetroMat({ color: 0xffe5ec })
+    );
+    headMesh.position.y = 1.85;
+    playerAvatar.add(headMesh);
 
-    const kasaHat = new THREE.Mesh(new THREE.ConeGeometry(1.05, 0.55, 10), hatMat);
-    kasaHat.position.y = 2.22;
-    playerAvatar.add(kasaHat);
+    const wizardHat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.98, 0.72, 10),
+        createRetroMat({ color: 0x10002b })
+    );
+    wizardHat.position.y = 2.28;
+    playerAvatar.add(wizardHat);
 
     const hatRim = new THREE.Mesh(
-        new THREE.RingGeometry(0.95, 1.08, 12),
+        new THREE.RingGeometry(0.9, 1.02, 12),
         new THREE.MeshBasicMaterial({ color: 0xf72585, side: THREE.DoubleSide })
     );
     hatRim.rotation.x = Math.PI / 2;
-    hatRim.position.y = 1.96;
+    hatRim.position.y = 1.94;
     playerAvatar.add(hatRim);
 
-    // Bastão Encantado na Mão Direita do Avatar (com Orbe Emissivo)
-    const avatarStaffGroup = new THREE.Group();
-    avatarStaffGroup.position.set(0.68, 1.15, -0.35);
-    playerAvatar.add(avatarStaffGroup);
+    // Cajado com Cristal Azul Pulsante
+    const staffPivot = new THREE.Group();
+    staffPivot.position.set(0.68, 1.15, -0.35);
+    playerAvatar.add(staffPivot);
 
-    const staffPole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.08, 2.35, 6),
+    const staffShaft = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.08, 2.4, 6),
         createRetroMat({ color: 0x3c096c })
     );
-    avatarStaffGroup.add(staffPole);
+    staffPivot.add(staffShaft);
 
-    const staffOrbMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
-    const staffOrb = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 1), staffOrbMat);
-    staffOrb.position.y = 1.25;
-    avatarStaffGroup.add(staffOrb);
+    const staffCrystal = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.26, 0),
+        new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
+    );
+    staffCrystal.position.y = 1.28;
+    staffPivot.add(staffCrystal);
 
-    const staffGlowLight = new THREE.PointLight(0x00f5d4, 1.4, 9);
-    staffGlowLight.position.y = 1.25;
-    avatarStaffGroup.add(staffGlowLight);
+    const staffPointLight = new THREE.PointLight(0x00f5d4, 1.4, 10);
+    staffPointLight.position.y = 1.28;
+    staffPivot.add(staffPointLight);
 
     // ============================================================================
-    // 6. MUNDO DARK FANTASY ORIENTAL CÓSMICO & ESTRUTURAS MONUMENTAIS
+    // 6. BIOMAS, ESTRUTURAS INTERATIVAS E CASTELO FLUTUANTE DE 2 ANDARES
     // ============================================================================
+    const stoneMat = createRetroMat({ map: textures.crackedMossStone });
+    const woodMat = createRetroMat({ map: textures.agedWood });
+    const pathMat = createRetroMat({ map: textures.runeStonePath });
+    const waterMat = new THREE.MeshBasicMaterial({ map: textures.starryWater });
+
     const groundMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(GAME_CONFIG.MAP_SIZE, GAME_CONFIG.MAP_SIZE, 64, 64),
-        createRetroMat({ map: textures.cosmicGrass })
+        createRetroMat({ map: textures.darkCosmicGrass })
     );
     groundMesh.rotation.x = -Math.PI / 2;
     floorGroups[0].add(groundMesh);
 
-    const stoneMat = createRetroMat({ map: textures.ancientStone });
-    const woodMat = createRetroMat({ map: textures.darkWood });
-    const pathMat = createRetroMat({ map: textures.stonePath });
-    const waterMat = new THREE.MeshBasicMaterial({ map: textures.starryWater });
+    // Trilhas de Pedra conectando os 4 Biomas
+    const mainRoadNS = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.14, 460), pathMat);
+    mainRoadNS.position.set(0, 0.07, -110);
+    floorGroups[0].add(mainRoadNS);
 
-    // Estradas de Pedra Principais (Norte-Sul e Leste-Oeste)
-    const roadNS = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.14, 520), pathMat);
-    roadNS.position.set(0, 0.07, -140);
-    floorGroups[0].add(roadNS);
+    const mainRoadEW = new THREE.Mesh(new THREE.BoxGeometry(360, 0.14, 7.2), pathMat);
+    mainRoadEW.position.set(0, 0.07, -38);
+    floorGroups[0].add(mainRoadEW);
 
-    const roadEW = new THREE.Mesh(new THREE.BoxGeometry(520, 0.14, 7.5), pathMat);
-    roadEW.position.set(0, 0.07, -38);
-    floorGroups[0].add(roadEW);
+    // Rio Estrelado Norte & Pontes Acorrentadas
+    const starRiver = new THREE.Mesh(new THREE.PlaneGeometry(700, 26), waterMat);
+    starRiver.rotation.x = -Math.PI / 2;
+    starRiver.position.set(0, 0.05, -88);
+    floorGroups[0].add(starRiver);
 
-    // Rios de Água Estrelada Cintilante com Pontes de Pedra Estreitas
-    const riverNorth = new THREE.Mesh(new THREE.PlaneGeometry(650, 26), waterMat);
-    riverNorth.rotation.x = -Math.PI / 2;
-    riverNorth.position.set(0, 0.05, -88);
-    floorGroups[0].add(riverNorth);
+    const riverBridge = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.55, 28), pathMat);
+    riverBridge.position.set(0, 0.3, -88);
+    floorGroups[0].add(riverBridge);
+    addBoxCollider(-320, -3.0, -100, -76, 0, 'Rio Oeste');
+    addBoxCollider(3.0, 320, -100, -76, 0, 'Rio Leste');
 
-    const bridgeNorth = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.55, 28), pathMat);
-    bridgeNorth.position.set(0, 0.3, -88);
-    floorGroups[0].add(bridgeNorth);
-    addBoxCollider(-280, -3.0, -100, -76, 0, 'Rio Estrelado Oeste');
-    addBoxCollider(3.0, 280, -100, -76, 0, 'Rio Estrelado Leste');
-
-    // --- 6.1 PORTÕES TORII AMALDIÇOADOS (DESAFIOS DE HORDA & TELEPORTE) ---
-    function createCursedTorii(x, z, rotY, mode, targetPos = null, label = '') {
+    // --- 6.1 SANTUÁRIOS PAGODE (CHECKPOINTS & RESTAURAÇÃO) ---
+    function createPagodaCheckpoint(x, z, name) {
         const g = new THREE.Group();
         g.position.set(x, 0, z);
-        g.rotation.y = rotY;
         floorGroups[0].add(g);
 
-        const colMat = createRetroMat({ color: 0x9b002c });
-        const topMat = createRetroMat({ color: 0x10002b });
-        const runeMat = new THREE.MeshBasicMaterial({ color: mode === 'teleport' ? 0x00f5d4 : 0xff0a54 });
+        const base = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.7, 9.5), stoneMat);
+        base.position.y = 0.35;
+        g.add(base);
 
-        for (const sx of [-3.2, 3.2]) {
-            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 8.8, 8), colMat);
-            pillar.position.set(sx, 4.4, 0);
-            g.add(pillar);
+        const body = new THREE.Mesh(new THREE.BoxGeometry(6.2, 4.8, 6.2), woodMat);
+        body.position.y = 3.1;
+        g.add(body);
 
-            const base = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 1.3), stoneMat);
-            base.position.set(sx, 0.45, 0);
-            g.add(base);
-        }
-
-        // Kasagi (Viga Superior Curva)
-        const kasagi = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.65, 1.1), topMat);
-        kasagi.position.set(0, 8.9, 0);
-        g.add(kasagi);
-
-        const nuki = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.45, 0.7), colMat);
-        nuki.position.set(0, 7.1, 0);
-        g.add(nuki);
-
-        // Véu energético no portal
-        const veil = new THREE.Mesh(
-            new THREE.PlaneGeometry(5.6, 6.8),
-            new THREE.MeshBasicMaterial({
-                color: mode === 'teleport' ? 0x00f5d4 : 0xf72585,
-                transparent: true,
-                opacity: 0.24,
-                side: THREE.DoubleSide
-            })
+        const winGlow = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.4, 2.0),
+            new THREE.MeshBasicMaterial({ color: 0xffd166 })
         );
-        veil.position.set(0, 3.5, 0);
-        g.add(veil);
+        winGlow.position.set(0, 3.2, 3.13);
+        g.add(winGlow);
 
-        const plaque = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 0.25), runeMat);
-        plaque.position.set(0, 8.0, 0);
-        g.add(plaque);
-
-        const light = new THREE.PointLight(mode === 'teleport' ? 0x00f5d4 : 0xff0a54, 1.8, 18);
-        light.position.set(x, 5.2, z);
-        floorGroups[0].add(light);
-
-        mapLandmarks.push({ x, z, color: mode === 'teleport' ? '#00f5d4' : '#ff0a54', size: 5 });
-
-        toriiGates.push({
-            pos: new THREE.Vector3(x, 0, z),
-            mode, // 'challenge' ou 'teleport'
-            targetPos,
-            label,
-            veil,
-            cooldown: 0,
-            completed: false
-        });
-    }
-
-    // 4 Portões Torii espalhados nas trilhas
-    createCursedTorii(0, -24, 0, 'challenge', null, 'Torii do Despertar (Desafio de Horda)');
-    createCursedTorii(-55, -38, Math.PI / 2, 'teleport', new THREE.Vector3(78, 0, -38), 'Portal Torii Oeste -> Santuário Leste');
-    createCursedTorii(85, -38, Math.PI / 2, 'teleport', new THREE.Vector3(-48, 0, -38), 'Portal Torii Leste -> Santuário Oeste');
-    createCursedTorii(0, -68, 0, 'challenge', null, 'Torii da Ponte Estrelada (Desafio Elite)');
-
-    // --- 6.2 SANTUÁRIOS E ALTARES DE PAGODE (OFERENDAS POR ESSÊNCIAS) ---
-    function createPagodaShrine(x, z, shrineType, title, cost, rewardDesc, applyFn) {
-        const g = new THREE.Group();
-        g.position.set(x, 0, z);
-        floorGroups[0].add(g);
-
-        // Base de pedra escalonada
-        const base1 = new THREE.Mesh(new THREE.BoxGeometry(10, 0.7, 10), stoneMat);
-        base1.position.y = 0.35;
-        g.add(base1);
-
-        // Corpo do Pagode com janelas iluminadas (Bloom glow)
-        const core = new THREE.Mesh(new THREE.BoxGeometry(6.8, 5.2, 6.8), woodMat);
-        core.position.y = 3.3;
-        g.add(core);
-
-        const windowGlowMat = new THREE.MeshBasicMaterial({ color: 0xffd166 });
-        for (const side of [-1, 1]) {
-            const winZ = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.2), windowGlowMat);
-            winZ.position.set(0, 3.4, side * 3.43);
-            if (side < 0) winZ.rotation.y = Math.PI;
-            g.add(winZ);
-        }
-
-        // 3 Telhados Curvos Orientais Sobrepostos
         const roofMat = createRetroMat({ color: 0x240046 });
-        [
-            { y: 6.4, r: 7.4, h: 2.2 },
-            { y: 8.6, r: 5.5, h: 2.0 },
-            { y: 10.6, r: 3.6, h: 2.2 }
-        ].forEach(tier => {
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(tier.r, tier.h, 4), roofMat);
-            roof.position.y = tier.y;
+        [{ y: 6.0, r: 7.0, h: 2.1 }, { y: 8.1, r: 5.0, h: 1.9 }, { y: 10.0, r: 3.2, h: 2.0 }].forEach(t => {
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(t.r, t.h, 4), roofMat);
+            roof.position.y = t.y;
             roof.rotation.y = Math.PI / 4;
             g.add(roof);
         });
 
-        // Pináculo dourado
-        const spire = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.35, 2.6, 6),
-            new THREE.MeshBasicMaterial({ color: 0xffd166 })
-        );
-        spire.position.y = 12.6;
-        g.add(spire);
-
-        // Lanternas de Pedra na frente
-        for (const lx of [-3.4, 3.4]) {
-            const lantern = new THREE.Mesh(
-                new THREE.BoxGeometry(0.7, 1.8, 0.7),
-                new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
-            );
-            lantern.position.set(lx, 1.6, 4.4);
-            g.add(lantern);
-        }
-
-        addBoxCollider(x - 3.6, x + 3.6, z - 3.6, z + 3.6, 0, 'Pagode');
+        addBoxCollider(x - 3.3, x + 3.3, z - 3.3, z + 3.3, 0, 'Pagode');
         mapLandmarks.push({ x, z, color: '#ffd166', size: 5 });
 
         const light = new THREE.PointLight(0xffd166, 1.8, 22);
-        light.position.set(x, 4.5, z + 4.5);
+        light.position.set(x, 4.2, z + 4.4);
         floorGroups[0].add(light);
 
-        // Altar de Oferenda Interativo [E] na entrada do Pagode
-        const altarMesh = new THREE.Mesh(
+        const lanternOrb = new THREE.Mesh(
             new THREE.OctahedronGeometry(0.65, 0),
-            new THREE.MeshBasicMaterial({ color: 0x00f5d4 })
+            new THREE.MeshBasicMaterial({ color: 0xffd166 })
         );
-        altarMesh.position.set(x, 1.8, z + 5.2);
-        floorGroups[0].add(altarMesh);
+        lanternOrb.position.set(x, 1.8, z + 4.8);
+        floorGroups[0].add(lanternOrb);
 
         interactiveObjects.push({
-            pos: new THREE.Vector3(x, 1.8, z + 5.2),
+            pos: new THREE.Vector3(x, 1.8, z + 4.8),
             andar: 0,
             reusable: true,
-            promptLabel: `Oferendar ${cost} Essências (${rewardDesc})`,
-            mesh: altarMesh,
+            promptLabel: `Descansar no ${name} (Curar & Salvar Checkpoint)`,
+            mesh: lanternOrb,
             onInteract: () => {
-                if (player.souls < cost) {
-                    showFloatingText(`PRECISA DE ${cost} ESSÊNCIAS ESPIRITUAIS!`, '#ff0a54');
-                    return;
-                }
-                player.souls -= cost;
+                player.hp = player.maxHp;
+                player.mp = player.maxMp;
+                player.respawnPos.set(x, 0, z + 6.5);
                 audio.playShrineChime();
-                applyFn();
                 updateRPGHud();
+                showFloatingText(`CHECKPOINT SALVO: ${name.toUpperCase()}!`, '#ffd166', '1.6rem');
             }
         });
     }
 
-    createPagodaShrine(
-        -32, -16, 'blessing', 'Pagode da Vitalidade Lunar', 10,
-        'Restaurar Tudo + Relíquia Vampirismo',
-        () => {
-            player.hp = player.maxHp;
-            player.mp = player.maxMp;
-            grantRelic('Vampirismo Astral (+8 HP/Abate)');
-            showFloatingText('BÊNÇÃO DO PAGODE: VIDA CHEIA + VAMPIRISMO!', '#00f5d4', '1.6rem');
-        }
-    );
+    createPagodaCheckpoint(-16, 4, 'Pagode do Bosque Inicial');
+    createPagodaCheckpoint(-18, -68, 'Pagode da Ponte Acorrentada');
 
-    createPagodaShrine(
-        34, -18, 'power', 'Pagode da Fúria Carmesim', 15,
-        '+10 Dano Mágico Permanente',
-        () => {
-            player.magicDamage += 10;
-            grantRelic('Selo da Fúria (+Dano)');
-            showFloatingText('PODER ELEMENTAL AUMENTADO (+10 DANO)!', '#ffd166', '1.6rem');
-        }
-    );
+    // --- 6.2 ALTARES DOS 3 SELOS CORROMPIDOS (OBJETIVOS PRINCIPAIS DA HISTÓRIA) ---
+    function createCorruptedSealAltar(id, x, z, biomeName, waveTypes) {
+        const g = new THREE.Group();
+        g.position.set(x, 0, z);
+        floorGroups[0].add(g);
 
-    // --- 6.3 RODA DE ESPADAS MÍSTICAS / FORJA ASTRAL ---
-    const FORGE_POS = new THREE.Vector3(42, 0, -56);
+        const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 4.6, 0.8, 8), stoneMat);
+        pedestal.position.y = 0.4;
+        g.add(pedestal);
+
+        // Torii em miniatura sobre o Altar do Selo
+        for (const px of [-2.4, 2.4]) {
+            const pil = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 5.4, 6), woodMat);
+            pil.position.set(px, 3.1, 0);
+            g.add(pil);
+        }
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.45, 0.8), createRetroMat({ color: 0x10002b }));
+        beam.position.set(0, 5.8, 0);
+        g.add(beam);
+
+        const crystalMat = new THREE.MeshBasicMaterial({ color: 0xff0a54 });
+        const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), crystalMat);
+        crystal.position.set(0, 2.6, 0);
+        g.add(crystal);
+
+        const light = new THREE.PointLight(0xff0a54, 2.0, 22);
+        light.position.set(x, 3.5, z);
+        floorGroups[0].add(light);
+
+        mapLandmarks.push({ x, z, color: '#ff0a54', size: 6 });
+
+        const sealObj = {
+            id,
+            x,
+            z,
+            biomeName,
+            waveTypes,
+            crystal,
+            crystalMat,
+            light,
+            purified: false,
+            inProgress: false
+        };
+        sealAltars.push(sealObj);
+
+        interactiveObjects.push({
+            pos: new THREE.Vector3(x, 1.5, z + 2.8),
+            andar: 0,
+            reusable: true,
+            promptLabel: `Iniciar Ritual de Purificação — Selo ${id} (${biomeName})`,
+            mesh: crystal,
+            onInteract: () => {
+                if (sealObj.purified) {
+                    showFloatingText('ESTE SELO JÁ FOI PURIFICADO!', '#00f5d4');
+                    return;
+                }
+                if (questState.activeRitual) {
+                    showFloatingText('UM RITUAL JÁ ESTÁ EM ANDAMENTO!', '#ff0a54');
+                    return;
+                }
+                startSealPurificationRitual(sealObj);
+            }
+        });
+    }
+
+    // Os 3 Selos espalhados pelos 3 Biomas Exteriores
+    createCorruptedSealAltar(1, 34, -12, 'Bosque das Sakuras', ['goblin', 'goblin', 'goblin']);
+    createCorruptedSealAltar(2, -74, -38, 'Cemitério dos Esquecidos', ['skeleton', 'skeleton', 'necromancer']);
+    createCorruptedSealAltar(3, 76, -38, 'Santuário Torii Amaldiçoado', ['yokai', 'skeleton', 'yokai']);
+
+    function startSealPurificationRitual(sealObj) {
+        sealObj.inProgress = true;
+        questState.activeRitual = {
+            sealObj,
+            timer: 0,
+            duration: 15.0,
+            wave2Spawned: false
+        };
+        document.getElementById('ritual-hud').style.display = 'block';
+        audio.playShrineChime();
+        showFloatingText(`RITUAL DO SELO ${sealObj.id} INICIADO! SOBREVIVA 15s!`, '#00f5d4', '1.65rem');
+
+        // Onda 1 imediata
+        sealObj.waveTypes.forEach((t, idx) => {
+            const ang = (idx / sealObj.waveTypes.length) * Math.PI * 2;
+            spawnCampEnemy(t, sealObj.x + Math.cos(ang) * 14, sealObj.z + Math.sin(ang) * 14, 0, true);
+        });
+    }
+
+    // --- 6.3 FORJA ASTRAL / RODA DE ESPADAS (EVOLUÇÃO DO BASTÃO COM ESSÊNCIAS) ---
+    const FORGE_POS = new THREE.Vector3(24, 0, -64);
     {
         const fg = new THREE.Group();
         fg.position.copy(FORGE_POS);
         floorGroups[0].add(fg);
 
-        const dais = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 6.5, 0.8, 12), stoneMat);
+        const dais = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 6.2, 0.8, 12), stoneMat);
         dais.position.y = 0.4;
         fg.add(dais);
 
-        // Núcleo cristalino da Forja Astral
-        const forgeCore = new THREE.Mesh(
-            new THREE.OctahedronGeometry(1.3, 0),
+        const core = new THREE.Mesh(
+            new THREE.OctahedronGeometry(1.2, 0),
             new THREE.MeshBasicMaterial({ color: 0xf72585 })
         );
-        forgeCore.position.y = 3.6;
-        fg.add(forgeCore);
+        core.position.y = 3.4;
+        fg.add(core);
 
-        // Roda Monumental de 8 Espadas Místicas Giratórias
-        const wheelPivot = new THREE.Group();
-        wheelPivot.position.y = 4.2;
-        fg.add(wheelPivot);
+        const wheel = new THREE.Group();
+        wheel.position.y = 4.0;
+        fg.add(wheel);
 
         const bladeMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
-        const hiltMat = createRetroMat({ color: 0xffd166 });
-
         for (let i = 0; i < 8; i++) {
-            const ang = (i / 8) * Math.PI * 2;
-            const swordGroup = new THREE.Group();
-            swordGroup.rotation.z = ang;
-
-            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.8, 0.08), bladeMat);
-            blade.position.y = 3.4;
-            swordGroup.add(blade);
-
-            const guard = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.2, 0.2), hiltMat);
-            guard.position.y = 1.5;
-            swordGroup.add(guard);
-
-            wheelPivot.add(swordGroup);
+            const sg = new THREE.Group();
+            sg.rotation.z = (i / 8) * Math.PI * 2;
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.26, 3.6, 0.08), bladeMat);
+            blade.position.y = 3.2;
+            sg.add(blade);
+            wheel.add(sg);
         }
-
-        rotatingBlades.push(wheelPivot);
+        rotatingBlades.push(wheel);
         mapLandmarks.push({ x: FORGE_POS.x, z: FORGE_POS.z, color: '#f72585', size: 6 });
 
-        const fLight = new THREE.PointLight(0xf72585, 2.4, 26);
-        fLight.position.set(FORGE_POS.x, 4.5, FORGE_POS.z);
+        const fLight = new THREE.PointLight(0xf72585, 2.2, 24);
+        fLight.position.set(FORGE_POS.x, 4.2, FORGE_POS.z);
         floorGroups[0].add(fLight);
 
         interactiveObjects.push({
-            pos: new THREE.Vector3(FORGE_POS.x, 1.5, FORGE_POS.z + 4.2),
+            pos: new THREE.Vector3(FORGE_POS.x, 1.5, FORGE_POS.z + 4.0),
             andar: 0,
             reusable: true,
-            promptLabel: 'Forja Astral: Encantar / Alternar Forma do Bastão (12 Essências)',
-            mesh: forgeCore,
+            promptLabel: 'Forja Astral: Evoluir Bastão Mágico',
+            mesh: core,
             onInteract: () => {
-                // Desbloqueia todas as 3 formas na primeira interação com 12 essências, e depois alterna livremente!
-                if (player.unlockedSpells.length < 3) {
-                    if (player.souls < 12) {
-                        showFloatingText('PRECISA DE 12 ESSÊNCIAS PARA DESPERTAR A RODA DE ESPADAS!', '#ff0a54');
-                        return;
-                    }
-                    player.souls -= 12;
-                    player.unlockedSpells = [0, 1, 2];
-                    player.currentSpellIndex = 1;
-                    audio.playShrineChime();
-                    applySpellFormVisuals();
-                    showFloatingText('FORJA DESPERTADA! USE [1], [2], [3] OU [E] PARA ALTERNAR MAGIAS!', '#00f5d4', '1.55rem');
-                } else {
-                    player.currentSpellIndex = (player.currentSpellIndex + 1) % GAME_CONFIG.SPELL_FORMS.length;
-                    audio.playShrineChime();
-                    applySpellFormVisuals();
-                    const sp = GAME_CONFIG.SPELL_FORMS[player.currentSpellIndex];
-                    showFloatingText(`BASTÃO ENCANTADO: ${sp.name}`, '#ffd166', '1.6rem');
+                const cost = 15 + player.wandLevel * 12;
+                if (player.souls < cost) {
+                    showFloatingText(`PRECISA DE ${cost} ESSÊNCIAS ESPIRITUAIS!`, '#ff0a54');
+                    return;
                 }
+                player.souls -= cost;
+                player.wandLevel += 1;
+                player.magicDamage += 7;
+                player.fireRateMs = Math.max(150, player.fireRateMs - 18);
+                if (player.wandLevel === 2) player.projectileCount = 2; // Disparo duplo
+                if (player.wandLevel >= 4) player.projectileCount = 3; // Disparo triplo em leque
+
+                audio.playShrineChime();
                 updateRPGHud();
+                showFloatingText(`BASTÃO FORJADO PARA +${player.wandLevel}! (DANO: ${player.magicDamage})`, '#00f5d4', '1.65rem');
             }
         });
     }
 
-    // --- 6.4 ESTÁTUAS COLOSSAIS & CRIPTAS COM GRIMÓRIOS DE LORE ---
-    function createColossalStatueCrypt(x, z, loreTitle, loreText, relicReward) {
+    // --- 6.4 CASAS ABANDONADAS, BIBLIOTECAS E CRIPTAS (BAÚS & PERGAMINHOS DE LORE) ---
+    function createLoreBuilding(x, z, title, scrollHeading, scrollBody, soulBonus, healPotion) {
         const g = new THREE.Group();
         g.position.set(x, 0, z);
         floorGroups[0].add(g);
 
-        // Cabeça / Estátua Colossal Esculpida na Rocha com Olhos Azul-Elétrico
-        const monolith = new THREE.Mesh(new THREE.BoxGeometry(7.5, 11.5, 6.5), stoneMat);
-        monolith.position.set(0, 5.75, -3.5);
-        g.add(monolith);
+        // Casa/Cripta antiga com paredes de pedra e telhado escuro
+        const floor = new THREE.Mesh(new THREE.BoxGeometry(9, 0.3, 9), pathMat);
+        floor.position.y = 0.15;
+        g.add(floor);
 
-        const brow = new THREE.Mesh(new THREE.BoxGeometry(8.1, 1.4, 7.2), stoneMat);
-        brow.position.set(0, 9.2, -3.2);
-        g.add(brow);
+        const backW = new THREE.Mesh(new THREE.BoxGeometry(9, 4.5, 0.8), stoneMat);
+        backW.position.set(0, 2.25, -4.1);
+        g.add(backW);
 
-        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
-        for (const ex of [-1.8, 1.8]) {
-            const eye = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.65, 0.3), eyeMat);
-            eye.position.set(ex, 8.1, -0.15);
-            g.add(eye);
-        }
+        const leftW = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 9), stoneMat);
+        leftW.position.set(-4.1, 2.25, 0);
+        g.add(leftW);
 
-        // Entrada da Cripta aos pés da Estátua
-        const cryptFloor = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.25, 7.5), pathMat);
-        cryptFloor.position.set(0, 0.125, 3.2);
-        g.add(cryptFloor);
+        const rightW = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 9), stoneMat);
+        rightW.position.set(4.1, 2.25, 0);
+        g.add(rightW);
 
-        addBoxCollider(x - 4.0, x + 4.0, z - 6.8, z - 0.2, 0, 'Estátua Colossal');
-        mapLandmarks.push({ x, z, color: '#4cc9f0', size: 5 });
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(7.2, 2.8, 4), woodMat);
+        roof.position.y = 5.9;
+        roof.rotation.y = Math.PI / 4;
+        g.add(roof);
 
-        const eyeLight = new THREE.PointLight(0x00f5d4, 1.9, 20);
-        eyeLight.position.set(x, 8.0, z + 1.5);
-        floorGroups[0].add(eyeLight);
+        addBoxCollider(x - 4.5, x + 4.5, z - 4.5, z - 3.6, 0, title);
+        addBoxCollider(x - 4.5, x - 3.6, z - 4.5, z + 4.5, 0, title);
+        addBoxCollider(x + 3.6, x + 4.5, z - 4.5, z + 4.5, 0, title);
+        mapLandmarks.push({ x, z, color: '#4cc9f0', size: 4 });
 
-        // Grimório / Relíquia na Cripta
-        const tome = new THREE.Mesh(
-            new THREE.BoxGeometry(1.1, 0.3, 0.85),
+        const relicChest = new THREE.Mesh(
+            new THREE.BoxGeometry(1.4, 0.9, 1.0),
             new THREE.MeshBasicMaterial({ color: 0xffd166 })
         );
-        tome.position.set(x, 1.35, z + 2.5);
-        floorGroups[0].add(tome);
+        relicChest.position.set(x, 0.75, z - 1.5);
+        floorGroups[0].add(relicChest);
 
         interactiveObjects.push({
-            pos: new THREE.Vector3(x, 1.35, z + 2.5),
+            pos: new THREE.Vector3(x, 1.0, z - 1.5),
             andar: 0,
             reusable: false,
-            promptLabel: `Examinar Cripta (${loreTitle})`,
-            mesh: tome,
+            promptLabel: `Abrir Baú & Pergaminho (${title})`,
+            mesh: relicChest,
             onInteract: () => {
                 audio.playShrineChime();
-                gainPlayerXP(45, 'Cripta Antiga');
-                if (relicReward) grantRelic(relicReward);
-                showLoreModal(loreTitle, loreText);
+                player.souls += soulBonus;
+                if (healPotion) {
+                    player.hp = Math.min(player.maxHp, player.hp + 50);
+                    player.mp = player.maxMp;
+                }
+                gainPlayerXP(45, title);
+                openLoreScroll(scrollHeading, `${scrollBody}\n\n[Recompensa: +${soulBonus} Essências Espirituais${healPotion ? ' e Poção Astral' : ''}]`);
             }
         });
     }
 
-    createColossalStatueCrypt(
-        -52, -62,
-        'CRÔNICA DOS GUARDIÕES DE PEDRA',
-        '“As estátuas colossais vigiam o selo da Ilha Acorrentada. No topo da torre flutua Onryō Kage-Samurai, corrompido pelo eclipse.”',
-        'Passos do Vento (+20% Velocidade)'
+    createLoreBuilding(
+        22, 16,
+        'Casa Abandonada do Eremita',
+        'DIÁRIO DO ÚLTIMO ONMYOJI',
+        '“Quando Lorde Malakor estilhaçou a Lua Cheia no céu de índigo, três selos profanos caíram sobre o vale. Enquanto os três altares não forem purificados, uma barreira carmesim trancará o Trono do Eclipse.”',
+        12, true
     );
 
-    createColossalStatueCrypt(
-        68, 28,
-        'PERGAMINHO DO VÉU CÓSMICO',
-        '“Quando a Lua de Sangue ascende, as almas dos yokai dobram de brilho — e sua fúria também.”',
-        'Orbes Ricocheteantes'
+    createLoreBuilding(
+        -56, -18,
+        'Cripta dos Esqueletos Antigos',
+        'TRATADO DE COMBATE ASTRAL',
+        '“Os Esqueletos Guerreiros erguem escudos rúnicos que absorvem 60% dos projéteis frontais. Use o Dash [ESPAÇO] para atravessar sua guarda ou detone a Explosão Arcana [Botão Direito] ao lado deles.”',
+        16, true
     );
 
-    // --- 6.5 ILHA / TORRE FLUTUANTE ACORRENTADA (CASTELO DE 2 ANDARES + ESCADA EM ESPIRAL) ---
-    const CASTLE_CENTER_Z = -132;
-    const SPIRAL_STAIR_POS = new THREE.Vector3(14.5, 0, -144);
+    createLoreBuilding(
+        56, -18,
+        'Biblioteca das Sakuras',
+        'CRÔNICA DA RODA DE ESPADAS',
+        '“A Forja Astral próximo ao rio transmuta Essências Espirituais em poder puro. Um cajado forjado dispara múltiplas esferas simultâneas — indispensável contra os Cavaleiros Negros do Castelo.”',
+        18, false
+    );
+
+    // --- 6.5 CASTELO FLUTUANTE ACORRENTADO (2 ANDARES ISOLADOS + BARREIRA DOS 3 SELOS) ---
+    const CASTLE_CENTER_Z = -134;
+    const SPIRAL_STAIR_POS = new THREE.Vector3(14.5, 0, -146);
     const floor1Y = GAME_CONFIG.SECOND_FLOOR_HEIGHT;
 
     mapLandmarks.push({ x: 0, z: CASTLE_CENTER_Z, color: '#ff0a54', size: 8 });
 
-    // Ponte de Pedra Estreita conectando o continente à Ilha Flutuante
     const skyBridge = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.7, 22), pathMat);
     skyBridge.position.set(0, 0.35, -104);
     floorGroups[0].add(skyBridge);
 
-    // Correntes Gigantes ancorando a Fortaleza Flutuante ao solo!
-    function createGiantChain(startX, startY, startZ, endX, endY, endZ) {
-        const steps = 14;
-        const chainMat = createRetroMat({ color: 0x3c096c });
-        const glowLinkMat = new THREE.MeshBasicMaterial({ color: 0xf72585 });
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
+    // Correntes Gigantes Ancorando o Castelo Flutuante
+    [
+        [-22, 18, -112, -36, 0, -96],
+        [22, 18, -112, 36, 0, -96],
+        [-22, 18, -154, -38, 0, -170],
+        [22, 18, -154, 38, 0, -170]
+    ].forEach(([sx, sy, sz, ex, ey, ez]) => {
+        for (let i = 0; i <= 14; i++) {
+            const t = i / 14;
             const link = new THREE.Mesh(
                 new THREE.TorusGeometry(0.85, 0.24, 6, 8),
-                i % 4 === 0 ? glowLinkMat : chainMat
+                i % 4 === 0 ? new THREE.MeshBasicMaterial({ color: 0xf72585 }) : createRetroMat({ color: 0x3c096c })
             );
-            link.position.set(
-                startX + (endX - startX) * t,
-                startY + (endY - startY) * t,
-                startZ + (endZ - startZ) * t
-            );
+            link.position.set(sx + (ex - sx) * t, sy + (ey - sy) * t, sz + (ez - sz) * t);
             link.rotation.y = (i % 2) * (Math.PI / 2);
             floorGroups[0].add(link);
         }
-    }
+    });
 
-    createGiantChain(-22, 18, -112, -36, 0, -96);
-    createGiantChain(22, 18, -112, 36, 0, -96);
-    createGiantChain(-22, 18, -152, -38, 0, -168);
-    createGiantChain(22, 18, -152, 38, 0, -168);
-
-    // === ANDAR 0 DA FORTALEZA (TÉRREO ISOLADO) ===
+    // === 1º ANDAR DO CASTELO (SALÃO DOS GUARDAS — ISOLADO) ===
     const cGroundDeck = new THREE.Mesh(new THREE.BoxGeometry(44, 0.8, 44), pathMat);
     cGroundDeck.position.set(0, 0.3, CASTLE_CENTER_Z);
     floorGroups[0].add(cGroundDeck);
 
     const wallH0 = floor1Y;
-    // Muralha Sul com Portão Aberto (X entre -4.2 e 4.2)
     const cFrontL = new THREE.Mesh(new THREE.BoxGeometry(17.8, wallH0, 2.2), stoneMat);
     cFrontL.position.set(-13.1, wallH0 / 2, CASTLE_CENTER_Z + 22);
     floorGroups[0].add(cFrontL);
-    addBoxCollider(-23, -4.2, -111.2, -108.8, 0, 'Muralha Sul Esq');
+    addBoxCollider(-23, -4.2, -113.2, -110.8, 0, 'Muralha Sul Esq');
 
     const cFrontR = new THREE.Mesh(new THREE.BoxGeometry(17.8, wallH0, 2.2), stoneMat);
     cFrontR.position.set(13.1, wallH0 / 2, CASTLE_CENTER_Z + 22);
     floorGroups[0].add(cFrontR);
-    addBoxCollider(4.2, 23, -111.2, -108.8, 0, 'Muralha Sul Dir');
+    addBoxCollider(4.2, 23, -113.2, -110.8, 0, 'Muralha Sul Dir');
+
+    // Barreira Mágica Selada na Entrada do Castelo (Quebra ao Purificar os 3 Selos!)
+    const castleBarrierMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(8.4, 12),
+        new THREE.MeshBasicMaterial({ color: 0xff0a54, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+    );
+    castleBarrierMesh.position.set(0, 6, CASTLE_CENTER_Z + 22);
+    floorGroups[0].add(castleBarrierMesh);
+    addBoxCollider(-4.2, 4.2, -113.2, -110.8, 0, 'BarreiraSelos');
 
     const cNorthW = new THREE.Mesh(new THREE.BoxGeometry(46, wallH0, 2.2), stoneMat);
     cNorthW.position.set(0, wallH0 / 2, CASTLE_CENTER_Z - 22);
     floorGroups[0].add(cNorthW);
-    addBoxCollider(-23, 23, -155.2, -152.8, 0, 'Muralha Norte');
+    addBoxCollider(-23, 23, -157.2, -154.8, 0, 'Muralha Norte');
 
     const cWestW = new THREE.Mesh(new THREE.BoxGeometry(2.2, wallH0, 46), stoneMat);
     cWestW.position.set(-22, wallH0 / 2, CASTLE_CENTER_Z);
     floorGroups[0].add(cWestW);
-    addBoxCollider(-23.2, -20.8, -155, -109, 0, 'Muralha Oeste');
+    addBoxCollider(-23.2, -20.8, -157, -111, 0, 'Muralha Oeste');
 
     const cEastW = new THREE.Mesh(new THREE.BoxGeometry(2.2, wallH0, 46), stoneMat);
     cEastW.position.set(22, wallH0 / 2, CASTLE_CENTER_Z);
     floorGroups[0].add(cEastW);
-    addBoxCollider(20.8, 23.2, -155, -109, 0, 'Muralha Leste');
+    addBoxCollider(20.8, 23.2, -157, -111, 0, 'Muralha Leste');
 
-    // === ESCADA EM ESPIRAL DETALHADA (CONECTA ANDAR 0 <-> ANDAR 1) ===
+    // Escada em Espiral conectando 1º e 2º Andares
     function buildSpiralStaircase(parentGroup) {
         const sg = new THREE.Group();
         sg.position.set(SPIRAL_STAIR_POS.x, 0, SPIRAL_STAIR_POS.z);
@@ -2054,7 +2057,7 @@
     buildSpiralStaircase(floorGroups[0]);
     buildSpiralStaircase(floorGroups[1]);
 
-    // === ANDAR 1 DA FORTALEZA (SANTUÁRIO SUPERIOR DO CHEFE — ISOLADO) ===
+    // === 2º ANDAR DO CASTELO (TRONO DO ECLIPSE — TOTALMENTE ISOLADO) ===
     const uDeck = new THREE.Mesh(new THREE.BoxGeometry(44, 0.8, 44), pathMat);
     uDeck.position.set(0, floor1Y, CASTLE_CENTER_Z);
     floorGroups[1].add(uDeck);
@@ -2063,121 +2066,91 @@
     const uSouthW = new THREE.Mesh(new THREE.BoxGeometry(46, wallH1, 2.2), stoneMat);
     uSouthW.position.set(0, floor1Y + wallH1 / 2, CASTLE_CENTER_Z + 22);
     floorGroups[1].add(uSouthW);
-    addBoxCollider(-23, 23, -111.2, -108.8, 1, 'Muralha Sul 2º Andar');
+    addBoxCollider(-23, 23, -113.2, -110.8, 1, 'Muralha Sul 2º Andar');
 
     const uNorthW = new THREE.Mesh(new THREE.BoxGeometry(46, wallH1, 2.2), stoneMat);
     uNorthW.position.set(0, floor1Y + wallH1 / 2, CASTLE_CENTER_Z - 22);
     floorGroups[1].add(uNorthW);
-    addBoxCollider(-23, 23, -155.2, -152.8, 1, 'Muralha Norte 2º Andar');
+    addBoxCollider(-23, 23, -157.2, -154.8, 1, 'Muralha Norte 2º Andar');
 
     const uWestW = new THREE.Mesh(new THREE.BoxGeometry(2.2, wallH1, 46), stoneMat);
     uWestW.position.set(-22, floor1Y + wallH1 / 2, CASTLE_CENTER_Z);
     floorGroups[1].add(uWestW);
-    addBoxCollider(-23.2, -20.8, -155, -109, 1, 'Muralha Oeste 2º Andar');
+    addBoxCollider(-23.2, -20.8, -157, -111, 1, 'Muralha Oeste 2º Andar');
 
     const uEastW = new THREE.Mesh(new THREE.BoxGeometry(2.2, wallH1, 46), stoneMat);
     uEastW.position.set(22, floor1Y + wallH1 / 2, CASTLE_CENTER_Z);
     floorGroups[1].add(uEastW);
-    addBoxCollider(20.8, 23.2, -155, -109, 1, 'Muralha Leste 2º Andar');
+    addBoxCollider(20.8, 23.2, -157, -111, 1, 'Muralha Leste 2º Andar');
 
-    // Telhado Pagode Monumental no Topo da Ilha Flutuante
     const uRoof = new THREE.Mesh(new THREE.ConeGeometry(34, 15, 4), createRetroMat({ color: 0x240046 }));
     uRoof.position.set(0, floor1Y + wallH1 + 7.5, CASTLE_CENTER_Z);
     uRoof.rotation.y = Math.PI / 4;
     floorGroups[1].add(uRoof);
 
-    const bossRoomLight = new THREE.PointLight(0xff0a54, 2.5, 50);
-    bossRoomLight.position.set(0, floor1Y + 11, CASTLE_CENTER_Z);
-    floorGroups[1].add(bossRoomLight);
+    const bossLight = new THREE.PointLight(0xff0a54, 2.6, 52);
+    bossLight.position.set(0, floor1Y + 11, CASTLE_CENTER_Z);
+    floorGroups[1].add(bossLight);
 
-    // --- 6.6 VEGETAÇÃO: CEREJEIRAS SOMBRIAS (SAKURAS) & FOGOS-FÁTUOS AZUIS ---
+    // --- 6.6 CEREJEIRAS SOMBRIAS & FOGOS-FÁTUOS AMBIENTAIS ---
     const sakuraBarkMat = createRetroMat({ map: textures.sakuraBark });
     const sakuraLeavesMat = createRetroMat({ map: textures.sakuraLeaves });
 
-    function createDarkSakuraTree(x, z, scale = 1.0) {
+    function createDarkSakura(x, z, scale = 1.0) {
         const tree = new THREE.Group();
         tree.position.set(x, 0, z);
 
-        // Tronco retorcido escuro
-        const trunk1 = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * scale, 0.72 * scale, 3.6 * scale, 6), sakuraBarkMat);
-        trunk1.position.y = 1.8 * scale;
-        trunk1.rotation.z = 0.14;
-        tree.add(trunk1);
+        const t1 = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * scale, 0.72 * scale, 3.6 * scale, 6), sakuraBarkMat);
+        t1.position.y = 1.8 * scale;
+        t1.rotation.z = 0.14;
+        tree.add(t1);
 
-        const trunk2 = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * scale, 0.38 * scale, 3.2 * scale, 6), sakuraBarkMat);
-        trunk2.position.set(-0.4 * scale, 4.4 * scale, 0.2 * scale);
-        trunk2.rotation.z = -0.22;
-        tree.add(trunk2);
+        const t2 = new THREE.Mesh(new THREE.CylinderGeometry(0.25 * scale, 0.38 * scale, 3.2 * scale, 6), sakuraBarkMat);
+        t2.position.set(-0.4 * scale, 4.4 * scale, 0.2 * scale);
+        t2.rotation.z = -0.22;
+        tree.add(t2);
 
-        // Copas Sakura Roxas/Magenta Brilhantes em camadas
-        const canopyOffsets = [
-            { x: 0, y: 6.2, z: 0, r: 3.3 },
-            { x: -1.8, y: 5.4, z: 1.1, r: 2.3 },
-            { x: 1.9, y: 5.6, z: -0.9, r: 2.4 }
-        ];
-        canopyOffsets.forEach(c => {
+        [{ x: 0, y: 6.2, z: 0, r: 3.3 }, { x: -1.8, y: 5.4, z: 1.1, r: 2.3 }, { x: 1.9, y: 5.6, z: -0.9, r: 2.4 }].forEach(c => {
             const crown = new THREE.Mesh(new THREE.DodecahedronGeometry(c.r * scale, 1), sakuraLeavesMat);
             crown.position.set(c.x * scale, c.y * scale, c.z * scale);
             tree.add(crown);
         });
 
         floorGroups[0].add(tree);
-        addBoxCollider(x - 0.85 * scale, x + 0.85 * scale, z - 0.85 * scale, z + 0.85 * scale, 0, 'Sakura Sombria');
+        addBoxCollider(x - 0.85 * scale, x + 0.85 * scale, z - 0.85 * scale, z + 0.85 * scale, 0, 'Sakura');
     }
 
-    // Fogos-Fátuos Azuis Flutuantes (Atmosfera Mística)
-    function createAmbientBlueWisp(x, z) {
-        const sprite = new THREE.Sprite(
-            new THREE.SpriteMaterial({
-                map: textures.orbBlue,
-                color: 0x00f5d4,
-                transparent: true,
-                blending: THREE.AdditiveBlending
-            })
-        );
-        sprite.scale.set(1.6, 1.6, 1);
-        sprite.position.set(x, 2.2, z);
-        floorGroups[0].add(sprite);
-        floatingWisps.push({
-            sprite,
-            baseX: x,
-            baseZ: z,
-            phase: Math.random() * Math.PI * 2
-        });
-    }
+    for (let i = 0; i < 210; i++) {
+        const rx = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 160);
+        const rz = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 160);
+        if (Math.abs(rx) < 14) continue;
+        if (Math.abs(rz + 38) < 16) continue;
+        if (rz > -106 && rz < -70) continue;
+        if (Math.abs(rx) < 42 && rz < -105 && rz > -168) continue;
+        if (Math.hypot(rx - 34, rz + 12) < 14) continue;
+        if (Math.hypot(rx + 74, rz + 38) < 18) continue;
+        if (Math.hypot(rx - 76, rz + 38) < 18) continue;
 
-    // Popula Sakuras Sombrias e Fogos-Fátuos pelo Reino
-    for (let i = 0; i < 240; i++) {
-        const rx = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 140);
-        const rz = (Math.random() - 0.5) * (GAME_CONFIG.MAP_SIZE - 140);
-
-        // Evita estradas, rios e estruturas centrais
-        if (Math.abs(rx) < 12) continue;
-        if (Math.abs(rz + 38) < 12) continue;
-        if (rz > -104 && rz < -72) continue;
-        if (Math.abs(rx) < 35 && rz < -105 && rz > -165) continue;
-
-        createDarkSakuraTree(rx, rz, 0.85 + Math.random() * 0.85);
-        if (i % 4 === 0) {
-            createAmbientBlueWisp(rx + 2.5, rz + 2.5);
+        createDarkSakura(rx, rz, 0.85 + Math.random() * 0.8);
+        if (i % 5 === 0) {
+            const wisp = new THREE.Sprite(
+                new THREE.SpriteMaterial({ map: textures.orbBlue, color: 0x00f5d4, blending: THREE.AdditiveBlending })
+            );
+            wisp.scale.set(1.5, 1.5, 1);
+            wisp.position.set(rx + 2, 2.2, rz + 2);
+            floorGroups[0].add(wisp);
+            floatingWisps.push({ sprite: wisp, baseX: rx + 2, baseZ: rz + 2, phase: Math.random() * 6.28 });
         }
     }
 
     // ============================================================================
-    // 7. VARA MÁGICA ENCANTADA — TIRO CONTÍNUO & 3 FORMAS ELEMENTAIS
+    // 7. COMBATE ARCANO: DISPARO CONTÍNUO & EXPLOSÃO ARCANA EM ÁREA [CLIQUE DIR]
     // ============================================================================
     const activeProjectiles = [];
     const magicParticles = [];
     const particleGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
 
-    function applySpellFormVisuals() {
-        const sp = GAME_CONFIG.SPELL_FORMS[player.currentSpellIndex];
-        staffOrbMat.color.setHex(sp.color);
-        staffGlowLight.color.setHex(sp.color);
-        document.getElementById('hud-weapon-badge').textContent = `✨ FORMA: ${sp.name}`;
-    }
-
-    function spawnMagicTrailParticle(pos, colorHex = 0x00f5d4, speedScale = 1.0) {
+    function spawnParticle(pos, colorHex = 0x00f5d4, speedScale = 1.0) {
         const mesh = new THREE.Mesh(
             particleGeo,
             new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95, fog: false })
@@ -2187,80 +2160,117 @@
         magicParticles.push({
             mesh,
             vel: new THREE.Vector3(
-                (Math.random() - 0.5) * 4.0 * speedScale,
-                (Math.random() - 0.2) * 4.0 * speedScale,
-                (Math.random() - 0.5) * 4.0 * speedScale
+                (Math.random() - 0.5) * 4.5 * speedScale,
+                (Math.random() - 0.2) * 4.5 * speedScale,
+                (Math.random() - 0.5) * 4.5 * speedScale
             ),
-            life: 0.35,
-            maxLife: 0.35
+            life: 0.36,
+            maxLife: 0.36
         });
     }
 
-    function tryCastContinuousMagicOrb(nowMs) {
-        if (!player.isPlaying || isPaused) return;
-        const spell = GAME_CONFIG.SPELL_FORMS[player.currentSpellIndex];
-        if (nowMs - lastFireTimestamp < spell.fireRateMs) return;
+    function tryCastPrimaryMagic(nowMs) {
+        if (!player.isPlaying || isPaused || isLoreOpen) return;
+        if (nowMs - lastFireTimestamp < player.fireRateMs) return;
 
-        if (player.mp < spell.manaCost) {
+        if (player.mp < GAME_CONFIG.PRIMARY_MANA_COST) {
             lastFireTimestamp = nowMs;
-            showFloatingText('MANA CÓSMICA INSUFICIENTE!', '#00f5d4');
+            showFloatingText('MANA INSUFICIENTE!', '#00f5d4');
             return;
         }
 
         lastFireTimestamp = nowMs;
-        player.mp -= spell.manaCost;
-        audio.playMagicCast(spell.id);
+        player.mp -= GAME_CONFIG.PRIMARY_MANA_COST;
+        audio.playMagicCast();
 
-        // Animação de ataque do bastão no avatar
-        avatarStaffGroup.rotation.x = -0.65;
-        setTimeout(() => { avatarStaffGroup.rotation.x = 0; }, 110);
+        staffPivot.rotation.x = -0.65;
+        setTimeout(() => { staffPivot.rotation.x = 0; }, 110);
 
-        // Mira a partir do centro da tela em 3ª pessoa
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouseNDC, camera);
         const targetPoint = new THREE.Vector3();
         raycaster.ray.at(75, targetPoint);
 
         const spawnPos = new THREE.Vector3();
-        staffOrb.getWorldPosition(spawnPos);
-        const dir = targetPoint.sub(spawnPos).normalize();
+        staffCrystal.getWorldPosition(spawnPos);
+        const baseDir = targetPoint.sub(spawnPos).normalize();
 
-        const orbGroup = new THREE.Group();
-        orbGroup.position.copy(spawnPos);
+        // Dispara 1, 2 ou 3 projéteis conforme nível do Bastão na Forja Astral
+        const count = player.projectileCount;
+        for (let c = 0; c < count; c++) {
+            const spreadAngle = count === 1 ? 0 : (c - (count - 1) / 2) * 0.09;
+            const dir = baseDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), spreadAngle);
 
-        const core = new THREE.Mesh(
-            new THREE.SphereGeometry(0.32, 8, 8),
-            new THREE.MeshBasicMaterial({ color: spell.coreColor, fog: false })
-        );
-        orbGroup.add(core);
+            const orbGroup = new THREE.Group();
+            orbGroup.position.copy(spawnPos);
 
-        const spriteTex = spell.id === 1 ? textures.orbMagenta : (spell.id === 2 ? textures.orbCosmic : textures.orbBlue);
-        const halo = new THREE.Sprite(
-            new THREE.SpriteMaterial({
-                map: spriteTex,
-                color: spell.color,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                fog: false
-            })
-        );
-        halo.scale.set(spell.scale, spell.scale, 1);
-        orbGroup.add(halo);
+            const core = new THREE.Mesh(
+                new THREE.SphereGeometry(0.3, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false })
+            );
+            orbGroup.add(core);
 
-        scene.add(orbGroup);
+            const halo = new THREE.Sprite(
+                new THREE.SpriteMaterial({
+                    map: textures.orbBlue,
+                    color: 0x00f5d4,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    fog: false
+                })
+            );
+            halo.scale.set(1.9, 1.9, 1);
+            orbGroup.add(halo);
 
-        const hasRicochetRelic = player.relics.includes('Orbes Ricocheteantes');
-        activeProjectiles.push({
-            mesh: orbGroup,
-            andar: player.andar,
-            isEnemy: false,
-            color: spell.color,
-            velocity: dir.multiplyScalar(spell.speed),
-            distanceTraveled: 0,
-            damage: Math.round(player.magicDamage * spell.damageMult),
-            bouncesLeft: (spell.ricochet || hasRicochetRelic) ? 2 : 0,
-            trailTimer: 0
-        });
+            scene.add(orbGroup);
+            activeProjectiles.push({
+                mesh: orbGroup,
+                andar: player.andar,
+                isEnemy: false,
+                color: 0x00f5d4,
+                velocity: dir.multiplyScalar(GAME_CONFIG.PROJECTILE_SPEED),
+                distanceTraveled: 0,
+                damage: player.magicDamage,
+                trailTimer: 0
+            });
+        }
+    }
+
+    // Habilidade Secundária: Explosão Arcana em Área (Botão Direito do Mouse)
+    function castArcaneNova() {
+        if (!player.isPlaying || isPaused || isLoreOpen) return;
+        if (player.novaCooldownTimer > 0) {
+            showFloatingText(`NOVA ARCANA EM RECARGA (${player.novaCooldownTimer.toFixed(1)}s)`, '#9d4edd');
+            return;
+        }
+        if (player.mp < GAME_CONFIG.NOVA_MANA_COST) {
+            showFloatingText(`PRECISA DE ${GAME_CONFIG.NOVA_MANA_COST} MANA!`, '#00f5d4');
+            return;
+        }
+
+        player.mp -= GAME_CONFIG.NOVA_MANA_COST;
+        player.novaCooldownTimer = GAME_CONFIG.NOVA_COOLDOWN;
+        audio.playArcaneNova();
+
+        const center = player.pos.clone().add(new THREE.Vector3(0, 1.2, 0));
+        for (let i = 0; i < 36; i++) {
+            const ang = (i / 36) * Math.PI * 2;
+            const ringPos = center.clone().add(new THREE.Vector3(Math.cos(ang) * 2.5, 0, Math.sin(ang) * 2.5));
+            spawnParticle(ringPos, i % 2 === 0 ? 0x00f5d4 : 0xf72585, 3.8);
+        }
+
+        const novaDmg = Math.round(player.magicDamage * GAME_CONFIG.NOVA_DAMAGE_MULT);
+        let hits = 0;
+        for (let j = activeEnemies.length - 1; j >= 0; j--) {
+            const e = activeEnemies[j];
+            if (e.andar !== player.andar) continue;
+            if (e.mesh.position.distanceTo(player.pos) <= GAME_CONFIG.NOVA_RADIUS) {
+                damageEnemy(e, j, novaDmg, true); // Ignora escudo frontal!
+                hits++;
+            }
+        }
+        showFloatingText(hits > 0 ? `EXPLOSÃO ARCANA! (${hits} ATINGIDOS)` : 'EXPLOSÃO ARCANA!', '#00f5d4', '1.6rem');
+        updateRPGHud();
     }
 
     function updateProjectiles(dt) {
@@ -2271,37 +2281,29 @@
             p.distanceTraveled += step.length();
 
             p.trailTimer += dt;
-            if (p.trailTimer >= 0.025) {
+            if (p.trailTimer >= 0.028) {
                 p.trailTimer = 0;
-                spawnMagicTrailParticle(p.mesh.position, p.color, 0.7);
+                spawnParticle(p.mesh.position, p.color, 0.7);
             }
 
             let destroy = false;
 
             if (p.isEnemy) {
-                // Projétil disparado por Fogo-Fátuo Hostil ou Boss
                 if (p.andar === player.andar) {
-                    const playerCenter = player.pos.clone().add(new THREE.Vector3(0, 1.2, 0));
-                    if (p.mesh.position.distanceTo(playerCenter) < 1.1) {
-                        damagePlayer(p.damage, 'Magia Yokai');
+                    const pCenter = player.pos.clone().add(new THREE.Vector3(0, 1.2, 0));
+                    if (p.mesh.position.distanceTo(pCenter) < 1.1) {
+                        damagePlayer(p.damage, 'Magia Sombria');
                         destroy = true;
                     }
                 }
             } else {
-                // Projétil do Jogador contra inimigos do MESMO andar
                 for (let j = activeEnemies.length - 1; j >= 0; j--) {
                     const e = activeEnemies[j];
                     if (e.andar !== p.andar) continue;
                     const eCenter = e.mesh.position.clone().add(new THREE.Vector3(0, e.height * 0.5, 0));
-                    if (p.mesh.position.distanceTo(eCenter) <= e.hitRadius + 0.8) {
-                        damageEnemy(e, j, p.damage);
-                        if (p.bouncesLeft > 0) {
-                            p.bouncesLeft--;
-                            p.velocity.x = -p.velocity.x + (Math.random() - 0.5) * 18;
-                            p.velocity.z = -p.velocity.z + (Math.random() - 0.5) * 18;
-                        } else {
-                            destroy = true;
-                        }
+                    if (p.mesh.position.distanceTo(eCenter) <= e.hitRadius + 0.75) {
+                        damageEnemy(e, j, p.damage, false, p.velocity);
+                        destroy = true;
                         break;
                     }
                 }
@@ -2314,18 +2316,12 @@
                     p.mesh.position.y <= floorY + 0.15 ||
                     checkCollision(p.mesh.position.x, p.mesh.position.z, 0.25, p.andar)
                 ) {
-                    if (p.bouncesLeft > 0 && p.mesh.position.y > floorY + 0.3) {
-                        p.bouncesLeft--;
-                        p.velocity.x *= -1;
-                        p.velocity.z *= -1;
-                    } else {
-                        destroy = true;
-                    }
+                    destroy = true;
                 }
             }
 
             if (destroy) {
-                for (let k = 0; k < 7; k++) spawnMagicTrailParticle(p.mesh.position, p.color, 2.0);
+                for (let k = 0; k < 6; k++) spawnParticle(p.mesh.position, p.color, 1.8);
                 scene.remove(p.mesh);
                 activeProjectiles.splice(i, 1);
             }
@@ -2347,198 +2343,202 @@
     }
 
     // ============================================================================
-    // 8. BESTIÁRIO ORIENTAL (DUENDES, ESQUELETOS SAMURAIS, ONIS, FOGOS-FÁTUOS & BOSS)
+    // 8. BESTIÁRIO POR BIOMA E ACAMPAMENTOS (SEM SPAWN ALEATÓRIO GLOBAL!)
     // ============================================================================
     const activeEnemies = [];
-    let spawnTimer = 0;
-    let bossEntity = null;
+    let malakorBoss = null;
 
-    function createEnemyMesh(type) {
+    function createDetailedEnemyMesh(type) {
         const g = new THREE.Group();
         const cfg = GAME_CONFIG.BESTIARY[type];
         const s = cfg.SCALE;
 
         if (type === 'goblin') {
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.9 * s, 1.0 * s, 0.65 * s), createRetroMat({ color: 0x3a0ca3 }));
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.9 * s, 1.05 * s, 0.65 * s), createRetroMat({ color: 0x3c096c }));
             body.position.y = 0.9 * s;
             g.add(body);
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.85 * s, 0.75 * s, 0.8 * s), createRetroMat({ color: 0x2b9348 }));
-            head.position.y = 1.7 * s;
+            head.position.y = 1.72 * s;
             g.add(head);
-            const eye = new THREE.Mesh(new THREE.BoxGeometry(0.5 * s, 0.15 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: 0xff0a54 }));
+            const eye = new THREE.Mesh(new THREE.BoxGeometry(0.52 * s, 0.14 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: 0xff0a54 }));
             eye.position.set(0, 1.75 * s, 0.42 * s);
             g.add(eye);
-        } else if (type === 'skeleton' || type === 'boss') {
-            const armorCol = type === 'boss' ? 0x590d22 : 0x240046;
-            const eyeCol = type === 'boss' ? 0xff0a54 : 0x00f5d4;
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.1 * s, 1.3 * s, 0.7 * s), createRetroMat({ color: armorCol }));
-            torso.position.y = 1.5 * s;
+            const dagger = new THREE.Mesh(new THREE.BoxGeometry(0.14 * s, 1.1 * s, 0.2 * s), createRetroMat({ color: 0xadb5bd }));
+            dagger.position.set(0.6 * s, 1.1 * s, 0.45 * s);
+            dagger.rotation.x = 0.7;
+            g.add(dagger);
+        } else if (type === 'skeleton') {
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.0 * s, 1.3 * s, 0.65 * s), createRetroMat({ color: 0x2b2d42 }));
+            torso.position.y = 1.45 * s;
             g.add(torso);
-            const skull = new THREE.Mesh(new THREE.BoxGeometry(0.75 * s, 0.75 * s, 0.75 * s), createRetroMat({ color: 0xe9ecef }));
-            skull.position.y = 2.55 * s;
+            const skull = new THREE.Mesh(new THREE.BoxGeometry(0.75 * s, 0.75 * s, 0.75 * s), createRetroMat({ color: 0xedf2f4 }));
+            skull.position.y = 2.48 * s;
             g.add(skull);
-            // Capacete Kabuto Samurai
-            const kabuto = new THREE.Mesh(new THREE.ConeGeometry(0.85 * s, 0.55 * s, 6), createRetroMat({ color: 0x10002b }));
-            kabuto.position.y = 3.05 * s;
-            g.add(kabuto);
-            const crest = new THREE.Mesh(new THREE.BoxGeometry(1.1 * s, 0.25 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: 0xffd166 }));
-            crest.position.set(0, 3.0 * s, 0.42 * s);
-            g.add(crest);
-            const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.5 * s, 0.16 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: eyeCol }));
+            const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.48 * s, 0.15 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+            eyes.position.set(0, 2.48 * s, 0.39 * s);
+            g.add(eyes);
+            // Escudo Rúnico Frontal (bloqueia 60% do dano frontal!)
+            const shield = new THREE.Mesh(new THREE.BoxGeometry(0.95 * s, 1.45 * s, 0.18 * s), createRetroMat({ color: 0x3a0ca3 }));
+            shield.position.set(-0.55 * s, 1.45 * s, 0.55 * s);
+            g.add(shield);
+            const shieldTrim = new THREE.Mesh(new THREE.BoxGeometry(0.75 * s, 1.25 * s, 0.2 * s), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+            shieldTrim.position.set(-0.55 * s, 1.45 * s, 0.56 * s);
+            g.add(shieldTrim);
+        } else if (type === 'necromancer') {
+            const robe = new THREE.Mesh(new THREE.ConeGeometry(0.85 * s, 2.4 * s, 8), createRetroMat({ color: 0x240046 }));
+            robe.position.y = 1.2 * s;
+            g.add(robe);
+            const hood = new THREE.Mesh(new THREE.BoxGeometry(0.75 * s, 0.75 * s, 0.75 * s), createRetroMat({ color: 0x10002b }));
+            hood.position.y = 2.55 * s;
+            g.add(hood);
+            const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.45 * s, 0.15 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: 0xf72585 }));
             eyes.position.set(0, 2.55 * s, 0.39 * s);
             g.add(eyes);
-            // Katana Encantada Brilhante
-            const katana = new THREE.Mesh(new THREE.BoxGeometry(0.14 * s, 2.1 * s, 0.18 * s), new THREE.MeshBasicMaterial({ color: eyeCol }));
-            katana.position.set(0.75 * s, 1.8 * s, 0.55 * s);
-            katana.rotation.x = 0.5;
-            g.add(katana);
-        } else if (type === 'oni') {
-            // Espírito Yokai Oni (Colossal, Lento e Resistente)
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.45 * s, 1.6 * s, 1.0 * s), createRetroMat({ color: 0x800f2f }));
-            body.position.y = 1.35 * s;
-            g.add(body);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.0 * s, 0.95 * s, 0.95 * s), createRetroMat({ color: 0xa4133c }));
-            head.position.y = 2.6 * s;
-            g.add(head);
-            for (const hx of [-0.32, 0.32]) {
-                const horn = new THREE.Mesh(new THREE.ConeGeometry(0.16 * s, 0.75 * s, 5), new THREE.MeshBasicMaterial({ color: 0xffd166 }));
-                horn.position.set(hx * s, 3.3 * s, 0.1 * s);
+            const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.32 * s, 0), new THREE.MeshBasicMaterial({ color: 0xf72585 }));
+            orb.position.set(0.75 * s, 2.0 * s, 0.4 * s);
+            g.add(orb);
+        } else if (type === 'yokai' || type === 'black_knight' || type === 'malakor') {
+            const armorCol = type === 'malakor' ? 0x370617 : (type === 'black_knight' ? 0x14141f : 0x590d22);
+            const glowCol = type === 'malakor' ? 0xff0a54 : (type === 'black_knight' ? 0xf72585 : 0x00f5d4);
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.18 * s, 1.42 * s, 0.75 * s), createRetroMat({ color: armorCol }));
+            torso.position.y = 1.55 * s;
+            g.add(torso);
+            const helm = new THREE.Mesh(new THREE.BoxGeometry(0.8 * s, 0.8 * s, 0.8 * s), createRetroMat({ color: 0x0b0214 }));
+            helm.position.y = 2.65 * s;
+            g.add(helm);
+            const visor = new THREE.Mesh(new THREE.BoxGeometry(0.56 * s, 0.16 * s, 0.1 * s), new THREE.MeshBasicMaterial({ color: glowCol }));
+            visor.position.set(0, 2.65 * s, 0.42 * s);
+            g.add(visor);
+
+            // Chifres / Ornamento de Eclipse
+            for (const hx of [-0.42, 0.42]) {
+                const horn = new THREE.Mesh(new THREE.ConeGeometry(0.14 * s, 0.9 * s, 5), new THREE.MeshBasicMaterial({ color: 0xffd166 }));
+                horn.position.set(hx * s, 3.35 * s, 0);
+                horn.rotation.z = hx > 0 ? -0.35 : 0.35;
                 g.add(horn);
             }
-            const club = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * s, 0.16 * s, 2.4 * s, 6), woodMat);
-            club.position.set(0.95 * s, 1.6 * s, 0.5 * s);
-            club.rotation.x = 0.6;
-            g.add(club);
-        } else if (type === 'wisp') {
-            // Fogo-Fátuo Hostil Flutuante
-            const sprite = new THREE.Sprite(
-                new THREE.SpriteMaterial({
-                    map: textures.orbMagenta,
-                    color: 0xff0a54,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending
-                })
-            );
-            sprite.scale.set(2.4, 2.4, 1);
-            sprite.position.y = 1.8;
-            g.add(sprite);
+
+            const greatsword = new THREE.Mesh(new THREE.BoxGeometry(0.18 * s, 2.5 * s, 0.24 * s), new THREE.MeshBasicMaterial({ color: glowCol }));
+            greatsword.position.set(0.85 * s, 1.9 * s, 0.6 * s);
+            greatsword.rotation.x = 0.55;
+            g.add(greatsword);
         }
         return g;
     }
 
-    function spawnEnemy(type, x, z, andar = 0) {
+    // Spawn vinculado a um Acampamento / Território específico
+    function spawnCampEnemy(type, x, z, andar = 0, isRitualSummon = false) {
         const cfg = GAME_CONFIG.BESTIARY[type];
         const baseY = andar * floor1Y;
-        const mesh = createEnemyMesh(type);
+        const mesh = createDetailedEnemyMesh(type);
         mesh.position.set(x, baseY, z);
         floorGroups[andar].add(mesh);
 
-        const bloodMult = worldEvent.bloodMoonActive ? 1.35 : 1.0;
-        const enemyObj = {
+        const enemy = {
             type,
             andar,
             baseY,
+            homePos: new THREE.Vector3(x, baseY, z),
+            isRitualSummon,
             name: cfg.NAME,
             mesh,
-            hp: Math.round(cfg.HP * bloodMult),
-            maxHp: Math.round(cfg.HP * bloodMult),
-            speed: cfg.SPEED * GAME_CONFIG.GLOBAL_MOB_SPEED_MULTIPLIER,
-            damage: Math.round(cfg.DAMAGE * bloodMult),
-            xpReward: Math.round(cfg.XP * (worldEvent.bloodMoonActive ? 2.0 : 1.0)),
-            soulReward: Math.round(cfg.SOULS * (worldEvent.bloodMoonActive ? 2.0 : 1.0)),
-            detectRange: cfg.DETECT,
-            attackRange: cfg.RANGE,
-            attackCooldown: cfg.CD,
+            hp: cfg.HP,
+            maxHp: cfg.HP,
+            speed: cfg.SPEED,
+            damage: cfg.DAMAGE,
+            xpReward: cfg.XP,
+            soulReward: cfg.SOULS,
+            aggroRadius: isRitualSummon ? 85 : cfg.AGGRO_RADIUS,
+            leashRadius: isRitualSummon ? 120 : cfg.LEASH_RADIUS,
+            attackRange: cfg.ATTACK_RANGE,
+            attackCooldown: cfg.ATTACK_CD,
             attackTimer: 0,
+            hasShield: Boolean(cfg.HAS_SHIELD),
             hitRadius: 1.05 * cfg.SCALE,
-            height: 2.2 * cfg.SCALE,
-            wanderAngle: Math.random() * Math.PI * 2,
-            wanderTimer: 1.5
+            height: 2.3 * cfg.SCALE,
+            patrolAngle: Math.random() * Math.PI * 2,
+            phase2Triggered: false
         };
 
-        activeEnemies.push(enemyObj);
-        if (type === 'boss') bossEntity = enemyObj;
-        return enemyObj;
+        activeEnemies.push(enemy);
+        if (type === 'malakor') malakorBoss = enemy;
+        return enemy;
     }
 
-    // Dropa Orbes de Essência Espiritual atraídos pelo jogador
     function dropSoulOrbs(pos, count, andar) {
-        for (let i = 0; i < Math.min(count, 10); i++) {
+        const orbsToMake = Math.min(count, 8);
+        for (let i = 0; i < orbsToMake; i++) {
             const orb = new THREE.Sprite(
-                new THREE.SpriteMaterial({
-                    map: textures.orbBlue,
-                    color: 0x00f5d4,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending
-                })
+                new THREE.SpriteMaterial({ map: textures.orbBlue, color: 0x00f5d4, blending: THREE.AdditiveBlending })
             );
             orb.scale.set(1.1, 1.1, 1);
-            orb.position.set(
-                pos.x + (Math.random() - 0.5) * 2.5,
-                pos.y + 1.1,
-                pos.z + (Math.random() - 0.5) * 2.5
-            );
+            orb.position.set(pos.x + (Math.random() - 0.5) * 2.2, pos.y + 1.1, pos.z + (Math.random() - 0.5) * 2.2);
             floorGroups[andar].add(orb);
-            soulOrbs.push({
-                mesh: orb,
-                andar,
-                value: Math.max(1, Math.ceil(count / Math.min(count, 10)))
-            });
+            soulOrbs.push({ mesh: orb, andar, value: Math.max(1, Math.ceil(count / orbsToMake)) });
         }
     }
 
-    function damageEnemy(enemy, index, amount) {
-        enemy.hp -= amount;
-        audio.playMagicHit();
+    function damageEnemy(enemy, index, amount, ignoreShield = false, projVel = null) {
+        let finalDamage = amount;
+        let blocked = false;
 
-        if (enemy.type === 'boss') {
-            document.getElementById('boss-hp-fill').style.width = `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%`;
+        // Mecânica tática: Esqueletos Guerreiros bloqueiam 60% do dano frontal!
+        if (enemy.hasShield && !ignoreShield && projVel) {
+            const enemyForward = new THREE.Vector3(Math.sin(enemy.mesh.rotation.y), 0, Math.cos(enemy.mesh.rotation.y));
+            const incomingDir = projVel.clone().setY(0).normalize();
+            if (enemyForward.dot(incomingDir) < -0.35) {
+                finalDamage = Math.max(2, Math.round(amount * 0.4));
+                blocked = true;
+            }
+        }
+
+        enemy.hp -= finalDamage;
+        audio.playMagicHit(blocked);
+
+        if (enemy.type === 'malakor') {
+            const pct = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
+            document.getElementById('boss-hp-fill').style.width = `${pct}%`;
+
+            // Fase 2 de Lorde Malakor aos 50% de vida!
+            if (!enemy.phase2Triggered && enemy.hp <= enemy.maxHp * 0.5) {
+                enemy.phase2Triggered = true;
+                enemy.speed *= 1.25;
+                enemy.damage = Math.round(enemy.damage * 1.25);
+                showFloatingText('⚠️ LORDE MALAKOR DESPERTOU O ECLIPSE TOTAL (FASE 2)!', '#ff0a54', '1.8rem');
+                spawnCampEnemy('yokai', enemy.mesh.position.x - 8, enemy.mesh.position.z + 6, 1, true);
+                spawnCampEnemy('yokai', enemy.mesh.position.x + 8, enemy.mesh.position.z + 6, 1, true);
+            }
         }
 
         if (enemy.hp <= 0) {
             for (let p = 0; p < 14; p++) {
-                spawnMagicTrailParticle(enemy.mesh.position.clone().add(new THREE.Vector3(0, 1.4, 0)), 0xf72585, 2.4);
+                spawnParticle(enemy.mesh.position.clone().add(new THREE.Vector3(0, 1.4, 0)), 0xf72585, 2.4);
             }
             dropSoulOrbs(enemy.mesh.position, enemy.soulReward, enemy.andar);
             floorGroups[enemy.andar].remove(enemy.mesh);
             activeEnemies.splice(index, 1);
 
-            if (enemy.type === 'boss') {
-                bossEntity = null;
+            if (enemy.type === 'malakor') {
+                malakorBoss = null;
+                questState.malakorDefeated = true;
                 document.getElementById('boss-hud').style.display = 'none';
-                grantRelic('Coroa do Onryō (+30% Dano)');
-                player.magicDamage = Math.round(player.magicDamage * 1.3);
-                showFloatingText('CHEFE DERROTADO! COROA DO ONRYŌ OBTIDA!', '#ffd166', '1.9rem');
-            }
-
-            // Relíquia Vampirismo Astral cura ao abater inimigos
-            if (player.relics.includes('Vampirismo Astral (+8 HP/Abate)')) {
-                player.hp = Math.min(player.maxHp, player.hp + 8);
+                updateQuestTracker();
+                openLoreScroll(
+                    'VITÓRIA: A LUA RESTAURADA!',
+                    'Com a queda de Lorde Malakor, a corrupção do Eclipse se dissipa dos céus orientais. Você cumpriu seu juramento como Andarilho Astral!'
+                );
             }
 
             gainPlayerXP(enemy.xpReward, enemy.name);
         } else {
-            showFloatingText(`-${amount}`, '#00f5d4');
+            showFloatingText(blocked ? `-${finalDamage} (ESCUDO!)` : `-${finalDamage}`, blocked ? '#ffd166' : '#00f5d4');
         }
     }
 
     function updateEnemies(dt, elapsedTime) {
-        spawnTimer += dt;
-        if (spawnTimer >= GAME_CONFIG.SPAWN_INTERVAL && activeEnemies.length < GAME_CONFIG.MAX_ACTIVE_ENEMIES && player.andar === 0) {
-            spawnTimer = 0;
-            const ang = Math.random() * Math.PI * 2;
-            const dist = GAME_CONFIG.SPAWN_MIN_DIST + Math.random() * (GAME_CONFIG.SPAWN_MAX_DIST - GAME_CONFIG.SPAWN_MIN_DIST);
-            const sx = player.pos.x + Math.cos(ang) * dist;
-            const sz = player.pos.z + Math.sin(ang) * dist;
-            if (Math.abs(sx) < GAME_CONFIG.MAP_HALF - 40 && Math.abs(sz) < GAME_CONFIG.MAP_HALF - 40) {
-                const pool = ['goblin', 'skeleton', 'oni', 'wisp'];
-                spawnEnemy(pool[Math.floor(Math.random() * pool.length)], sx, sz, 0);
-            }
-        }
-
-        // HUD do Chefe visível apenas no 2º Andar enquanto vivo
         const bossHud = document.getElementById('boss-hud');
-        bossHud.style.display = (player.andar === 1 && bossEntity && bossEntity.hp > 0) ? 'block' : 'none';
+        bossHud.style.display = (player.andar === 1 && malakorBoss && malakorBoss.hp > 0) ? 'block' : 'none';
 
         for (let i = activeEnemies.length - 1; i >= 0; i--) {
             const e = activeEnemies[i];
@@ -2546,41 +2546,31 @@
 
             if (e.attackTimer > 0) e.attackTimer -= dt;
 
-            const toPlayer = new THREE.Vector3(player.pos.x - e.mesh.position.x, 0, player.pos.z - e.mesh.position.z);
-            const dist = toPlayer.length();
+            const distToPlayer = Math.hypot(player.pos.x - e.mesh.position.x, player.pos.z - e.mesh.position.z);
+            const distFromHome = Math.hypot(e.mesh.position.x - e.homePos.x, e.mesh.position.z - e.homePos.z);
 
-            if (dist <= e.detectRange) {
-                toPlayer.normalize();
+            // IA Territorial: Reage apenas no raio de aggro e retorna ao acampamento se o jogador fugir!
+            if (distToPlayer <= e.aggroRadius && distFromHome <= e.leashRadius) {
+                const toPlayer = new THREE.Vector3(player.pos.x - e.mesh.position.x, 0, player.pos.z - e.mesh.position.z).normalize();
                 e.mesh.rotation.y = Math.atan2(toPlayer.x, toPlayer.z);
 
-                if (e.type === 'wisp') {
-                    // Fogo-Fátuo Hostil mantém distância e dispara magia
-                    if (dist > 14) {
+                if (e.type === 'necromancer') {
+                    if (distToPlayer > 16) {
                         e.mesh.position.x += toPlayer.x * e.speed * dt;
                         e.mesh.position.z += toPlayer.z * e.speed * dt;
                     }
-                    if (e.attackTimer <= 0 && dist <= e.attackRange) {
+                    if (e.attackTimer <= 0) {
                         e.attackTimer = e.attackCooldown;
-                        const orb = new THREE.Sprite(
-                            new THREE.SpriteMaterial({ map: textures.orbMagenta, color: 0xff0a54, blending: THREE.AdditiveBlending })
-                        );
-                        orb.scale.set(1.6, 1.6, 1);
-                        orb.position.copy(e.mesh.position).add(new THREE.Vector3(0, 1.6, 0));
-                        scene.add(orb);
-                        activeProjectiles.push({
-                            mesh: orb,
-                            andar: e.andar,
-                            isEnemy: true,
-                            color: 0xff0a54,
-                            velocity: toPlayer.clone().multiplyScalar(32.0),
-                            distanceTraveled: 0,
-                            damage: e.damage,
-                            bouncesLeft: 0,
-                            trailTimer: 0
-                        });
+                        // Necromante dispara orbe ou invoca servo
+                        if (activeEnemies.filter(x => x.andar === e.andar).length < 18 && Math.random() < 0.35) {
+                            spawnCampEnemy('goblin', e.mesh.position.x + 3, e.mesh.position.z + 3, e.andar, true);
+                            showFloatingText('NECROMANTE INVOCOU UM SERVO!', '#f72585');
+                        } else {
+                            fireEnemyOrb(e, toPlayer, 0xf72585, 34.0);
+                        }
                     }
                 } else {
-                    if (dist > e.attackRange) {
+                    if (distToPlayer > e.attackRange) {
                         const nx = e.mesh.position.x + toPlayer.x * e.speed * dt;
                         const nz = e.mesh.position.z + toPlayer.z * e.speed * dt;
                         if (!checkCollision(nx, e.mesh.position.z, 0.75, e.andar)) e.mesh.position.x = nx;
@@ -2588,69 +2578,98 @@
                     } else if (e.attackTimer <= 0) {
                         e.attackTimer = e.attackCooldown;
                         damagePlayer(e.damage, e.name);
-                        if (e.type === 'oni' || e.type === 'boss') {
-                            spawnMagicTrailParticle(e.mesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)), 0xff0a54, 2.5);
+                        if (e.type === 'malakor') {
+                            // Rajada mágica adicional do Chefe
+                            fireEnemyOrb(e, toPlayer, 0xff0a54, 40.0);
+                            if (e.phase2Triggered) {
+                                fireEnemyOrb(e, toPlayer.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.35), 0xff0a54, 40.0);
+                                fireEnemyOrb(e, toPlayer.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.35), 0xff0a54, 40.0);
+                            }
                         }
                     }
                 }
-                e.mesh.position.y = e.baseY + Math.abs(Math.sin(elapsedTime * 8 + i)) * 0.18;
+                e.mesh.position.y = e.baseY + Math.abs(Math.sin(elapsedTime * 8 + i)) * 0.16;
+            } else if (!e.isRitualSummon && distFromHome > 2.5) {
+                // Retorna suavemente para seu território de origem
+                const toHome = new THREE.Vector3(e.homePos.x - e.mesh.position.x, 0, e.homePos.z - e.mesh.position.z).normalize();
+                e.mesh.position.x += toHome.x * (e.speed * 0.8) * dt;
+                e.mesh.position.z += toHome.z * (e.speed * 0.8) * dt;
+                e.mesh.rotation.y = Math.atan2(toHome.x, toHome.z);
+                e.hp = Math.min(e.maxHp, e.hp + 15 * dt); // Regenera fora de combate
             }
         }
     }
 
-    function populateInitialWorldEntities() {
+    function fireEnemyOrb(enemy, dir, colorHex, speed) {
+        const orb = new THREE.Sprite(
+            new THREE.SpriteMaterial({ map: textures.orbBlood, color: colorHex, blending: THREE.AdditiveBlending })
+        );
+        orb.scale.set(1.8, 1.8, 1);
+        orb.position.copy(enemy.mesh.position).add(new THREE.Vector3(0, 1.7, 0));
+        scene.add(orb);
+        activeProjectiles.push({
+            mesh: orb,
+            andar: enemy.andar,
+            isEnemy: true,
+            color: colorHex,
+            velocity: dir.clone().multiplyScalar(speed),
+            distanceTraveled: 0,
+            damage: enemy.damage,
+            trailTimer: 0
+        });
+    }
+
+    // Popula os 4 Biomas com acampamentos fixos e temáticos
+    function populateBiomeCamps() {
         for (const e of activeEnemies) floorGroups[e.andar].remove(e.mesh);
         activeEnemies.length = 0;
+        malakorBoss = null;
 
-        // Térreo (Andar 0)
-        spawnEnemy('goblin', -8, -18, 0);
-        spawnEnemy('goblin', 9, -20, 0);
-        spawnEnemy('skeleton', 0, -45, 0);
-        spawnEnemy('wisp', -22, -42, 0);
-        spawnEnemy('oni', 24, -48, 0);
-        spawnEnemy('skeleton', -10, -125, 0);
-        spawnEnemy('oni', 10, -135, 0);
+        // 1. Bosque das Sakuras Sombrias (Área Inicial - Nível 1-2)
+        spawnCampEnemy('goblin', 8, -14, 0);
+        spawnCampEnemy('goblin', -10, -22, 0);
+        spawnCampEnemy('goblin', 28, -8, 0);
+        spawnCampEnemy('goblin', 38, -18, 0);
 
-        // 2º Andar da Ilha Flutuante Acorrentada (Andar 1) — Guarda Elite + Boss!
-        spawnEnemy('skeleton', -10, -125, 1);
-        spawnEnemy('skeleton', 10, -125, 1);
-        spawnEnemy('boss', 0, -142, 1);
+        // 2. Cemitério dos Esquecidos & Criptas (Oeste - Nível 3-4)
+        spawnCampEnemy('skeleton', -48, -32, 0);
+        spawnCampEnemy('skeleton', -64, -44, 0);
+        spawnCampEnemy('necromancer', -76, -30, 0);
+        spawnCampEnemy('skeleton', -70, -48, 0);
+
+        // 3. Pontes Acorrentadas & Santuário Torii (Leste/Norte - Nível 5-6)
+        spawnCampEnemy('yokai', 52, -34, 0);
+        spawnCampEnemy('yokai', 70, -44, 0);
+        spawnCampEnemy('yokai', 0, -76, 0);
+
+        // 4. Castelo Flutuante — 1º Andar (Salão dos Guardas - Nível 7+)
+        spawnCampEnemy('black_knight', -10, -126, 0);
+        spawnCampEnemy('black_knight', 10, -126, 0);
+        spawnCampEnemy('black_knight', 0, -144, 0);
+
+        // 5. Castelo Flutuante — 2º Andar (Trono do Eclipse - Chefe Final)
+        spawnCampEnemy('malakor', 0, -142, 1);
     }
-    populateInitialWorldEntities();
+    populateBiomeCamps();
 
     // ============================================================================
-    // 9. EVENTOS DINÂMICOS (ECLIPSE DA LUA DE SANGUE), RELÍQUIAS & HUD
+    // 9. HUD, PROGRESSÃO DE HISTÓRIA, RASTREADOR DE OBJETIVOS & LORE
     // ============================================================================
-    function toggleBloodMoon(active) {
-        worldEvent.bloodMoonActive = active;
-        const tint = document.getElementById('blood-moon-tint');
-        const evBanner = document.getElementById('event-banner');
-        if (active) {
-            tint.style.opacity = '1';
-            evBanner.style.display = 'block';
-            giantMoon.material.color.setHex(0xff0a54);
-            showFloatingText('🌑 ECLIPSE DA LUA DE SANGUE! (2x ALMAS & XP)', '#ff0a54', '1.8rem');
+    function updateQuestTracker() {
+        const objEl = document.getElementById('quest-objective');
+        if (questState.malakorDefeated) {
+            objEl.textContent = '👑 LENDA CUMPRIDA: Lorde Malakor derrotado e a Lua restaurada!';
+            objEl.style.color = '#ffd166';
+        } else if (questState.sealsPurified < questState.totalSeals) {
+            objEl.textContent = `📜 Objetivo: Purifique os 3 Altares Corrompidos (${questState.sealsPurified}/3)`;
+            objEl.style.color = '#00f5d4';
         } else {
-            tint.style.opacity = '0';
-            evBanner.style.display = 'none';
-            giantMoon.material.color.setHex(GAME_CONFIG.COLORS.MOON_CORE);
+            objEl.textContent = '⚔️ Barreira Quebrada! Suba ao 2º Andar do Castelo e derrote Lorde Malakor!';
+            objEl.style.color = '#ff758f';
         }
     }
 
-    function grantRelic(relicName) {
-        if (player.relics.includes(relicName)) return;
-        player.relics.push(relicName);
-        if (relicName.includes('Passos do Vento')) {
-            player.speed = GAME_CONFIG.PLAYER_SPEED * 1.22;
-        }
-        const bar = document.getElementById('relics-bar');
-        const chip = document.createElement('div');
-        chip.className = 'relic-chip';
-        chip.textContent = `🏺 ${relicName}`;
-        bar.appendChild(chip);
-    }
-
-    function showFloatingText(text, color = '#ffd166', fontSize = '1.45rem') {
+    function showFloatingText(text, color = '#ffd166', fontSize = '1.42rem') {
         const el = document.createElement('div');
         el.className = 'floating-msg';
         el.textContent = text;
@@ -2659,18 +2678,31 @@
         el.style.left = `${48 + (Math.random() - 0.5) * 14}%`;
         el.style.top = `${40 + (Math.random() - 0.5) * 10}%`;
         document.getElementById('floating-text-layer').appendChild(el);
-        setTimeout(() => el.remove(), 1550);
+        setTimeout(() => el.remove(), 1500);
     }
 
-    let loreTimer = null;
-    function showLoreModal(title, text) {
-        const m = document.getElementById('lore-modal');
+    function openLoreScroll(title, text) {
+        isLoreOpen = true;
+        isMouseDown = false;
         document.getElementById('lore-modal-title').textContent = title;
-        document.getElementById('lore-modal-text').textContent = text;
-        m.style.display = 'block';
-        if (loreTimer) clearTimeout(loreTimer);
-        loreTimer = setTimeout(() => { m.style.display = 'none'; }, 7000);
+        document.getElementById('lore-modal-text').innerText = text;
+        document.getElementById('lore-modal').style.display = 'flex';
+        try { if (document.exitPointerLock) document.exitPointerLock(); } catch (e) {}
     }
+
+    function closeLoreScroll() {
+        isLoreOpen = false;
+        document.getElementById('lore-modal').style.display = 'none';
+        if (player.isPlaying && !isPaused) {
+            try {
+                if (canvas.requestPointerLock) {
+                    const p = canvas.requestPointerLock();
+                    if (p && p.catch) p.catch(() => {});
+                }
+            } catch (e) {}
+        }
+    }
+    document.getElementById('close-lore-btn').addEventListener('click', closeLoreScroll);
 
     function updateRPGHud() {
         document.getElementById('hud-lvl').textContent = `LVL ${player.nivel}`;
@@ -2684,9 +2716,25 @@
         document.getElementById('hud-xp-bar').style.width = `${Math.min(100, (player.xp / player.xpProximoNivel) * 100)}%`;
 
         document.getElementById('hud-souls-text').textContent = player.souls;
-        document.getElementById('hud-floor-badge').textContent = player.andar === 0
-            ? 'CAMADA: REINO EXTERIOR / TÉRREO (ANDAR 0)'
-            : 'CAMADA: TORRE ACORRENTADA SUPERIOR (ANDAR 1)';
+        document.getElementById('hud-wand-badge').textContent = `✨ BASTÃO ASTRAL +${player.wandLevel} (DANO: ${player.magicDamage} | x${player.projectileCount})`;
+
+        const dashPill = document.getElementById('hud-dash-pill');
+        if (player.dashCooldownTimer > 0) {
+            dashPill.textContent = `[ESPAÇO] DASH: ${player.dashCooldownTimer.toFixed(1)}s`;
+            dashPill.classList.add('cooldown');
+        } else {
+            dashPill.textContent = '[ESPAÇO] DASH: PRONTO';
+            dashPill.classList.remove('cooldown');
+        }
+
+        const novaPill = document.getElementById('hud-nova-pill');
+        if (player.novaCooldownTimer > 0) {
+            novaPill.textContent = `[BOTÃO DIR] NOVA: ${player.novaCooldownTimer.toFixed(1)}s`;
+            novaPill.classList.add('cooldown');
+        } else {
+            novaPill.textContent = '[BOTÃO DIR] NOVA: PRONTO';
+            novaPill.classList.remove('cooldown');
+        }
     }
 
     function gainPlayerXP(amount, sourceName) {
@@ -2695,19 +2743,23 @@
         while (player.xp >= player.xpProximoNivel) {
             player.xp -= player.xpProximoNivel;
             player.nivel += 1;
-            player.xpProximoNivel = Math.round(player.xpProximoNivel * GAME_CONFIG.XP_SCALING_FACTOR);
+            player.xpProximoNivel = Math.floor(100 * Math.pow(GAME_CONFIG.XP_SCALING_FACTOR, player.nivel - 1));
             player.maxHp += GAME_CONFIG.LEVEL_UP_HP_BONUS;
             player.hp = player.maxHp;
-            player.maxMp += 15;
+            player.maxMp += GAME_CONFIG.LEVEL_UP_MP_BONUS;
             player.mp = player.maxMp;
             player.magicDamage += GAME_CONFIG.LEVEL_UP_DMG_BONUS;
             audio.playShrineChime();
-            showFloatingText(`★ ASCENSÃO ASTRAL! NÍVEL ${player.nivel} ★`, '#00f5d4', '2.0rem');
+            showFloatingText(`★ NÍVEL ${player.nivel} ALCANÇADO! ★`, '#00f5d4', '1.9rem');
         }
         updateRPGHud();
     }
 
     function damagePlayer(amount, attackerName) {
+        if (player.invulnTimer > 0) {
+            showFloatingText('ESQUIVA PERFEITA!', '#00f5d4', '1.3rem');
+            return;
+        }
         player.hp = Math.max(0, player.hp - amount);
         audio.playPlayerHurt();
         showFloatingText(`-${amount} HP (${attackerName})`, '#ff0a54', '1.45rem');
@@ -2717,11 +2769,11 @@
         setTimeout(() => { vig.style.opacity = '0'; }, 180);
 
         if (player.hp <= 0) {
-            showFloatingText('ALMA REENCARNADA NO SANTUÁRIO!', '#ff758f', '1.8rem');
+            showFloatingText('VOCÊ CAIU... RENASCENDO NO ÚLTIMO PAGODE!', '#ff758f', '1.75rem');
             switchCastleFloor(0, true);
             player.hp = player.maxHp;
             player.mp = player.maxMp;
-            player.pos.set(0, 0, 8);
+            player.pos.copy(player.respawnPos);
         }
         updateRPGHud();
     }
@@ -2736,12 +2788,11 @@
         const baseY = targetFloor * floor1Y;
         player.pos.set(SPIRAL_STAIR_POS.x - 3.6, baseY, SPIRAL_STAIR_POS.z + 2.5);
         player.vel.y = 0;
-        player.onGround = true;
 
         if (!silent) {
             audio.playShrineChime();
             showFloatingText(
-                targetFloor === 1 ? 'SUBIU AO 2º ANDAR DA ILHA ACORRENTADA' : 'DESCEU AO SALÃO TÉRREO',
+                targetFloor === 1 ? 'ASCENDEU AO TRONO DO ECLIPSE (2º ANDAR)' : 'DESCEU AO SALÃO DOS GUARDAS',
                 '#00f5d4',
                 '1.6rem'
             );
@@ -2750,7 +2801,7 @@
     }
 
     // ============================================================================
-    // 10. PAUSE (ESC), REINICIALIZAÇÃO E CONTROLES EM TERCEIRA PESSOA
+    // 10. PAUSE (ESC), REINICIALIZAÇÃO E CONTROLES (WASD + ESPAÇO DASH + CLIQUES)
     // ============================================================================
     const pauseScreen = document.getElementById('pause-screen');
     const pauseInfoBox = document.getElementById('pause-info-box');
@@ -2761,13 +2812,15 @@
         isMouseDown = false;
         if (isPaused) {
             pauseScreen.style.display = 'flex';
-            const relicList = player.relics.length ? player.relics.join(' • ') : 'Nenhuma relíquia obtida ainda';
+            const blessingsStr = player.blessings.length ? player.blessings.join(' • ') : 'Nenhuma bênção de selo ainda';
             pauseInfoBox.innerHTML = `
-                <strong style="color:#ffd166;">STATUS DO ONMYOJI ASTRAL:</strong><br>
-                &bull; Nível: <strong>${player.nivel}</strong> (${player.xp}/${player.xpProximoNivel} XP) | Dano Base: <strong>${player.magicDamage}</strong><br>
+                <strong style="color:#ffd166;">📜 OBJETIVO PRINCIPAL:</strong> ${document.getElementById('quest-objective').textContent}<br><br>
+                <strong style="color:#00f5d4;">⚔️ ATRIBUTOS DO ANDARILHO ASTRAL:</strong><br>
+                &bull; Nível: <strong>${player.nivel}</strong> (${player.xp}/${player.xpProximoNivel} XP) | Vitalidade: <strong>${Math.ceil(player.hp)}/${player.maxHp}</strong><br>
+                &bull; Bastão Astral: <strong>+${player.wandLevel}</strong> (Dano: <strong>${player.magicDamage}</strong> | Projéteis: <strong>${player.projectileCount}</strong>)<br>
                 &bull; Essências Espirituais: <strong style="color:#00f5d4;">${player.souls}</strong> | Camada: <strong>Andar ${player.andar}</strong><br>
-                &bull; Relíquias Ativas: <strong style="color:#ff70a6;">${relicList}</strong><br><br>
-                <strong style="color:#00f5d4;">CONTROLES:</strong> WASD Mover &bull; Espaço Pular &bull; Segurar Clique Esq Disparar &bull; [1-3] Magia &bull; [E] Interagir
+                &bull; Bênçãos dos Selos: <strong style="color:#ff70a6;">${blessingsStr}</strong><br><br>
+                <strong style="color:#ffd166;">📖 HISTÓRIA:</strong> Lorde Malakor fragmentou a Lua Cheia. Purifique os 3 Altares Corrompidos nos biomas exteriores para dissipar a barreira do Castelo Flutuante e derrotá-lo no Trono do Eclipse.
             `;
             try { if (document.exitPointerLock) document.exitPointerLock(); } catch (e) {}
         } else {
@@ -2785,24 +2838,40 @@
         player.andar = 0;
         floorGroups[0].visible = true;
         floorGroups[1].visible = false;
-        player.pos.set(0, 0, 8);
+        player.pos.set(0, 0, 14);
+        player.respawnPos.set(0, 0, 14);
         player.vel.set(0, 0, 0);
         player.yaw = 0;
         player.nivel = 1;
         player.xp = 0;
         player.xpProximoNivel = GAME_CONFIG.START_NEXT_LEVEL_XP;
-        player.souls = 15;
+        player.souls = 10;
         player.maxHp = GAME_CONFIG.PLAYER_BASE_HP;
         player.hp = player.maxHp;
         player.maxMp = GAME_CONFIG.PLAYER_BASE_MP;
         player.mp = player.maxMp;
+        player.wandLevel = 0;
         player.magicDamage = GAME_CONFIG.WAND_BASE_DAMAGE;
-        player.speed = GAME_CONFIG.PLAYER_SPEED;
-        player.relics = [];
-        player.unlockedSpells = [0];
-        player.currentSpellIndex = 0;
-        document.getElementById('relics-bar').innerHTML = '';
-        applySpellFormVisuals();
+        player.projectileCount = 1;
+        player.fireRateMs = GAME_CONFIG.WAND_FIRE_RATE_MS;
+        player.blessings = [];
+
+        questState.sealsPurified = 0;
+        questState.barrierBroken = false;
+        questState.malakorDefeated = false;
+        questState.activeRitual = null;
+        document.getElementById('ritual-hud').style.display = 'none';
+
+        castleBarrierMesh.visible = true;
+        removeColliderByTag('BarreiraSelos', 0);
+        addBoxCollider(-4.2, 4.2, -113.2, -110.8, 0, 'BarreiraSelos');
+
+        for (const s of sealAltars) {
+            s.purified = false;
+            s.inProgress = false;
+            s.crystalMat.color.setHex(0xff0a54);
+            s.light.color.setHex(0xff0a54);
+        }
 
         for (const p of activeProjectiles) scene.remove(p.mesh);
         activeProjectiles.length = 0;
@@ -2811,13 +2880,11 @@
             obj.used = false;
             obj.mesh.visible = true;
         }
-        for (const tg of toriiGates) tg.completed = false;
 
-        toggleBloodMoon(false);
-        populateInitialWorldEntities();
+        populateBiomeCamps();
+        updateQuestTracker();
         updateRPGHud();
         setPaused(false);
-        showFloatingText('REINO ASTRAL REINICIADO!', '#00f5d4', '1.7rem');
     }
 
     document.getElementById('play-btn').addEventListener('click', () => {
@@ -2825,6 +2892,8 @@
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('hud').style.display = 'block';
         player.isPlaying = true;
+        updateQuestTracker();
+        updateRPGHud();
         setPaused(false);
     });
 
@@ -2842,8 +2911,39 @@
         document.getElementById('mute-btn').textContent = m ? '🔇 SOM: OFF' : '🔊 SOM: ON';
     });
 
+    function triggerPlayerDash() {
+        if (player.dashCooldownTimer > 0 || player.dashTimer > 0) return;
+
+        let f = 0, r = 0;
+        if (keys['KeyW'] || keys['ArrowUp']) f += 1;
+        if (keys['KeyS'] || keys['ArrowDown']) f -= 1;
+        if (keys['KeyD'] || keys['ArrowRight']) r += 1;
+        if (keys['KeyA'] || keys['ArrowLeft']) r -= 1;
+        if (f === 0 && r === 0) f = 1;
+
+        const len = Math.hypot(f, r);
+        f /= len; r /= len;
+        const sinY = Math.sin(player.yaw);
+        const cosY = Math.cos(player.yaw);
+
+        player.dashDir.set(-sinY * f + cosY * r, 0, -cosY * f - sinY * r).normalize();
+        player.dashTimer = GAME_CONFIG.DASH_DURATION;
+        player.invulnTimer = GAME_CONFIG.DASH_INVULN_DURATION;
+        player.dashCooldownTimer = GAME_CONFIG.DASH_COOLDOWN;
+        audio.playDash();
+
+        for (let k = 0; k < 10; k++) {
+            spawnParticle(player.pos.clone().add(new THREE.Vector3(0, 1.1, 0)), 0x00f5d4, 2.2);
+        }
+    }
+
     window.addEventListener('keydown', (e) => {
         keys[e.code] = true;
+        if (isLoreOpen && (e.code === 'Escape' || e.code === 'KeyE' || e.code === 'Space')) {
+            e.preventDefault();
+            closeLoreScroll();
+            return;
+        }
         if (e.code === 'Escape' && player.isPlaying) {
             e.preventDefault();
             setPaused(!isPaused);
@@ -2852,26 +2952,17 @@
         if (isPaused || !player.isPlaying) return;
 
         if (e.code === 'KeyE') handleContextualInteraction();
-        if (e.code === 'Space' && player.onGround) {
-            player.vel.y = player.jumpForce;
-            player.onGround = false;
-            audio.playJump();
-        }
-        // Troca rápida entre formas mágicas desbloqueadas [1, 2, 3]
-        if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') {
-            const idx = parseInt(e.code.replace('Digit', ''), 10) - 1;
-            if (player.unlockedSpells.includes(idx)) {
-                player.currentSpellIndex = idx;
-                applySpellFormVisuals();
-                showFloatingText(`FORMA: ${GAME_CONFIG.SPELL_FORMS[idx].name}`, '#00f5d4');
-            }
+        if (e.code === 'Space' || e.code === 'ShiftLeft') {
+            e.preventDefault();
+            triggerPlayerDash();
         }
     });
 
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
 
     canvas.addEventListener('mousedown', (e) => {
-        if (!player.isPlaying || isPaused) return;
+        if (!player.isPlaying || isPaused || isLoreOpen) return;
         if (document.pointerLockElement !== canvas && canvas.requestPointerLock) {
             try {
                 const p = canvas.requestPointerLock();
@@ -2880,8 +2971,9 @@
         }
         if (e.button === 0) {
             isMouseDown = true;
-            mouseNDC.set(0, 0.08);
-            tryCastContinuousMagicOrb(performance.now());
+            tryCastPrimaryMagic(performance.now());
+        } else if (e.button === 2) {
+            castArcaneNova();
         }
     });
 
@@ -2890,13 +2982,12 @@
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!player.isPlaying || isPaused) return;
+        if (!player.isPlaying || isPaused || isLoreOpen) return;
         if (document.pointerLockElement === canvas) {
             const factor = 0.0024 * player.sensitivity;
             player.yaw -= e.movementX * factor;
             player.pitch += e.movementY * factor;
             player.pitch = Math.max(-0.35, Math.min(0.65, player.pitch));
-            mouseNDC.set(0, 0.08);
         }
     });
 
@@ -2912,17 +3003,10 @@
     }
 
     function getNearbyInteractable() {
-        if (player.andar === 0) {
-            for (const tg of toriiGates) {
-                if (tg.cooldown <= 0 && Math.hypot(player.pos.x - tg.pos.x, player.pos.z - tg.pos.z) < 4.5) {
-                    return { type: 'torii', data: tg, label: tg.label };
-                }
-            }
-        }
         if (Math.hypot(player.pos.x - SPIRAL_STAIR_POS.x, player.pos.z - SPIRAL_STAIR_POS.z) < 4.0) {
             return {
                 type: 'stair',
-                label: player.andar === 0 ? 'Subir Escada em Espiral (2º Andar)' : 'Descer Escada em Espiral (Térreo)'
+                label: player.andar === 0 ? 'Subir Escada em Espiral (Trono do Eclipse)' : 'Descer Escada em Espiral (1º Andar)'
             };
         }
         for (const obj of interactiveObjects) {
@@ -2937,25 +3021,8 @@
     function handleContextualInteraction() {
         const target = getNearbyInteractable();
         if (!target) return;
-
         if (target.type === 'stair') {
             switchCastleFloor(player.andar === 0 ? 1 : 0);
-        } else if (target.type === 'torii') {
-            const tg = target.data;
-            tg.cooldown = 4.0;
-            audio.playShrineChime();
-            if (tg.mode === 'teleport' && tg.targetPos) {
-                player.pos.set(tg.targetPos.x, 0, tg.targetPos.z);
-                showFloatingText('TELETRANSPORTADO PELO PORTÃO TORII!', '#00f5d4', '1.65rem');
-            } else {
-                // Desafio de Horda Torii: invoca 3 Yokai e recompensa almas extras
-                showFloatingText('DESAFIO TORII ATIVADO! DERROTE OS YOKAI!', '#ff0a54', '1.65rem');
-                spawnEnemy('goblin', tg.pos.x - 6, tg.pos.z - 8, 0);
-                spawnEnemy('skeleton', tg.pos.x + 6, tg.pos.z - 8, 0);
-                spawnEnemy('wisp', tg.pos.x, tg.pos.z - 12, 0);
-                player.souls += 8;
-                updateRPGHud();
-            }
         } else if (target.type === 'object') {
             const obj = target.data;
             if (!obj.reusable) {
@@ -2967,7 +3034,7 @@
     }
 
     // ============================================================================
-    // 11. MINIMAPA ASTRAL & LOOP PRINCIPAL
+    // 11. MINIMAPA & LOOP PRINCIPAL DE ATUALIZAÇÃO
     // ============================================================================
     const minimapCanvas = document.getElementById('minimap-canvas');
     const mCtx = minimapCanvas.getContext('2d');
@@ -2977,9 +3044,9 @@
         const h = minimapCanvas.height;
         const cx = w / 2;
         const cy = h / 2;
-        const sc = 0.32;
+        const sc = 0.34;
 
-        mCtx.fillStyle = '#090214';
+        mCtx.fillStyle = '#080114';
         mCtx.fillRect(0, 0, w, h);
 
         mCtx.save();
@@ -2997,7 +3064,6 @@
             });
         }
 
-        // Escada em Espiral
         const sdx = (SPIRAL_STAIR_POS.x - player.pos.x) * sc;
         const sdz = (SPIRAL_STAIR_POS.z - player.pos.z) * sc;
         if (Math.abs(sdx) < cx && Math.abs(sdz) < cy) {
@@ -3005,15 +3071,14 @@
             mCtx.fillRect(sdx - 3, sdz - 3, 6, 6);
         }
 
-        // Inimigos do andar atual
         activeEnemies.forEach(e => {
             if (e.andar !== player.andar) return;
             const dx = (e.mesh.position.x - player.pos.x) * sc;
             const dz = (e.mesh.position.z - player.pos.z) * sc;
             if (Math.abs(dx) < cx && Math.abs(dz) < cy) {
-                mCtx.fillStyle = e.type === 'boss' ? '#ff0a54' : '#f72585';
+                mCtx.fillStyle = e.type === 'malakor' ? '#ff0a54' : '#f72585';
                 mCtx.beginPath();
-                mCtx.arc(dx, dz, e.type === 'boss' ? 4.5 : 2.5, 0, Math.PI * 2);
+                mCtx.arc(dx, dz, e.type === 'malakor' ? 4.5 : 2.5, 0, Math.PI * 2);
                 mCtx.fill();
             }
         });
@@ -3033,52 +3098,110 @@
     const interactPrompt = document.getElementById('interact-prompt');
     const crosshair = document.getElementById('crosshair');
     const locationTitle = document.getElementById('location-title');
-    const locationSub = document.getElementById('location-sub');
 
     function animate() {
         requestAnimationFrame(animate);
         const dt = Math.min(clock.getDelta(), 0.05);
 
-        if (isPaused) {
+        if (isPaused || isLoreOpen) {
             renderer.render(scene, camera);
             return;
         }
 
         const elapsedTime = clock.getElapsedTime();
 
-        // Anima Roda de Espadas Místicas & Fogos-Fátuos Azuis
-        rotatingBlades.forEach(w => { w.rotation.z += dt * 1.1; });
+        // Anima Pétalas de Sakura caindo, Roda de Espadas e Fogos-Fátuos
+        const pArr = sakuraPetalsSystem.geometry.attributes.position.array;
+        for (let i = 0; i < petalCount; i++) {
+            pArr[i * 3 + 1] -= dt * 2.4;
+            pArr[i * 3] += Math.sin(elapsedTime + i) * dt * 0.8;
+            if (pArr[i * 3 + 1] < 0) {
+                pArr[i * 3] = player.pos.x + (Math.random() - 0.5) * 200;
+                pArr[i * 3 + 1] = 38;
+                pArr[i * 3 + 2] = player.pos.z + (Math.random() - 0.5) * 200;
+            }
+        }
+        sakuraPetalsSystem.geometry.attributes.position.needsUpdate = true;
+
+        rotatingBlades.forEach(w => { w.rotation.z += dt * 1.15; });
         floatingWisps.forEach(fw => {
             fw.sprite.position.y = 2.1 + Math.sin(elapsedTime * 2.2 + fw.phase) * 0.55;
             fw.sprite.position.x = fw.baseX + Math.cos(elapsedTime * 1.3 + fw.phase) * 1.1;
         });
 
-        // Evento Aleatório: Eclipse da Lua de Sangue
-        worldEvent.timer -= dt;
-        if (worldEvent.timer <= 0) {
-            toggleBloodMoon(!worldEvent.bloodMoonActive);
-            worldEvent.timer = worldEvent.bloodMoonActive ? 32.0 : 55.0;
-        }
-
         if (player.isPlaying) {
             if (player.stairCooldown > 0) player.stairCooldown -= dt;
-            for (const tg of toriiGates) if (tg.cooldown > 0) tg.cooldown -= dt;
+            if (player.dashCooldownTimer > 0) player.dashCooldownTimer = Math.max(0, player.dashCooldownTimer - dt);
+            if (player.invulnTimer > 0) player.invulnTimer = Math.max(0, player.invulnTimer - dt);
+            if (player.novaCooldownTimer > 0) player.novaCooldownTimer = Math.max(0, player.novaCooldownTimer - dt);
 
-            if (isMouseDown) tryCastContinuousMagicOrb(performance.now());
+            if (isMouseDown) tryCastPrimaryMagic(performance.now());
 
             if (player.mp < player.maxMp) {
                 player.mp = Math.min(player.maxMp, player.mp + GAME_CONFIG.PLAYER_MP_REGEN * dt);
-                updateRPGHud();
+            }
+            updateRPGHud();
+
+            // Atualiza Ritual de Purificação dos Selos (15s)
+            if (questState.activeRitual) {
+                const rit = questState.activeRitual;
+                rit.timer += dt;
+                const pct = Math.min(100, (rit.timer / rit.duration) * 100);
+                document.getElementById('ritual-fill').style.width = `${pct}%`;
+
+                // Se fugir para muito longe do altar, o ritual falha
+                if (Math.hypot(player.pos.x - rit.sealObj.x, player.pos.z - rit.sealObj.z) > 36) {
+                    rit.sealObj.inProgress = false;
+                    questState.activeRitual = null;
+                    document.getElementById('ritual-hud').style.display = 'none';
+                    showFloatingText('RITUAL INTERROMPIDO! VOCÊ SE AFASTOU DO ALTAR!', '#ff0a54', '1.6rem');
+                } else {
+                    if (!rit.wave2Spawned && rit.timer >= 7.5) {
+                        rit.wave2Spawned = true;
+                        rit.sealObj.waveTypes.forEach((t, idx) => {
+                            const ang = (idx / rit.sealObj.waveTypes.length) * Math.PI * 2 + 0.5;
+                            spawnCampEnemy(t, rit.sealObj.x + Math.cos(ang) * 14, rit.sealObj.z + Math.sin(ang) * 14, 0, true);
+                        });
+                    }
+
+                    if (rit.timer >= rit.duration) {
+                        const sObj = rit.sealObj;
+                        sObj.purified = true;
+                        sObj.inProgress = false;
+                        sObj.crystalMat.color.setHex(0x00f5d4);
+                        sObj.light.color.setHex(0x00f5d4);
+                        questState.activeRitual = null;
+                        questState.sealsPurified += 1;
+                        document.getElementById('ritual-hud').style.display = 'none';
+
+                        audio.playShrineChime();
+                        player.maxHp += 20;
+                        player.hp = player.maxHp;
+                        player.magicDamage += 5;
+                        player.blessings.push(`Selo ${sObj.id} (${sObj.biomeName})`);
+                        gainPlayerXP(120, `Purificação Selo ${sObj.id}`);
+                        updateQuestTracker();
+
+                        if (questState.sealsPurified >= questState.totalSeals && !questState.barrierBroken) {
+                            questState.barrierBroken = true;
+                            castleBarrierMesh.visible = false;
+                            removeColliderByTag('BarreiraSelos', 0);
+                            showFloatingText('★ OS 3 SELOS FORAM PURIFICADOS! BARREIRA DO CASTELO DISSIPADA! ★', '#ffd166', '1.85rem');
+                        } else {
+                            showFloatingText(`SELO ${sObj.id} PURIFICADO! (+20 HP MAX, +5 DANO)`, '#00f5d4', '1.65rem');
+                        }
+                    }
+                }
             }
 
             // Coleta magnética de Essências Espirituais
             for (let i = soulOrbs.length - 1; i >= 0; i--) {
                 const so = soulOrbs[i];
                 if (so.andar !== player.andar) continue;
-                const d = so.mesh.position.distanceTo(player.pos.clone().add(new THREE.Vector3(0, 1.2, 0)));
-                if (d < 14.0) {
-                    const pull = player.pos.clone().add(new THREE.Vector3(0, 1.2, 0)).sub(so.mesh.position).normalize();
-                    so.mesh.position.addScaledVector(pull, 26.0 * dt);
+                const pCenter = player.pos.clone().add(new THREE.Vector3(0, 1.2, 0));
+                const d = so.mesh.position.distanceTo(pCenter);
+                if (d < 15.0) {
+                    so.mesh.position.addScaledVector(pCenter.sub(so.mesh.position).normalize(), 26.0 * dt);
                 }
                 if (d < 1.6) {
                     player.souls += so.value;
@@ -3089,23 +3212,33 @@
                 }
             }
 
-            // Movimentação do Jogador em 3ª Pessoa
-            let f = 0, r = 0;
-            if (keys['KeyW'] || keys['ArrowUp']) f += 1;
-            if (keys['KeyS'] || keys['ArrowDown']) f -= 1;
-            if (keys['KeyD'] || keys['ArrowRight']) r += 1;
-            if (keys['KeyA'] || keys['ArrowLeft']) r -= 1;
+            // Movimentação do Jogador ou Dash Arcano
+            let vx = 0, vz = 0;
+            let isMoving = false;
 
-            const isMoving = f !== 0 || r !== 0;
-            if (isMoving) {
-                const len = Math.hypot(f, r);
-                f /= len; r /= len;
+            if (player.dashTimer > 0) {
+                player.dashTimer -= dt;
+                vx = player.dashDir.x * GAME_CONFIG.DASH_SPEED;
+                vz = player.dashDir.z * GAME_CONFIG.DASH_SPEED;
+                isMoving = true;
+                spawnParticle(player.pos.clone().add(new THREE.Vector3(0, 1.0, 0)), 0x00f5d4, 0.8);
+            } else {
+                let f = 0, r = 0;
+                if (keys['KeyW'] || keys['ArrowUp']) f += 1;
+                if (keys['KeyS'] || keys['ArrowDown']) f -= 1;
+                if (keys['KeyD'] || keys['ArrowRight']) r += 1;
+                if (keys['KeyA'] || keys['ArrowLeft']) r -= 1;
+
+                isMoving = f !== 0 || r !== 0;
+                if (isMoving) {
+                    const len = Math.hypot(f, r);
+                    f /= len; r /= len;
+                }
+                const sinY = Math.sin(player.yaw);
+                const cosY = Math.cos(player.yaw);
+                vx = (-sinY * f + cosY * r) * player.speed;
+                vz = (-cosY * f - sinY * r) * player.speed;
             }
-
-            const sinY = Math.sin(player.yaw);
-            const cosY = Math.cos(player.yaw);
-            const vx = (-sinY * f + cosY * r) * player.speed;
-            const vz = (-cosY * f - sinY * r) * player.speed;
 
             if (!checkCollision(player.pos.x + vx * dt, player.pos.z, player.radius, player.andar)) {
                 player.pos.x += vx * dt;
@@ -3114,37 +3247,33 @@
                 player.pos.z += vz * dt;
             }
 
-            const floorBaseY = player.andar * floor1Y;
-            player.vel.y -= player.gravity * dt;
-            player.pos.y += player.vel.y * dt;
-            if (player.pos.y <= floorBaseY) {
-                player.pos.y = floorBaseY;
-                player.vel.y = 0;
-                player.onGround = true;
-            }
+            player.pos.y = player.andar * floor1Y;
 
-            // Transição automática ao pisar no núcleo da Escada em Espiral
             if (player.stairCooldown <= 0 && Math.hypot(player.pos.x - SPIRAL_STAIR_POS.x, player.pos.z - SPIRAL_STAIR_POS.z) < 2.0) {
                 switchCastleFloor(player.andar === 0 ? 1 : 0);
             }
 
-            // Atualiza posição e animação do Avatar em Terceira Pessoa
+            // Animação do Avatar e Capa Esvoaçante
             playerAvatar.position.copy(player.pos);
             playerAvatar.rotation.y = player.yaw;
 
-            if (isMoving && player.onGround) {
+            if (isMoving) {
                 player.walkAnimTime += dt * 11;
                 playerAvatar.position.y += Math.abs(Math.sin(player.walkAnimTime)) * 0.14;
+                flowingCape.rotation.x = 0.45 + Math.sin(player.walkAnimTime * 1.4) * 0.14;
                 player.stepSoundTimer += dt;
-                if (player.stepSoundTimer >= 0.42) {
+                if (player.stepSoundTimer >= 0.42 && player.dashTimer <= 0) {
                     player.stepSoundTimer = 0;
                     audio.playFootstep(player.andar === 1);
                 }
             } else {
-                staffOrb.position.y = 1.25 + Math.sin(elapsedTime * 3) * 0.08;
+                flowingCape.rotation.x = 0.2 + Math.sin(elapsedTime * 2.5) * 0.06;
+                staffCrystal.position.y = 1.28 + Math.sin(elapsedTime * 3) * 0.07;
             }
 
-            // Posiciona a Câmera em Terceira Pessoa (Sobre o Ombro Direito)
+            // Câmera em 3ª Pessoa
+            const sinY = Math.sin(player.yaw);
+            const cosY = Math.cos(player.yaw);
             const camDist = GAME_CONFIG.THIRD_PERSON.DISTANCE;
             const shoulder = GAME_CONFIG.THIRD_PERSON.SHOULDER_OFFSET;
             const desiredCamX = player.pos.x + sinY * camDist + cosY * shoulder;
@@ -3167,22 +3296,19 @@
             updateEnemies(dt, elapsedTime);
             renderMinimap();
 
-            // Atualiza Banner de Região
+            // Atualiza Título da Região / Bioma Atual
             if (player.andar === 1) {
-                locationTitle.textContent = 'ILHA FLUTUANTE ACORRENTADA — 2º ANDAR';
-                locationSub.textContent = 'Santuário Superior de Onryō Kage-Samurai';
-            } else if (player.pos.z < -105 && Math.abs(player.pos.x) < 25) {
-                locationTitle.textContent = 'FORTALEZA SUSPENSA — SALÃO TÉRREO';
-                locationSub.textContent = 'Escada em Espiral a Nordeste';
-            } else if (Math.hypot(player.pos.x - FORGE_POS.x, player.pos.z - FORGE_POS.z) < 22) {
-                locationTitle.textContent = 'RODA DE ESPADAS MÍSTICAS — FORJA ASTRAL';
-                locationSub.textContent = 'Encante a Forma Elemental do seu Bastão';
+                locationTitle.textContent = 'CASTELO FLUTUANTE — TRONO DO ECLIPSE (2º ANDAR)';
+            } else if (player.pos.z < -108 && Math.abs(player.pos.x) < 25) {
+                locationTitle.textContent = 'CASTELO FLUTUANTE — SALÃO DOS GUARDAS (1º ANDAR)';
+            } else if (player.pos.x < -38) {
+                locationTitle.textContent = 'CEMITÉRIO DOS ESQUECIDOS & CRIPTAS';
+            } else if (player.pos.x > 38) {
+                locationTitle.textContent = 'PONTES ACORRENTADAS & SANTUÁRIO TORII';
             } else {
-                locationTitle.textContent = 'BOSQUE DAS SAKURAS CÓSMICAS';
-                locationSub.textContent = `Coordenadas: [${Math.round(player.pos.x)}, ${Math.round(player.pos.z)}]`;
+                locationTitle.textContent = 'BOSQUE DAS SAKURAS SOMBRIAS';
             }
 
-            // Prompt Contextual [E]
             const near = getNearbyInteractable();
             if (near) {
                 interactPrompt.style.display = 'block';
@@ -3193,7 +3319,6 @@
                 crosshair.classList.remove('interact-active');
             }
         } else {
-            // Câmera orbital panorâmica na tela inicial
             camera.position.set(Math.sin(elapsedTime * 0.25) * 18, 9, Math.cos(elapsedTime * 0.25) * 18);
             camera.lookAt(0, 3, -15);
         }
@@ -3201,6 +3326,7 @@
         renderer.render(scene, camera);
     }
 
+    updateQuestTracker();
     updateRPGHud();
     animate();
     </script>
