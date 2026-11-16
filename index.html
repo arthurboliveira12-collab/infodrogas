@@ -1,870 +1,1868 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Reverie - First Person Survival</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Shadow Tower: Chronicles - Retro 3D Dark Fantasy RPG</title>
+    <!-- Fontes Retro Pixel / Medieval -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=VT323&display=swap" rel="stylesheet">
+    <!-- Three.js r128 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            font-family: 'Courier New', Courier, monospace; /* Retro Font */
+        * {
+            box-sizing: border-box;
             user-select: none;
-            image-rendering: pixelated; /* Retro look for UI if needed */
+            -webkit-user-select: none;
         }
 
-        #game-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+        body, html {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            background-color: #080410;
+            font-family: 'VT323', monospace;
+            color: #f0e6ff;
         }
 
-        /* UI Overlays */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        /* Canvas principal com renderização pixelada nítida */
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Efeito de Scanlines CRT & Vinheta PS1 */
+        .crt-overlay {
+            position: fixed;
+            inset: 0;
             pointer-events: none;
             z-index: 10;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+                radial-gradient(circle at center, transparent 58%, rgba(8, 2, 18, 0.82) 100%);
+            background-size: 100% 4px, 100% 100%;
         }
 
-        /* Crosshair */
+        /* HUD em Primeira Pessoa */
+        #hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 20;
+            display: none;
+        }
+
+        /* Mira central mística */
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             transform: translate(-50%, -50%);
-            pointer-events: none;
+            border: 2px solid rgba(0, 255, 242, 0.75);
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00fff2, inset 0 0 4px #b829ff;
+            transition: transform 0.15s ease, border-color 0.15s ease;
         }
-        #crosshair::before, #crosshair::after {
-            content: '';
+
+        #crosshair.interact-active {
+            transform: translate(-50%, -50%) scale(1.6) rotate(45deg);
+            border-color: #ffcc00;
+            border-radius: 2px;
+            box-shadow: 0 0 14px #ffcc00;
+        }
+
+        /* Nome da Área Atual (Topo Centro) */
+        #location-banner {
             position: absolute;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
-        #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
-
-        /* Health & Level HUD */
-        #hud {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .stat-label {
-            color: #ccc;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        #health-bar-container {
-            width: 250px;
-            height: 20px;
-            background-color: rgba(20, 0, 0, 0.8);
-            border: 2px solid #300;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        #health-bar {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #cc0000, #ff0055);
-            transition: width 0.2s ease-out;
-        }
-
-        #level-display {
-            color: #00ffcc;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 0px #000;
-        }
-
-        #xp-bar-container {
-            width: 250px;
-            height: 10px;
-            background-color: #111;
-            border: 2px solid #222;
-            border-radius: 0px;
-            margin-top: -5px;
-        }
-
-        #xp-bar {
-            width: 0%;
-            height: 100%;
-            background-color: #9900ff;
-            transition: width 0.3s ease;
-        }
-
-        /* Interaction Prompt */
-        #interaction-prompt {
-            position: absolute;
-            top: 60%;
+            top: 22px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 20px;
-            text-shadow: 2px 2px 0px #000;
-            display: none;
+            transform: translateX(-50%);
+            text-align: center;
+            background: linear-gradient(90deg, transparent, rgba(22, 8, 42, 0.88) 25%, rgba(22, 8, 42, 0.88) 75%, transparent);
+            padding: 8px 42px;
+            border-top: 2px solid #9d4edd;
+            border-bottom: 2px solid #9d4edd;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
         }
 
-        /* Screens */
-        #blocker {
+        #location-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(1.1rem, 2.2vw, 1.65rem);
+            color: #ffd166;
+            text-shadow: 0 0 10px #ff9e00, 2px 2px 0 #1a0526;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        #location-sub {
+            font-size: 1.05rem;
+            color: #4cc9f0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Prompt de Interação [E] */
+        #interact-prompt {
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 57%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 6, 30, 0.92);
+            border: 2px solid #ffd166;
+            box-shadow: 0 0 16px rgba(255, 209, 102, 0.5), inset 0 0 8px rgba(157, 78, 221, 0.5);
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 1.35rem;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            display: none;
+            animation: pulsePrompt 1.2s infinite alternate;
+        }
+
+        #interact-prompt span {
+            color: #ffd166;
+            font-weight: bold;
+            background: #3c096c;
+            padding: 1px 7px;
+            border: 1px solid #ffd166;
+            border-radius: 4px;
+        }
+
+        @keyframes pulsePrompt {
+            from { transform: translateX(-50%) scale(0.98); }
+            to { transform: translateX(-50%) scale(1.03); }
+        }
+
+        /* Painel Status RPG (Canto Inferior Esquerdo) */
+        #rpg-stats {
+            position: absolute;
+            bottom: 22px;
+            left: 22px;
+            background: linear-gradient(135deg, rgba(18, 6, 34, 0.92), rgba(36, 11, 62, 0.88));
+            border: 3px solid #7b2cbf;
+            outline: 2px solid #10002b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            width: 260px;
+            box-shadow: 0 0 20px rgba(123, 44, 191, 0.45);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #5a189a;
+            padding-bottom: 4px;
+        }
+
+        .char-title {
+            font-family: 'Cinzel Decorative', serif;
+            color: #e0aaff;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .char-lvl {
+            color: #ffd166;
+            font-size: 1.1rem;
+        }
+
+        .bar-row {
+            margin-top: 7px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+
+        .bar-track {
+            width: 100%;
+            height: 13px;
+            background: #0d021a;
+            border: 2px solid #3c096c;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill-hp {
+            width: 92%;
+            height: 100%;
+            background: linear-gradient(90deg, #800f2f, #ff0a54, #ff477e);
+            box-shadow: 0 0 8px #ff0a54;
+        }
+
+        .bar-fill-mp {
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background: linear-gradient(90deg, #3a0ca3, #4361ee, #00f5d4);
+            box-shadow: 0 0 10px #00f5d4;
+            animation: manaShimmer 2.5s infinite alternate;
+        }
+
+        @keyframes manaShimmer {
+            from { filter: brightness(0.95); }
+            to { filter: brightness(1.25); }
+        }
+
+        /* Cajado Arcano / Mão em Primeira Pessoa (Overlay 2D Retro estilizado + Glow) */
+        #viewmodel-container {
+            position: absolute;
+            bottom: -15px;
+            right: 6%;
+            width: 310px;
+            height: 360px;
+            transform-origin: bottom center;
+            filter: drop-shadow(0 0 18px rgba(181, 23, 158, 0.65));
+        }
+
+        /* Controles rápidos no canto superior direito */
+        #top-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            pointer-events: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .retro-mini-btn {
+            background: rgba(24, 8, 44, 0.9);
+            border: 2px solid #9d4edd;
+            color: #ffd166;
+            font-family: 'VT323', monospace;
+            font-size: 1.15rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #240046;
+            transition: transform 0.1s, background 0.15s;
+        }
+
+        .retro-mini-btn:hover {
+            background: #3c096c;
+            border-color: #ffd166;
+        }
+
+        .retro-mini-btn:active {
+            transform: translateY(2px);
+        }
+
+        /* Dica de controles no canto inferior direito */
+        #controls-hint {
+            position: absolute;
+            bottom: 22px;
+            right: 22px;
+            background: rgba(14, 5, 26, 0.78);
+            border: 1px solid #5a189a;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #cbb2fe;
+            text-align: right;
+        }
+
+        /* Tela Inicial / Pausa */
+        #menu-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            background: radial-gradient(circle at 50% 35%, rgba(60, 9, 108, 0.78), rgba(8, 2, 18, 0.95));
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: white;
-            z-index: 20;
-            cursor: pointer;
-        }
-
-        .title {
-            font-size: 50px;
-            font-weight: bold;
-            color: #ff0055;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            text-shadow: 4px 4px 0px #440022;
-        }
-
-        .instructions {
-            font-size: 20px;
-            color: #00ffcc;
+            padding: 20px;
             text-align: center;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 0px #000;
+            backdrop-filter: blur(3px);
         }
 
-        .btn {
-            padding: 15px 40px;
-            background-color: #220033;
-            color: #00ffcc;
-            border: 4px solid #00ffcc;
-            border-radius: 0px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 20px;
-            font-weight: bold;
+        .menu-card {
+            max-width: 650px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(24, 7, 46, 0.95), rgba(13, 3, 26, 0.98));
+            border: 3px solid #9d4edd;
+            outline: 3px solid #240046;
+            border-radius: 12px;
+            padding: 32px 28px;
+            box-shadow: 0 0 45px rgba(157, 78, 221, 0.55), inset 0 0 25px rgba(0, 245, 212, 0.15);
+        }
+
+        .game-subtitle-tag {
+            display: inline-block;
+            background: #3c096c;
+            color: #00f5d4;
+            border: 1px solid #00f5d4;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 1.05rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
             text-transform: uppercase;
+        }
+
+        .game-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(2rem, 4.5vw, 3.3rem);
+            font-weight: 900;
+            margin: 6px 0;
+            background: linear-gradient(180deg, #fff3b0 0%, #ffd166 45%, #ff9e00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 0 #3c096c) drop-shadow(0 0 18px rgba(255, 158, 0, 0.6));
+            line-height: 1.1;
+        }
+
+        .game-lore {
+            color: #d8bbff;
+            font-size: 1.25rem;
+            margin: 14px 0 22px;
+            line-height: 1.35;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            background: rgba(10, 2, 20, 0.75);
+            border: 2px solid #5a189a;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.18rem;
+        }
+
+        .key-badge {
+            background: #240046;
+            border: 2px solid #ffd166;
+            color: #ffd166;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            min-width: 68px;
+            text-align: center;
+            box-shadow: 0 2px 0 #000;
+        }
+
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 24px;
+            font-size: 1.15rem;
+            color: #e0aaff;
+        }
+
+        input[type="range"] {
+            accent-color: #00f5d4;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background-color: #00ffcc;
-            color: #220033;
         }
 
-        /* Blood overlay for damage */
-        #damage-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 50%, rgba(200, 0, 0, 0.4) 100%);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.1s;
-            z-index: 5;
+        #play-btn {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #10002b;
+            background: linear-gradient(180deg, #ffe169 0%, #ffb703 55%, #fb8500 100%);
+            border: 3px solid #fff3b0;
+            border-radius: 8px;
+            padding: 14px 38px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #7f4f24, 0 0 25px rgba(255, 183, 3, 0.7);
+            transition: transform 0.1s, filter 0.15s;
+            letter-spacing: 1.5px;
         }
 
-    </style>
-    <!-- Import Maps for Three.js -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+        #play-btn:hover {
+            filter: brightness(1.12);
+            transform: translateY(-2px);
+        }
+
+        #play-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #7f4f24;
+        }
+
+        @media (max-width: 600px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            #viewmodel-container {
+                width: 210px;
+                height: 250px;
+                right: 0;
+            }
+            #rpg-stats {
+                width: 200px;
+                padding: 8px 10px;
             }
         }
-    </script>
+    </style>
 </head>
 <body>
 
-    <div id="game-container"></div>
+    <!-- Canvas 3D -->
+    <canvas id="game-canvas"></canvas>
 
-    <div id="ui-layer">
-        <div id="damage-overlay"></div>
+    <!-- Overlay CRT / PS1 -->
+    <div class="crt-overlay"></div>
+
+    <!-- HUD em Primeira Pessoa -->
+    <div id="hud">
+        <!-- Banner de Região -->
+        <div id="location-banner">
+            <h2 id="location-title">TORRE ARCANA — BIBLIOTECA</h2>
+            <div id="location-sub">Santuário do Arquimago</div>
+        </div>
+
+        <!-- Controles Superiores -->
+        <div id="top-controls">
+            <button id="mute-btn" class="retro-mini-btn" title="Alternar Áudio">🔊 SOM: ON</button>
+            <button id="pause-btn" class="retro-mini-btn" title="Abrir Menu">⚙️ MENU</button>
+        </div>
+
+        <!-- Mira Central -->
         <div id="crosshair"></div>
-        <div id="interaction-prompt">Pressione E para abrir</div>
-        
-        <div id="hud">
-            <div id="level-display">Nível <span id="lvl-val">1</span></div>
-            <div id="xp-bar-container"><div id="xp-bar"></div></div>
-            <div class="stat-label">Vida</div>
-            <div id="health-bar-container">
-                <div id="health-bar"></div>
+
+        <!-- Aviso de Interação com a Porta -->
+        <div id="interact-prompt">Pressione <span>[E]</span> para Abrir a Porta</div>
+
+        <!-- Cajado Arcano & Orbe Místico (SVG Detalhado Estilo Retro Pixel/PS1) -->
+        <div id="viewmodel-container">
+            <svg viewBox="0 0 300 350" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                        <stop offset="30%" stop-color="#00f5d4" stop-opacity="0.95"/>
+                        <stop offset="65%" stop-color="#9d4edd" stop-opacity="0.7"/>
+                        <stop offset="100%" stop-color="#3c096c" stop-opacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="staffWood" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#1a0926"/>
+                        <stop offset="45%" stop-color="#4a196b"/>
+                        <stop offset="100%" stop-color="#12041c"/>
+                    </linearGradient>
+                    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fff3b0"/>
+                        <stop offset="50%" stop-color="#ffb703"/>
+                        <stop offset="100%" stop-color="#9c6615"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Aura mágica pulsante -->
+                <circle cx="150" cy="88" r="68" fill="url(#orbGlow)">
+                    <animate attributeName="r" values="60;74;60" dur="2.2s" repeatCount="indefinite"/>
+                </circle>
+
+                <!-- Haste do Cajado -->
+                <polygon points="142,135 162,135 186,350 156,350" fill="url(#staffWood)" stroke="#090212" stroke-width="3"/>
+                <!-- Runas brilhantes na haste -->
+                <polygon points="151,180 157,190 151,200 146,190" fill="#00f5d4"/>
+                <polygon points="156,225 162,235 156,245 151,235" fill="#ff0a54"/>
+                <polygon points="161,270 167,280 161,290 156,280" fill="#00f5d4"/>
+
+                <!-- Garras Douradas Góticas segurando o Orbe -->
+                <path d="M135,140 L110,95 L125,65 L128,92 L145,125 Z" fill="url(#goldTrim)" stroke="#240046" stroke-width="2"/>
+                <path d="M168,140 L192,95 L176,65 L173,92 L156,125 Z" fill="url(#goldTrim)" stroke="#240046" stroke-width="2"/>
+                <rect x="134" y="128" width="35" height="14" rx="3" fill="url(#goldTrim)" stroke="#240046" stroke-width="2"/>
+
+                <!-- Orbe Arcano Flutuante -->
+                <circle cx="150" cy="88" r="24" fill="#3a0ca3" stroke="#00f5d4" stroke-width="3"/>
+                <circle cx="150" cy="88" r="16" fill="#7209b7"/>
+                <circle cx="143" cy="81" r="6" fill="#ffffff" opacity="0.85"/>
+
+                <!-- Partículas Mágicas -->
+                <rect x="108" y="55" width="6" height="6" fill="#00f5d4">
+                    <animate attributeName="y" values="62;42;62" dur="1.8s" repeatCount="indefinite"/>
+                </rect>
+                <rect x="184" y="68" width="5" height="5" fill="#ffd166">
+                    <animate attributeName="y" values="72;50;72" dur="2.1s" repeatCount="indefinite"/>
+                </rect>
+                <rect x="122" y="115" width="5" height="5" fill="#ff0a54">
+                    <animate attributeName="y" values="118;96;118" dur="1.6s" repeatCount="indefinite"/>
+                </rect>
+
+                <!-- Mão/Luva do Mago Sombrio -->
+                <path d="M126,245 Q118,225 140,218 L175,222 Q192,235 186,265 L145,270 Z" fill="#240046" stroke="#9d4edd" stroke-width="3"/>
+                <path d="M132,232 L168,234 M134,244 L170,246 M136,256 L172,258" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- Status do Personagem RPG -->
+        <div id="rpg-stats">
+            <div class="stat-header">
+                <span class="char-title">SHADOW WIZARD</span>
+                <span class="char-lvl">LVL 99</span>
             </div>
+            <div class="bar-row">
+                <div class="bar-label">
+                    <span style="color:#ff758f;">VITALIDADE</span>
+                    <span>480 / 500</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill-hp"></div>
+                </div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">
+                    <span style="color:#48bfe3;">MANA ARCANA</span>
+                    <span>999 / 999</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill-mp"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lembrete rápido -->
+        <div id="controls-hint">
+            [WASD] Mover &bull; [ESPAÇO] Pular<br>
+            [E] Interagir &bull; [MOUSE] Olhar
         </div>
     </div>
 
-    <!-- Start / Game Over Screen -->
-    <div id="blocker">
-        <div id="menu-content" class="flex flex-col items-center">
-            <div class="title" id="menu-title">Dark Reverie</div>
-            <div class="instructions" id="menu-instructions">
-                Uma jornada na escuridão.<br><br>
-                WASD = Mover<br>
-                MOUSE = Olhar<br>
-                CLIQUE ESQUERDO = Atacar<br><br>
-                Explore o mundo sombrio.
+    <!-- Tela de Título / Menu Inicial -->
+    <div id="menu-screen">
+        <div class="menu-card">
+            <div class="game-subtitle-tag">PS1 / N64 RETRO 3D EDITION</div>
+            <h1 class="game-title">SHADOW TOWER:<br>CHRONICLES</h1>
+            <p class="game-lore">
+                Desperte na antiga Biblioteca da Torre Arcana. Abra os portões selados, atravesse a Trilha Sombria e cruze a Ponte do Abismo rumo ao Castelo das Sombras.
+            </p>
+
+            <div class="controls-grid">
+                <div class="control-item"><span class="key-badge">W A S D</span> <span>Caminhar / Correr</span></div>
+                <div class="control-item"><span class="key-badge">ESPAÇO</span> <span>Pular</span></div>
+                <div class="control-item"><span class="key-badge">TECLA E</span> <span>Abrir / Fechar Porta</span></div>
+                <div class="control-item"><span class="key-badge">MOUSE</span> <span>Controlar Câmera</span></div>
             </div>
-            <button class="btn" id="start-btn">Clique para Jogar</button>
+
+            <div class="settings-row">
+                <label for="sens-slider">Sensibilidade do Mouse: <span id="sens-val" style="color:#ffd166;">1.0x</span></label>
+                <input type="range" id="sens-slider" min="0.3" max="2.5" step="0.1" value="1.0">
+            </div>
+
+            <button id="play-btn">CLIQUE PARA JOGAR</button>
         </div>
     </div>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    <script>
+    /**
+     * ============================================================================
+     * SHADOW TOWER: CHRONICLES
+     * Jogo 3D em Primeira Pessoa estilo PS1/N64 Dark Fantasy (Shadow Wizard Vibe)
+     * ============================================================================
+     */
 
-        // Game State Variables
-        let camera, scene, renderer, controls;
-        let prevTime = performance.now();
-        
-        // Movement state
-        const velocity = new THREE.Vector3();
-        const direction = new THREE.Vector3();
-        let moveForward = false;
-        let moveBackward = false;
-        let moveLeft = false;
-        let moveRight = false;
-        const playerSpeed = 300.0;
-        
-        // RPG Stats
-        let maxHealth = 100;
-        let currentHealth = 100;
-        let level = 1;
-        let xp = 0;
-        let xpToNext = 5;
-        let isDead = false;
+    // ============================================================================
+    // 1. SINTETIZADOR RETRO WEB AUDIO API (Dungeon Synth + Efeitos Sonoros)
+    // ============================================================================
+    class RetroAudioEngine {
+        constructor() {
+            this.ctx = null;
+            this.isMuted = false;
+            this.bgmInterval = null;
+            this.stepIndex = 0;
+            this.isPlayingBgm = false;
+        }
 
-        // Weapon Animation State
-        let swordGroup;
-        let isAttacking = false;
-        let attackProgress = 0;
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioCtx();
+            }
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            if (!this.isPlayingBgm) {
+                this.startDungeonSynth();
+            }
+        }
 
-        // Entities & Environment
-        const enemies = [];
-        const collidableObjects = []; // For basic wall collisions
-        let floorObjects = []; // For ground detection
-        const damageAmount = 20;
-        const damageCooldown = 1.0; 
-        let lastDamageTime = 0;
-        
-        // Interactive Elements
-        let doorMesh;
-        let doorPivot;
-        let isDoorOpen = false;
-        let doorAnimationProgress = 0;
-        let isAnimatingDoor = false;
+        toggleMute() {
+            this.isMuted = !this.isMuted;
+            return this.isMuted;
+        }
 
-        // Raycasting for combat and ground
-        const raycaster = new THREE.Raycaster();
-        const groundRaycaster = new THREE.Raycaster();
-        const centerCoords = new THREE.Vector2(0, 0); 
+        // Som sintetizado de passos na pedra/madeira
+        playFootstep(isWood = false) {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
 
-        // DOM Elements
-        const blocker = document.getElementById('blocker');
-        const menuTitle = document.getElementById('menu-title');
-        const menuInstructions = document.getElementById('menu-instructions');
-        const startBtn = document.getElementById('start-btn');
-        const healthBar = document.getElementById('health-bar');
-        const lvlVal = document.getElementById('lvl-val');
-        const xpBar = document.getElementById('xp-bar');
-        const damageOverlay = document.getElementById('damage-overlay');
-        const interactionPrompt = document.getElementById('interaction-prompt');
+            osc.type = isWood ? 'triangle' : 'sawtooth';
+            const baseFreq = isWood ? 110 + Math.random() * 25 : 75 + Math.random() * 20;
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(28, now + 0.09);
 
-        init();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(isWood ? 420 : 280, now);
+
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+
+        // Som de pulo arcano
+        playJump() {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(140, now);
+            osc.frequency.exponentialRampToValueAtTime(340, now + 0.18);
+
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        // Som pesado de porta medieval abrindo/fechando
+        playDoorSound(opening) {
+            if (this.isMuted || !this.ctx) return;
+            const now = this.ctx.currentTime;
+
+            // Rangido grave de madeira e ferro
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            if (opening) {
+                osc.frequency.setValueAtTime(65, now);
+                osc.frequency.linearRampToValueAtTime(98, now + 0.45);
+                osc.frequency.linearRampToValueAtTime(52, now + 0.85);
+            } else {
+                osc.frequency.setValueAtTime(92, now);
+                osc.frequency.linearRampToValueAtTime(42, now + 0.65);
+            }
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(220, now);
+            filter.Q.setValueAtTime(4, now);
+
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.88);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.9);
+
+            // Batida metálica da tranca
+            const clank = this.ctx.createOscillator();
+            const clankGain = this.ctx.createGain();
+            clank.type = 'triangle';
+            const impactTime = opening ? now + 0.05 : now + 0.62;
+            clank.frequency.setValueAtTime(180, impactTime);
+            clank.frequency.exponentialRampToValueAtTime(35, impactTime + 0.16);
+            clankGain.gain.setValueAtTime(0.22, impactTime);
+            clankGain.gain.exponentialRampToValueAtTime(0.001, impactTime + 0.17);
+            clank.connect(clankGain);
+            clankGain.connect(this.ctx.destination);
+            clank.start(impactTime);
+            clank.stop(impactTime + 0.18);
+        }
+
+        // Trilha Dungeon Synth Minimalista (Escala Frígia / Menor Harmônica)
+        startDungeonSynth() {
+            this.isPlayingBgm = true;
+            // Notas em Hz (D menor sombrio / Frígio)
+            const bassNotes = [73.42, 73.42, 77.78, 73.42, 65.41, 65.41, 58.27, 65.41]; // D2, Eb2, C2, Bb1
+            const leadNotes = [
+                293.66, 0, 349.23, 311.13, 293.66, 0, 220.00, 233.08,
+                293.66, 349.23, 440.00, 466.16, 440.00, 349.23, 311.13, 0
+            ];
+
+            this.bgmInterval = setInterval(() => {
+                if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+                const now = this.ctx.currentTime;
+
+                // Baixo Drone a cada 2 passos
+                if (this.stepIndex % 2 === 0) {
+                    const bNote = bassNotes[(this.stepIndex / 2) % bassNotes.length];
+                    const oscB = this.ctx.createOscillator();
+                    const gainB = this.ctx.createGain();
+                    const filterB = this.ctx.createBiquadFilter();
+
+                    oscB.type = 'sawtooth';
+                    oscB.frequency.setValueAtTime(bNote, now);
+                    filterB.type = 'lowpass';
+                    filterB.frequency.setValueAtTime(210, now);
+
+                    gainB.gain.setValueAtTime(0.001, now);
+                    gainB.gain.linearRampToValueAtTime(0.065, now + 0.15);
+                    gainB.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+                    oscB.connect(filterB);
+                    filterB.connect(gainB);
+                    gainB.connect(this.ctx.destination);
+
+                    oscB.start(now);
+                    oscB.stop(now + 1.0);
+                }
+
+                // Harpa / Sino Dungeon Synth
+                const lNote = leadNotes[this.stepIndex % leadNotes.length];
+                if (lNote > 0) {
+                    const oscL = this.ctx.createOscillator();
+                    const gainL = this.ctx.createGain();
+                    oscL.type = 'triangle';
+                    oscL.frequency.setValueAtTime(lNote, now);
+
+                    gainL.gain.setValueAtTime(0.001, now);
+                    gainL.gain.linearRampToValueAtTime(0.04, now + 0.04);
+                    gainL.gain.exponentialRampToValueAtTime(0.0008, now + 0.55);
+
+                    oscL.connect(gainL);
+                    gainL.connect(this.ctx.destination);
+
+                    oscL.start(now);
+                    oscL.stop(now + 0.58);
+                }
+
+                this.stepIndex++;
+            }, 480);
+        }
+    }
+
+    const audio = new RetroAudioEngine();
+
+    // ============================================================================
+    // 2. GERADOR DE TEXTURAS PIXELADAS PROCEDURAIS (ESTÉTICA PS1 / N64)
+    // ============================================================================
+    function createPixelTexture(width, height, drawFn, repeatX = 1, repeatY = 1) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        drawFn(ctx, width, height);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        // NearestFilter garante os pixels estourados autênticos de PS1/N64!
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(repeatX, repeatY);
+        return tex;
+    }
+
+    // Biblioteca de Texturas Retro
+    const textures = {
+        // Pedra escura arroxeada da Torre e Castelo
+        darkStone: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#1d112b';
+            ctx.fillRect(0, 0, w, h);
+            const colors = ['#28173b', '#331d4a', '#160c21', '#3d2459'];
+            for (let y = 0; y < h; y += 16) {
+                const offset = (y / 16) % 2 === 0 ? 0 : 16;
+                for (let x = -16; x < w; x += 32) {
+                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                    ctx.fillRect(x + offset + 1, y + 1, 30, 14);
+                    // Realce PS1
+                    ctx.fillStyle = '#4e2f70';
+                    ctx.fillRect(x + offset + 1, y + 1, 30, 2);
+                }
+            }
+            // Ruído pixelado
+            for (let i = 0; i < 220; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.28)' : 'rgba(180,120,255,0.12)';
+                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 2, 2);
+            }
+        }, 4, 4),
+
+        // Chão de madeira antiga da Biblioteca
+        woodFloor: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#2b1410';
+            ctx.fillRect(0, 0, w, h);
+            for (let x = 0; x < w; x += 8) {
+                ctx.fillStyle = x % 16 === 0 ? '#3b1c16' : '#24100d';
+                ctx.fillRect(x, 0, 7, h);
+                ctx.fillStyle = '#120604';
+                ctx.fillRect(x + 7, 0, 1, h);
+            }
+            for (let i = 0; i < 150; i++) {
+                ctx.fillStyle = 'rgba(255, 180, 100, 0.08)';
+                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 1, 5);
+            }
+        }, 4, 4),
+
+        // Tapete Arcano Roxo e Dourado
+        arcaneCarpet: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#4a0e4e';
+            ctx.fillRect(0, 0, w, h);
+            // Borda dourada
+            ctx.strokeStyle = '#ffb703';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(4, 4, w - 8, h - 8);
+            // Estrela/Runa central
+            ctx.strokeStyle = '#00f5d4';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(32, 12); ctx.lineTo(52, 32); ctx.lineTo(32, 52); ctx.lineTo(12, 32);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fillStyle = '#ff0a54';
+            ctx.fillRect(28, 28, 8, 8);
+        }, 1, 2),
+
+        // Estante de Livros Coloridos Saturados
+        bookshelf: createPixelTexture(64, 64, (ctx, w, h) => {
+            // Fundo de madeira escura
+            ctx.fillStyle = '#1f0d08';
+            ctx.fillRect(0, 0, w, h);
+            const bookColors = ['#ff0a54', '#00f5d4', '#ffd166', '#9d4edd', '#3a86ff', '#fb5607', '#06d6a0'];
+            for (let shelf = 0; shelf < 4; shelf++) {
+                const yBase = shelf * 16;
+                // Prateleira
+                ctx.fillStyle = '#4a2015';
+                ctx.fillRect(0, yBase + 13, w, 3);
+                let bx = 2;
+                while (bx < w - 5) {
+                    const bw = 3 + Math.floor(Math.random() * 4);
+                    const bh = 9 + Math.floor(Math.random() * 4);
+                    ctx.fillStyle = bookColors[Math.floor(Math.random() * bookColors.length)];
+                    ctx.fillRect(bx, yBase + 13 - bh, bw, bh);
+                    // Detalhe dourado na lombada
+                    if (Math.random() > 0.4) {
+                        ctx.fillStyle = '#fff3b0';
+                        ctx.fillRect(bx, yBase + 13 - bh + 2, bw, 1);
+                    }
+                    bx += bw + 1;
+                }
+            }
+        }, 1, 1),
+
+        // Porta Pesada de Madeira e Ferro Forjado
+        heavyDoor: createPixelTexture(64, 128, (ctx, w, h) => {
+            ctx.fillStyle = '#36150c';
+            ctx.fillRect(0, 0, w, h);
+            for (let x = 0; x < w; x += 8) {
+                ctx.fillStyle = x % 16 === 0 ? '#471d11' : '#2b1008';
+                ctx.fillRect(x, 0, 7, h);
+            }
+            // Dobradiças e faixas de ferro escuro
+            ctx.fillStyle = '#1b1b29';
+            ctx.fillRect(0, 14, w, 10);
+            ctx.fillRect(0, h - 24, w, 10);
+            ctx.fillRect(0, h / 2 - 5, w, 10);
+            // Rebites brilhantes
+            ctx.fillStyle = '#9d4edd';
+            for (let x = 6; x < w; x += 12) {
+                ctx.fillRect(x, 17, 3, 3);
+                ctx.fillRect(x, h / 2 - 2, 3, 3);
+                ctx.fillRect(x, h - 21, 3, 3);
+            }
+            // Argola Dourada
+            ctx.strokeStyle = '#ffd166';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(w - 14, h / 2 + 12, 6, 0, Math.PI * 2);
+            ctx.stroke();
+        }, 1, 1),
+
+        // Grama Sombria Noturna (Roxo/Azul-Petróleo Saturado)
+        darkGrass: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#0c1824';
+            ctx.fillRect(0, 0, w, h);
+            const shades = ['#12263a', '#1b1938', '#091f26', '#24173d'];
+            for (let i = 0; i < 420; i++) {
+                ctx.fillStyle = shades[Math.floor(Math.random() * shades.length)];
+                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 2, 3);
+            }
+            // Pequenos fungos/flores bioluminescentes raros
+            ctx.fillStyle = '#00f5d4';
+            ctx.fillRect(14, 22, 2, 2);
+            ctx.fillStyle = '#b5179e';
+            ctx.fillRect(48, 50, 2, 2);
+        }, 28, 28),
+
+        // Caminho de Lajes de Pedra (Cobblestone)
+        cobblePath: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#140f1f';
+            ctx.fillRect(0, 0, w, h);
+            const stones = ['#3b3355', '#4f4373', '#2e2742', '#5d4e87'];
+            for (let y = 0; y < h; y += 16) {
+                for (let x = 0; x < w; x += 16) {
+                    const ox = (Math.random() - 0.5) * 3;
+                    const oy = (Math.random() - 0.5) * 3;
+                    ctx.fillStyle = stones[Math.floor(Math.random() * stones.length)];
+                    ctx.fillRect(x + 2 + ox, y + 2 + oy, 12, 12);
+                    ctx.fillStyle = '#7b68b0';
+                    ctx.fillRect(x + 2 + ox, y + 2 + oy, 12, 2);
+                }
+            }
+        }, 2, 14),
+
+        // Vitral Gótico Brilhante do Castelo
+        stainedGlass: createPixelTexture(64, 128, (ctx, w, h) => {
+            ctx.fillStyle = '#10002b';
+            ctx.fillRect(0, 0, w, h);
+            const colors = ['#ff0a54', '#9d4edd', '#00f5d4', '#ffb703'];
+            for (let y = 8; y < h - 8; y += 16) {
+                for (let x = 8; x < w - 8; x += 16) {
+                    ctx.fillStyle = colors[(x + y) / 16 % colors.length];
+                    ctx.fillRect(x + 1, y + 1, 14, 14);
+                }
+            }
+            // Cruz central dourada
+            ctx.fillStyle = '#ffd166';
+            ctx.fillRect(w / 2 - 2, 12, 4, h - 24);
+            ctx.fillRect(14, h / 3, w - 28, 4);
+        }, 1, 1),
+
+        // Rio Místico / Abismo Brilhante sob a Ponte
+        abyssWater: createPixelTexture(64, 64, (ctx, w, h) => {
+            ctx.fillStyle = '#1a0536';
+            ctx.fillRect(0, 0, w, h);
+            for (let y = 0; y < h; y += 4) {
+                ctx.fillStyle = y % 8 === 0 ? '#5a189a' : '#3c096c';
+                ctx.fillRect(0, y, w, 2);
+            }
+            for (let i = 0; i < 60; i++) {
+                ctx.fillStyle = Math.random() > 0.4 ? '#00f5d4' : '#ff0a54';
+                ctx.fillRect(Math.floor(Math.random() * w), Math.floor(Math.random() * h), 4, 1);
+            }
+        }, 12, 6)
+    };
+
+    // ============================================================================
+    // 3. CONFIGURAÇÃO DA CENA THREE.JS (ESTÉTICA PS1 LOW-RES + FOG DENSO)
+    // ============================================================================
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+    // Renderização em resolução retro (estilo PS1/N64) esticada na tela com Nearest-Neighbor
+    const RETRO_SCALE = 0.48;
+    function updateRendererSize() {
+        const w = Math.max(320, Math.floor(window.innerWidth * RETRO_SCALE));
+        const h = Math.max(240, Math.floor(window.innerHeight * RETRO_SCALE));
+        renderer.setSize(w, h, false);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
+
+    const scene = new THREE.Scene();
+    // Neblina roxa-azulada profunda típica de jogos dark fantasy anos 90/2000
+    const FOG_COLOR = new THREE.Color(0x160829);
+    scene.background = FOG_COLOR;
+    scene.fog = new THREE.FogExp2(0x160829, 0.024);
+
+    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 140);
+    updateRendererSize();
+    window.addEventListener('resize', updateRendererSize);
+
+    // ============================================================================
+    // 4. SHADER INJECTOR: EFEITO PS1 VERTEX JITTER (TREMEDEIRA DE VÉRTICES RETRO)
+    // ============================================================================
+    function applyPS1Jitter(material) {
+        material.onBeforeCompile = (shader) => {
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <project_vertex>',
+                `
+                #include <project_vertex>
+                // Snap dos vértices na grade da tela estilo PlayStation 1
+                vec4 snapped = gl_Position;
+                snapped.xyz = gl_Position.xyz / gl_Position.w;
+                vec2 grid = vec2(220.0, 165.0);
+                snapped.xy = floor(grid * snapped.xy) / grid;
+                snapped.xyz *= gl_Position.w;
+                gl_Position = snapped;
+                `
+            );
+        };
+        return material;
+    }
+
+    function makePS1Mat(params) {
+        const mat = new THREE.MeshLambertMaterial(params);
+        return applyPS1Jitter(mat);
+    }
+
+    // ============================================================================
+    // 5. SISTEMA DE COLISÃO AABB E PLATAFORMAS (CHÃO / PONTE)
+    // ============================================================================
+    const colliders = []; // Caixas sólidas { minX, maxX, minZ, maxZ, minY, maxY, tag }
+    function addCollider(x, z, width, depth, minY = 0, maxY = 10, tag = 'solid') {
+        const box = {
+            minX: x - width / 2,
+            maxX: x + width / 2,
+            minZ: z - depth / 2,
+            maxZ: z + depth / 2,
+            minY,
+            maxY,
+            tag
+        };
+        colliders.push(box);
+        return box;
+    }
+
+    // ============================================================================
+    // 6. CONSTRUÇÃO DO MUNDO DARK FANTASY
+    // ============================================================================
+
+    // --- ILUMINAÇÃO GLOBAL DRAMÁTICA ---
+    const ambientLight = new THREE.AmbientLight(0x4a2574, 0.75);
+    scene.add(ambientLight);
+
+    const moonLight = new THREE.DirectionalLight(0x72efdd, 0.65);
+    moonLight.position.set(25, 45, -55);
+    scene.add(moonLight);
+
+    // --- CÉU ESTRELADO E LUA GIGANTE SATURADA ---
+    const moonGeo = new THREE.SphereGeometry(9, 14, 14);
+    const moonMat = new THREE.MeshBasicMaterial({ color: 0xffd166, fog: false });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonMesh.position.set(26, 42, -98);
+    scene.add(moonMesh);
+
+    // Halo roxo ao redor da lua
+    const haloGeo = new THREE.SphereGeometry(12.5, 14, 14);
+    const haloMat = new THREE.MeshBasicMaterial({ color: 0x9d4edd, transparent: true, opacity: 0.25, fog: false });
+    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+    haloMesh.position.copy(moonMesh.position);
+    scene.add(haloMesh);
+
+    // Estrelas pixeladas no céu
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 450;
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+        starPos[i * 3] = (Math.random() - 0.5) * 240;
+        starPos[i * 3 + 1] = 18 + Math.random() * 65;
+        starPos[i * 3 + 2] = (Math.random() - 0.5) * 240;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xe0aaff, size: 0.75, fog: false });
+    scene.add(new THREE.Points(starGeo, starMat));
+
+    // ============================================================================
+    // ÁREA A: BIBLIOTECA DENTRO DA TORRE ARCANA (Centro em X=0, Z=0)
+    // ============================================================================
+    const towerGroup = new THREE.Group();
+    scene.add(towerGroup);
+
+    const TOWER_RADIUS = 8.5;
+    const TOWER_HEIGHT = 11.5;
+
+    // Chão de madeira da torre
+    const towerFloorMat = makePS1Mat({ map: textures.woodFloor });
+    const towerFloor = new THREE.Mesh(new THREE.CylinderGeometry(TOWER_RADIUS, TOWER_RADIUS, 0.4, 12), towerFloorMat);
+    towerFloor.position.set(0, -0.15, 0);
+    towerGroup.add(towerFloor);
+
+    // Tapete Arcano Ornamentado no centro
+    const carpetMat = makePS1Mat({ map: textures.arcaneCarpet });
+    const carpet = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.06, 9.5), carpetMat);
+    carpet.position.set(0, 0.06, -1.2);
+    towerGroup.add(carpet);
+
+    // Teto abobadado da torre
+    const stoneWallMat = makePS1Mat({ map: textures.darkStone });
+    const towerCeiling = new THREE.Mesh(new THREE.ConeGeometry(TOWER_RADIUS + 0.6, 5.5, 10), stoneWallMat);
+    towerCeiling.position.set(0, TOWER_HEIGHT + 2.5, 0);
+    towerGroup.add(towerCeiling);
+
+    // Paredes da Torre em 10 segmentos (deixando a abertura frontal em Z = -8.2 para a porta!)
+    const segments = 10;
+    for (let i = 0; i < segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const wx = Math.sin(angle) * TOWER_RADIUS;
+        const wz = Math.cos(angle) * TOWER_RADIUS;
+
+        // O segmento i = 5 aponta diretamente para -Z (Z = -8.5), onde fica a porta!
+        if (i === 5) {
+            // Verga de pedra acima da porta
+            const lintel = new THREE.Mesh(new THREE.BoxGeometry(5.6, TOWER_HEIGHT - 4.4, 1.1), stoneWallMat);
+            lintel.position.set(0, 4.4 + (TOWER_HEIGHT - 4.4) / 2, -TOWER_RADIUS + 0.3);
+            towerGroup.add(lintel);
+
+            // Pilares laterais da moldura da porta
+            const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, TOWER_HEIGHT, 1.3), stoneWallMat);
+            leftFrame.position.set(-2.3, TOWER_HEIGHT / 2, -TOWER_RADIUS + 0.3);
+            towerGroup.add(leftFrame);
+            addCollider(-2.3, -TOWER_RADIUS + 0.3, 1.4, 1.3);
+
+            const rightFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, TOWER_HEIGHT, 1.3), stoneWallMat);
+            rightFrame.position.set(2.3, TOWER_HEIGHT / 2, -TOWER_RADIUS + 0.3);
+            towerGroup.add(rightFrame);
+            addCollider(2.3, -TOWER_RADIUS + 0.3, 1.4, 1.3);
+            continue;
+        }
+
+        const wallW = 5.6;
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(wallW, TOWER_HEIGHT, 1.0), stoneWallMat);
+        wall.position.set(wx, TOWER_HEIGHT / 2, wz);
+        wall.rotation.y = angle;
+        towerGroup.add(wall);
+
+        // Colisão aproximada da parede da torre
+        addCollider(wx, wz, 3.6, 3.6);
+
+        // Estantes altas de livros encostadas nas paredes internas (exceto perto da porta)
+        if (i !== 4 && i !== 6) {
+            const shelfMat = makePS1Mat({ map: textures.bookshelf });
+            const shelf = new THREE.Mesh(new THREE.BoxGeometry(3.8, 5.2, 0.85), shelfMat);
+            const innerR = TOWER_RADIUS - 1.05;
+            shelf.position.set(Math.sin(angle) * innerR, 2.6, Math.cos(angle) * innerR);
+            shelf.rotation.y = angle;
+            towerGroup.add(shelf);
+            addCollider(shelf.position.x, shelf.position.z, 2.2, 2.2);
+        }
+    }
+
+    // Mesas de Alquimia com Velas / Candelabros Brilhantes dentro da Biblioteca
+    const candleLights = [];
+    function createStudyTable(x, z, rotY) {
+        const tableGroup = new THREE.Group();
+        tableGroup.position.set(x, 0, z);
+        tableGroup.rotation.y = rotY;
+
+        const woodMat = makePS1Mat({ color: 0x3b1810 });
+        const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.16, 1.2), woodMat);
+        top.position.y = 1.15;
+        tableGroup.add(top);
+
+        // Pernas da mesa
+        [[-1.0, -0.45], [1.0, -0.45], [-1.0, 0.45], [1.0, 0.45]].forEach(([lx, lz]) => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.15, 0.16), woodMat);
+            leg.position.set(lx, 0.575, lz);
+            tableGroup.add(leg);
+        });
+
+        // Livro aberto sobre a mesa
+        const bookPage = new THREE.Mesh(
+            new THREE.BoxGeometry(0.55, 0.06, 0.4),
+            makePS1Mat({ color: 0xfff3b0 })
+        );
+        bookPage.position.set(-0.3, 1.26, 0.05);
+        bookPage.rotation.y = 0.2;
+        tableGroup.add(bookPage);
+
+        // Vela e Chama Brilhante
+        const candle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.06, 0.07, 0.35, 6),
+            new THREE.MeshBasicMaterial({ color: 0xffe5d9 })
+        );
+        candle.position.set(0.55, 1.4, -0.15);
+        tableGroup.add(candle);
+
+        const flame = new THREE.Mesh(
+            new THREE.ConeGeometry(0.07, 0.18, 5),
+            new THREE.MeshBasicMaterial({ color: 0xffb703 })
+        );
+        flame.position.set(0.55, 1.65, -0.15);
+        tableGroup.add(flame);
+
+        const pLight = new THREE.PointLight(0xff9e00, 1.5, 10);
+        pLight.position.set(x + 0.4, 2.0, z);
+        scene.add(pLight);
+        candleLights.push({ light: pLight, flame, baseIntensity: 1.5, phase: Math.random() * 10 });
+
+        towerGroup.add(tableGroup);
+        addCollider(x, z, 2.3, 1.2);
+    }
+
+    createStudyTable(-4.2, -1.2, 0.35);
+    createStudyTable(4.2, -1.2, -0.35);
+
+    // Orbe Arcano Flutuante no centro-lateral da Biblioteca (Vibe Shadow Wizard Money Gang)
+    const orbPedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 1.2, 8), stoneWallMat);
+    orbPedestal.position.set(-3.3, 0.6, -4.6);
+    towerGroup.add(orbPedestal);
+    addCollider(-3.3, -4.6, 1.1, 1.1);
+
+    const crystalOrb = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.42, 1),
+        new THREE.MeshBasicMaterial({ color: 0x00f5d4, wireframe: false })
+    );
+    crystalOrb.position.set(-3.3, 1.85, -4.6);
+    towerGroup.add(crystalOrb);
+
+    const orbWire = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.52, 0),
+        new THREE.MeshBasicMaterial({ color: 0xb5179e, wireframe: true })
+    );
+    orbWire.position.copy(crystalOrb.position);
+    towerGroup.add(orbWire);
+
+    const towerMagicLight = new THREE.PointLight(0x9d4edd, 2.2, 15);
+    towerMagicLight.position.set(0, 5.5, 0);
+    scene.add(towerMagicLight);
+
+    // ============================================================================
+    // PORTA DUPLA INTERATIVA DA TORRE (TECLA [E])
+    // ============================================================================
+    const doorSystem = {
+        isOpen: false,
+        currentAngle: 0,
+        targetAngle: 0,
+        doorZ: -8.2
+    };
+
+    const doorMat = makePS1Mat({ map: textures.heavyDoor });
+
+    // Folha Esquerda (Pivô em X = -1.6)
+    const leftDoorPivot = new THREE.Group();
+    leftDoorPivot.position.set(-1.6, 0, doorSystem.doorZ);
+    const leftDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.35, 0.24), doorMat);
+    leftDoorMesh.position.set(0.8, 2.175, 0);
+    leftDoorPivot.add(leftDoorMesh);
+    scene.add(leftDoorPivot);
+
+    // Folha Direita (Pivô em X = +1.6)
+    const rightDoorPivot = new THREE.Group();
+    rightDoorPivot.position.set(1.6, 0, doorSystem.doorZ);
+    const rightDoorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.35, 0.24), doorMat);
+    rightDoorMesh.position.set(-0.8, 2.175, 0);
+    rightDoorPivot.add(rightDoorMesh);
+    scene.add(rightDoorPivot);
+
+    // Colisor dinâmico da porta fechada
+    const doorCollider = addCollider(0, doorSystem.doorZ, 3.2, 0.45, 0, 4.4, 'door');
+
+    function toggleTowerDoor() {
+        doorSystem.isOpen = !doorSystem.isOpen;
+        doorSystem.targetAngle = doorSystem.isOpen ? Math.PI * 0.56 : 0;
+        audio.playDoorSound(doorSystem.isOpen);
+
+        // Ativa ou desativa colisão física da passagem
+        if (doorSystem.isOpen) {
+            doorCollider.maxY = -10; // Libera passagem
+        } else {
+            doorCollider.maxY = 4.4; // Bloqueia passagem
+        }
+    }
+
+    // ============================================================================
+    // ÁREA B: TERRENO EXTERNO, CAMINHO DE PEDRAS E FLORESTA DARK FANTASY
+    // ============================================================================
+    // Terreno antes do abismo (de Z = +20 até Z = -46)
+    const groundBeforeMat = makePS1Mat({ map: textures.darkGrass });
+    const groundBefore = new THREE.Mesh(new THREE.PlaneGeometry(160, 68), groundBeforeMat);
+    groundBefore.rotation.x = -Math.PI / 2;
+    groundBefore.position.set(0, 0, -12);
+    scene.add(groundBefore);
+
+    // Terreno após o abismo (Castelo, de Z = -74 até Z = -140)
+    const groundAfter = new THREE.Mesh(new THREE.PlaneGeometry(160, 68), groundBeforeMat);
+    groundAfter.rotation.x = -Math.PI / 2;
+    groundAfter.position.set(0, 0, -108);
+    scene.add(groundAfter);
+
+    // Caminho de Pedras (Cobblestone) guiando da saída da Torre (Z = -8.5) até a Ponte (Z = -46)
+    const pathMat = makePS1Mat({ map: textures.cobblePath });
+    const stonePath = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.08, 37.5), pathMat);
+    stonePath.position.set(0, 0.02, -27.2);
+    scene.add(stonePath);
+
+    // Pedras soltas decorativas nas bordas do caminho
+    const edgeStoneMat = makePS1Mat({ color: 0x3b3355 });
+    for (let z = -10; z >= -45; z -= 2.4) {
+        [-2.25, 2.25].forEach((sideX) => {
+            const pebble = new THREE.Mesh(
+                new THREE.DodecahedronGeometry(0.32 + Math.random() * 0.2, 0),
+                edgeStoneMat
+            );
+            pebble.position.set(sideX + (Math.random() - 0.5) * 0.35, 0.14, z);
+            pebble.rotation.set(Math.random(), Math.random(), 0);
+            scene.add(pebble);
+        });
+    }
+
+    // Função para criar Árvores Dark Fantasy Retorcidas (Low-Poly PS1)
+    const trunkMat = makePS1Mat({ color: 0x1b0d24 });
+    const foliageColors = [0x240046, 0x3c096c, 0x102a43, 0x1b4332];
+
+    function createDarkTree(x, z, scale = 1.0) {
+        const tree = new THREE.Group();
+        tree.position.set(x, 0, z);
+
+        const trunkH = 3.8 * scale;
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.22 * scale, 0.48 * scale, trunkH, 5),
+            trunkMat
+        );
+        trunk.position.y = trunkH / 2;
+        trunk.rotation.z = (Math.random() - 0.5) * 0.14;
+        tree.add(trunk);
+
+        const fColor = foliageColors[Math.floor(Math.random() * foliageColors.length)];
+        const leafMat = makePS1Mat({ color: fColor });
+
+        // 3 camadas pontiagudas góticas
+        for (let tier = 0; tier < 3; tier++) {
+            const cone = new THREE.Mesh(
+                new THREE.ConeGeometry((2.1 - tier * 0.45) * scale, (2.6 - tier * 0.3) * scale, 6),
+                leafMat
+            );
+            cone.position.y = trunkH + tier * 1.25 * scale;
+            cone.rotation.y = Math.random() * Math.PI;
+            tree.add(cone);
+        }
+
+        scene.add(tree);
+        addCollider(x, z, 1.3 * scale, 1.3 * scale);
+    }
+
+    // Povoar Floresta Densa ao redor da Torre e do Caminho de Pedras
+    for (let z = -6; z >= -44; z -= 4.2) {
+        // Lado Esquerdo
+        createDarkTree(-5.2 - Math.random() * 2.5, z + (Math.random() - 0.5) * 1.5, 0.95 + Math.random() * 0.4);
+        createDarkTree(-11.0 - Math.random() * 5.0, z + (Math.random() - 0.5) * 2.0, 1.1 + Math.random() * 0.5);
+        // Lado Direito
+        createDarkTree(5.2 + Math.random() * 2.5, z + (Math.random() - 0.5) * 1.5, 0.95 + Math.random() * 0.4);
+        createDarkTree(11.0 + Math.random() * 5.0, z + (Math.random() - 0.5) * 2.0, 1.1 + Math.random() * 0.5);
+    }
+    // Árvores atrás da torre
+    for (let x = -22; x <= 22; x += 5) {
+        if (Math.abs(x) > 9) {
+            createDarkTree(x, 12 + Math.random() * 4, 1.2);
+        }
+    }
+
+    // Barreiras invisíveis laterais na trilha para impedir que o jogador se perca no vazio infinito
+    addCollider(-16, -25, 2, 50);
+    addCollider(16, -25, 2, 50);
+    addCollider(0, 15, 36, 2);
+
+    // Tochas / Lanternas Mágicas iluminando a Trilha Sombria e a Ponte
+    function createMagicTorch(x, z, colorHex = 0xff9e00) {
+        const post = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.11, 0.15, 2.5, 6),
+            makePS1Mat({ color: 0x1a1a2e })
+        );
+        post.position.set(x, 1.25, z);
+        scene.add(post);
+
+        const brazier = new THREE.Mesh(
+            new THREE.BoxGeometry(0.36, 0.28, 0.36),
+            makePS1Mat({ color: 0xffb703 })
+        );
+        brazier.position.set(x, 2.55, z);
+        scene.add(brazier);
+
+        const flame = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.24, 0),
+            new THREE.MeshBasicMaterial({ color: colorHex })
+        );
+        flame.position.set(x, 2.88, z);
+        scene.add(flame);
+
+        const light = new THREE.PointLight(colorHex, 1.85, 13);
+        light.position.set(x, 3.2, z);
+        scene.add(light);
+
+        candleLights.push({ light, flame, baseIntensity: 1.85, phase: Math.random() * 10 });
+    }
+
+    // Lanternas ao longo do caminho de pedras
+    createMagicTorch(-2.7, -13, 0xff9e00);
+    createMagicTorch(2.7, -13, 0xff9e00);
+    createMagicTorch(-2.7, -25, 0x00f5d4);
+    createMagicTorch(2.7, -25, 0x00f5d4);
+    createMagicTorch(-2.7, -37, 0xff0a54);
+    createMagicTorch(2.7, -37, 0xff0a54);
+
+    // ============================================================================
+    // ÁREA C: ABISMO MÍSTICO E PONTE MEDIEVAL DE PEDRA (Z = -46 até Z = -74)
+    // ============================================================================
+    // Rio / Abismo luminoso abaixo da ponte (Y = -8)
+    const abyssMat = makePS1Mat({ map: textures.abyssWater });
+    const abyssRiver = new THREE.Mesh(new THREE.PlaneGeometry(160, 28), abyssMat);
+    abyssRiver.rotation.x = -Math.PI / 2;
+    abyssRiver.position.set(0, -7.5, -60);
+    scene.add(abyssRiver);
+
+    // Paredes do penhasco do abismo
+    const cliffNorth = new THREE.Mesh(new THREE.BoxGeometry(160, 8, 1), stoneWallMat);
+    cliffNorth.position.set(0, -4, -46);
+    scene.add(cliffNorth);
+
+    const cliffSouth = new THREE.Mesh(new THREE.BoxGeometry(160, 8, 1), stoneWallMat);
+    cliffSouth.position.set(0, -4, -74);
+    scene.add(cliffSouth);
+
+    // Plataforma da Ponte de Pedra (Largura 4.6, Comprimento 28, de Z = -46 a Z = -74)
+    const BRIDGE_Z_START = -46;
+    const BRIDGE_Z_END = -74;
+    const BRIDGE_WIDTH = 4.6;
+
+    const bridgeDeck = new THREE.Mesh(
+        new THREE.BoxGeometry(BRIDGE_WIDTH, 0.7, 28.4),
+        stoneWallMat
+    );
+    bridgeDeck.position.set(0, -0.25, -60);
+    scene.add(bridgeDeck);
+
+    // Arcos de sustentação sob a ponte
+    for (let bz = -51; bz >= -69; bz -= 9) {
+        const pillar = new THREE.Mesh(new THREE.BoxGeometry(4.2, 7.5, 1.8), stoneWallMat);
+        pillar.position.set(0, -4.0, bz);
+        scene.add(pillar);
+    }
+
+    // Parapeitos e Pilares da Ponte (com colisão sólida para não cair no abismo!)
+    const parapetLeft = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 28.4), stoneWallMat);
+    parapetLeft.position.set(-BRIDGE_WIDTH / 2 + 0.2, 0.65, -60);
+    scene.add(parapetLeft);
+    addCollider(-BRIDGE_WIDTH / 2 + 0.1, -60, 0.6, 28.6);
+
+    const parapetRight = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 28.4), stoneWallMat);
+    parapetRight.position.set(BRIDGE_WIDTH / 2 - 0.2, 0.65, -60);
+    scene.add(parapetRight);
+    addCollider(BRIDGE_WIDTH / 2 - 0.1, -60, 0.6, 28.6);
+
+    // Pilares ornamentados com tochas roxas/cianas na ponte
+    [-46.5, -55.5, -64.5, -73.5].forEach((pz, idx) => {
+        [-BRIDGE_WIDTH / 2 + 0.2, BRIDGE_WIDTH / 2 - 0.2].forEach((px) => {
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.75, 2.2, 0.75), stoneWallMat);
+            post.position.set(px, 1.1, pz);
+            scene.add(post);
+        });
+        if (idx % 2 === 0) {
+            createMagicTorch(-BRIDGE_WIDTH / 2 + 0.2, pz, 0x9d4edd);
+            createMagicTorch(BRIDGE_WIDTH / 2 - 0.2, pz, 0x9d4edd);
+        }
+    });
+
+    // ============================================================================
+    // ÁREA D: O CASTELO DARK FANTASY MONUMENTAL (Ao fim da ponte, Z <= -77)
+    // ============================================================================
+    const castleGroup = new THREE.Group();
+    scene.add(castleGroup);
+
+    const castleDarkMat = makePS1Mat({ map: textures.darkStone });
+    const roofMat = makePS1Mat({ color: 0x240046 });
+    const vitralMat = new THREE.MeshBasicMaterial({ map: textures.stainedGlass });
+
+    // Caminho final até o portão do castelo (Z = -74 até -81)
+    const castleApproach = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.1, 7.5), pathMat);
+    castleApproach.position.set(0, 0.03, -77.5);
+    castleGroup.add(castleApproach);
+
+    // Muralha Frontal Monumental
+    const mainWall = new THREE.Mesh(new THREE.BoxGeometry(34, 15, 4), castleDarkMat);
+    mainWall.position.set(0, 7.5, -83);
+    castleGroup.add(mainWall);
+    addCollider(0, -83, 34, 4);
+
+    // Portão Monumental do Castelo (Arco com grade dourada/roxa)
+    const gateRecess = new THREE.Mesh(
+        new THREE.BoxGeometry(5.2, 6.8, 4.3),
+        new THREE.MeshBasicMaterial({ color: 0x090212 })
+    );
+    gateRecess.position.set(0, 3.4, -83);
+    castleGroup.add(gateRecess);
+
+    // Barras da Grade Portcullis
+    const goldGateMat = makePS1Mat({ color: 0xffb703 });
+    for (let gx = -2.2; gx <= 2.2; gx += 0.55) {
+        const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 6.8, 5), goldGateMat);
+        bar.position.set(gx, 3.4, -80.9);
+        castleGroup.add(bar);
+    }
+    for (let gy = 1.2; gy <= 6.2; gy += 1.25) {
+        const hBar = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.14, 0.14), goldGateMat);
+        hBar.position.set(0, gy, -80.9);
+        castleGroup.add(hBar);
+    }
+
+    // Estandartes Roxos e Carmesim flanqueando o Portão
+    const bannerMat = makePS1Mat({ color: 0x9d0208 });
+    [-4.2, 4.2].forEach((bx) => {
+        const banner = new THREE.Mesh(new THREE.BoxGeometry(1.4, 5.5, 0.15), bannerMat);
+        banner.position.set(bx, 6.5, -80.85);
+        castleGroup.add(banner);
+    });
+
+    // Torres Pontiagudas Góticas do Castelo
+    function createCastleSpire(x, z, radius, height, hasVitral = true) {
+        const spireGroup = new THREE.Group();
+        spireGroup.position.set(x, 0, z);
+
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 1.08, height, 8), castleDarkMat);
+        body.position.y = height / 2;
+        spireGroup.add(body);
+
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.25, height * 0.45, 8), roofMat);
+        roof.position.y = height + (height * 0.45) / 2;
+        spireGroup.add(roof);
+
+        if (hasVitral) {
+            const win = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.2, 0.3), vitralMat);
+            win.position.set(0, height * 0.62, radius + 0.02);
+            spireGroup.add(win);
+        }
+
+        castleGroup.add(spireGroup);
+        addCollider(x, z, radius * 2, radius * 2);
+    }
+
+    // Torres gêmeas do portão
+    createCastleSpire(-4.2, -80.5, 2.2, 18, true);
+    createCastleSpire(4.2, -80.5, 2.2, 18, true);
+
+    // Torres laterais das muralhas
+    createCastleSpire(-16.5, -82.5, 3.0, 22, true);
+    createCastleSpire(16.5, -82.5, 3.0, 22, true);
+
+    // Torreão Central Gigante ao fundo do Castelo
+    createCastleSpire(0, -93, 5.2, 29, true);
+
+    // Iluminação Dramática no Portão do Castelo
+    const castleGateLight = new THREE.PointLight(0xff0a54, 2.8, 22);
+    castleGateLight.position.set(0, 5.5, -78.5);
+    scene.add(castleGateLight);
+
+    const castleTopGlow = new THREE.PointLight(0x9d4edd, 3.2, 35);
+    castleTopGlow.position.set(0, 20, -82);
+    scene.add(castleTopGlow);
+
+    // ============================================================================
+    // 7. CONTROLES DO JOGADOR (WASD, PULO COM ESPAÇO, POINTER LOCK, INTERAÇÃO [E])
+    // ============================================================================
+    const player = {
+        pos: new THREE.Vector3(0, 1.75, 2.5), // Começa dentro da Biblioteca olhando para a porta (-Z)
+        vel: new THREE.Vector3(0, 0, 0),
+        yaw: 0,
+        pitch: 0,
+        height: 1.75,
+        radius: 0.55,
+        speed: 7.4,
+        jumpForce: 8.6,
+        gravity: 21.0,
+        onGround: true,
+        bobTimer: 0,
+        stepAccumulator: 0
+    };
+
+    const keys = {
+        KeyW: false,
+        KeyA: false,
+        KeyS: false,
+        KeyD: false,
+        Space: false
+    };
+
+    let isPointerLocked = false;
+    let mouseSensitivity = 0.0022;
+
+    const menuScreen = document.getElementById('menu-screen');
+    const hud = document.getElementById('hud');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const sensSlider = document.getElementById('sens-slider');
+    const sensVal = document.getElementById('sens-val');
+    const interactPrompt = document.getElementById('interact-prompt');
+    const crosshair = document.getElementById('crosshair');
+    const locationTitle = document.getElementById('location-title');
+    const locationSub = document.getElementById('location-sub');
+    const viewmodel = document.getElementById('viewmodel-container');
+
+    sensSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        sensVal.textContent = val.toFixed(1) + 'x';
+        mouseSensitivity = 0.0022 * val;
+    });
+
+    playBtn.addEventListener('click', () => {
+        audio.init();
+        canvas.requestPointerLock();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+        if (document.pointerLockElement === canvas) {
+            document.exitPointerLock();
+        }
+        menuScreen.style.display = 'flex';
+        hud.style.display = 'none';
+    });
+
+    muteBtn.addEventListener('click', () => {
+        audio.init();
+        const muted = audio.toggleMute();
+        muteBtn.textContent = muted ? '🔇 SOM: OFF' : '🔊 SOM: ON';
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+        isPointerLocked = document.pointerLockElement === canvas;
+        if (isPointerLocked) {
+            menuScreen.style.display = 'none';
+            hud.style.display = 'block';
+        } else {
+            menuScreen.style.display = 'flex';
+            hud.style.display = 'none';
+            // Limpar teclas presas
+            Object.keys(keys).forEach(k => keys[k] = false);
+        }
+    });
+
+    // Rotação da câmera pelo Mouse
+    document.addEventListener('mousemove', (e) => {
+        if (!isPointerLocked) return;
+        player.yaw -= e.movementX * mouseSensitivity;
+        player.pitch -= e.movementY * mouseSensitivity;
+        const maxPitch = Math.PI / 2 - 0.08;
+        player.pitch = Math.max(-maxPitch, Math.min(maxPitch, player.pitch));
+    });
+
+    // Teclado (WASD, Espaço, E)
+    window.addEventListener('keydown', (e) => {
+        if (e.code in keys) {
+            keys[e.code] = true;
+        }
+        if (e.code === 'Space' && isPointerLocked && player.onGround) {
+            player.vel.y = player.jumpForce;
+            player.onGround = false;
+            audio.playJump();
+        }
+        if (e.code === 'KeyE' && isPointerLocked) {
+            if (canInteractWithDoor()) {
+                toggleTowerDoor();
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code in keys) {
+            keys[e.code] = false;
+        }
+    });
+
+    // Verifica se o jogador está perto da porta e olhando na direção dela
+    function canInteractWithDoor() {
+        const doorCenter = new THREE.Vector3(0, 1.8, doorSystem.doorZ);
+        const dist = player.pos.distanceTo(doorCenter);
+        if (dist > 4.6) return false;
+
+        const lookDir = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+        const toDoor = doorCenter.clone().sub(player.pos).normalize();
+        return lookDir.dot(toDoor) > 0.55;
+    }
+
+    // Verificação de Colisão Cilindro vs AABB
+    function checkCollision(nx, ny, nz) {
+        const feetY = ny - player.height;
+        const headY = ny + 0.15;
+        const r = player.radius;
+
+        for (let i = 0; i < colliders.length; i++) {
+            const b = colliders[i];
+            if (headY < b.minY || feetY > b.maxY) continue;
+
+            const closestX = Math.max(b.minX, Math.min(nx, b.maxX));
+            const closestZ = Math.max(b.minZ, Math.min(nz, b.maxZ));
+            const dx = nx - closestX;
+            const dz = nz - closestZ;
+
+            if ((dx * dx + dz * dz) < (r * r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Atualiza o nome da área no HUD conforme a coordenada Z
+    let currentZoneId = '';
+    function updateZoneHUD() {
+        let zoneId = 'tower';
+        let title = 'TORRE ARCANA — BIBLIOTECA';
+        let sub = 'Santuário do Arquimago';
+
+        if (player.pos.z < -8.3 && player.pos.z >= -45.5) {
+            zoneId = 'forest';
+            title = 'TRILHA SOMBRIA';
+            sub = 'Bosque dos Ecos Arcanos';
+        } else if (player.pos.z < -45.5 && player.pos.z >= -74.5) {
+            zoneId = 'bridge';
+            title = 'PONTE DO ABISMO';
+            sub = 'Travessia das Almas Perdidas';
+        } else if (player.pos.z < -74.5) {
+            zoneId = 'castle';
+            title = 'PORTÕES DO CASTELO DARK';
+            sub = 'Cidadela do Rei Feiticeiro';
+        }
+
+        if (zoneId !== currentZoneId) {
+            currentZoneId = zoneId;
+            locationTitle.textContent = title;
+            locationSub.textContent = sub;
+        }
+    }
+
+    // ============================================================================
+    // 8. LOOP PRINCIPAL DE ANIMAÇÃO E FÍSICA
+    // ============================================================================
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.05);
+        const elapsed = clock.getElapsedTime();
+
+        // Animação suave da Porta abrindo/fechando
+        doorSystem.currentAngle += (doorSystem.targetAngle - doorSystem.currentAngle) * Math.min(1, dt * 6.5);
+        leftDoorPivot.rotation.y = -doorSystem.currentAngle;
+        rightDoorPivot.rotation.y = doorSystem.currentAngle;
+
+        // Animação do Orbe Flutuante na Biblioteca e Luzes das Velas/Tochas
+        crystalOrb.rotation.y = elapsed * 1.4;
+        crystalOrb.position.y = 1.85 + Math.sin(elapsed * 2.5) * 0.12;
+        orbWire.rotation.y = -elapsed * 1.1;
+        orbWire.rotation.x = elapsed * 0.7;
+        orbWire.position.y = crystalOrb.position.y;
+
+        for (let i = 0; i < candleLights.length; i++) {
+            const c = candleLights[i];
+            const flicker = Math.sin(elapsed * 11 + c.phase) * 0.18 + Math.cos(elapsed * 19 + c.phase) * 0.1;
+            c.light.intensity = c.baseIntensity + flicker;
+            if (c.flame) {
+                c.flame.scale.y = 1 + flicker * 0.4;
+            }
+        }
+
+        // Animação da água mística no fundo do abismo
+        textures.abyssWater.offset.x = (elapsed * 0.06) % 1;
+        textures.abyssWater.offset.y = (elapsed * 0.03) % 1;
+
+        // Lógica de Movimento em Primeira Pessoa quando ativo
+        if (isPointerLocked) {
+            // Vetores direcionais no plano horizontal
+            const forward = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+            const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+
+            const moveDir = new THREE.Vector3(0, 0, 0);
+            if (keys.KeyW) moveDir.add(forward);
+            if (keys.KeyS) moveDir.sub(forward);
+            if (keys.KeyD) moveDir.add(right);
+            if (keys.KeyA) moveDir.sub(right);
+
+            const isMoving = moveDir.lengthSq() > 0;
+            if (isMoving) {
+                moveDir.normalize();
+            }
+
+            // Aplicar movimento horizontal com deslizamento nas paredes (sliding collision)
+            const nextX = player.pos.x + moveDir.x * player.speed * dt;
+            if (!checkCollision(nextX, player.pos.y, player.pos.z)) {
+                player.pos.x = nextX;
+            }
+
+            const nextZ = player.pos.z + moveDir.z * player.speed * dt;
+            if (!checkCollision(player.pos.x, player.pos.y, nextZ)) {
+                player.pos.z = nextZ;
+            }
+
+            // Gravidade e Pulo
+            player.vel.y -= player.gravity * dt;
+            player.pos.y += player.vel.y * dt;
+
+            // Altura do chão (0.0 no terreno/biblioteca, 0.10 na ponte)
+            const floorHeight = (player.pos.z < -45.8 && player.pos.z > -74.2) ? 0.10 : 0.0;
+            if (player.pos.y <= floorHeight + player.height) {
+                player.pos.y = floorHeight + player.height;
+                player.vel.y = 0;
+                player.onGround = true;
+            }
+
+            // Head-bobbing (balanço da câmera e do cajado ao andar) + som de passos
+            let bobOffsetY = 0;
+            if (isMoving && player.onGround) {
+                player.bobTimer += dt * 11.5;
+                bobOffsetY = Math.sin(player.bobTimer) * 0.075;
+
+                // Balanço do Cajado Arcano no HUD
+                const staffX = Math.cos(player.bobTimer * 0.5) * 14;
+                const staffY = Math.abs(Math.sin(player.bobTimer * 0.5)) * 16;
+                viewmodel.style.transform = `translate(${staffX}px, ${staffY}px)`;
+
+                player.stepAccumulator += dt * player.speed;
+                if (player.stepAccumulator >= 3.1) {
+                    player.stepAccumulator = 0;
+                    const insideTower = player.pos.z > -8.2;
+                    audio.playFootstep(insideTower);
+                }
+            } else {
+                // Respiração suave do cajado parado
+                const idleY = Math.sin(elapsed * 2.4) * 6;
+                viewmodel.style.transform = `translate(0px, ${idleY}px)`;
+            }
+
+            // Atualizar Câmera
+            camera.position.set(player.pos.x, player.pos.y + bobOffsetY, player.pos.z);
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = player.yaw;
+            camera.rotation.x = player.pitch;
+
+            // Prompt de Interação com a Porta [E]
+            if (canInteractWithDoor()) {
+                interactPrompt.style.display = 'block';
+                interactPrompt.innerHTML = doorSystem.isOpen
+                    ? 'Pressione <span>[E]</span> para Fechar a Porta'
+                    : 'Pressione <span>[E]</span> para Abrir a Porta';
+                crosshair.classList.add('interact-active');
+            } else {
+                interactPrompt.style.display = 'none';
+                crosshair.classList.remove('interact-active');
+            }
+
+            updateZoneHUD();
+        } else {
+            // Câmera inicial posicionada dentro da Biblioteca mirando a porta
+            camera.position.set(player.pos.x, player.pos.y, player.pos.z);
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = player.yaw;
+            camera.rotation.x = player.pitch;
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    // Iniciar loop ao carregar janela
+    window.onload = function () {
         animate();
-
-        function init() {
-            // 1. Scene Setup - Retro PS1 Style (Saturated, Dramatic Fog)
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a0033); // Deep purple
-            scene.fog = new THREE.FogExp2(0x1a0033, 0.025); // Thick saturated fog
-
-            // 2. Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 0); // Player height
-
-            // Player Weapon (Low Poly Retro Asta's Sword)
-            swordGroup = new THREE.Group();
-            
-            // Blade (Black, flat shading)
-            const bladeGeo = new THREE.BoxGeometry(1.5, 6, 0.2);
-            const bladeMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
-            const blade = new THREE.Mesh(bladeGeo, bladeMat);
-            blade.position.y = 3;
-            swordGroup.add(blade);
-            
-            // Guard
-            const guardGeo = new THREE.BoxGeometry(2.5, 0.5, 0.6);
-            const guardMat = new THREE.MeshLambertMaterial({ color: 0x330000 });
-            const guard = new THREE.Mesh(guardGeo, guardMat);
-            swordGroup.add(guard);
-
-            // Handle
-            const handleGeo = new THREE.BoxGeometry(0.3, 1.5, 0.3); // Blocky handle
-            const handleMat = new THREE.MeshLambertMaterial({ color: 0x2a1a1a });
-            const handle = new THREE.Mesh(handleGeo, handleMat);
-            handle.position.y = -1;
-            swordGroup.add(handle);
-
-            swordGroup.position.set(1.5, -2, -3);
-            swordGroup.rotation.x = -Math.PI / 4;
-            swordGroup.rotation.y = Math.PI / 6;
-            camera.add(swordGroup);
-            scene.add(camera);
-
-            // 3. Lighting - Dramatic, neon/saturated accents
-            const ambientLight = new THREE.AmbientLight(0x221144, 1.0); 
-            scene.add(ambientLight);
-
-            const pointLight = new THREE.PointLight(0xff0055, 2, 50); // Redish light in library
-            pointLight.position.set(0, 8, 0);
-            scene.add(pointLight);
-
-            const directionalLight = new THREE.DirectionalLight(0x00ffcc, 0.5); // Teal moonlight
-            directionalLight.position.set(-20, 50, -20);
-            scene.add(directionalLight);
-
-            // 4. Environment Construction (PS1 Style)
-            buildLevel();
-
-            // 5. Renderer - Pixelated, no AA
-            renderer = new THREE.WebGLRenderer({ antialias: false });
-            // Lower pixel ratio for retro look (adjust multiplier for chunkiness)
-            renderer.setPixelRatio(window.devicePixelRatio > 1 ? 0.5 : 0.25); 
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('game-container').appendChild(renderer.domElement);
-
-            // 6. Controls
-            controls = new PointerLockControls(camera, document.body);
-
-            startBtn.addEventListener('click', () => {
-                if(isDead) resetGame();
-                controls.lock();
-            });
-
-            controls.addEventListener('lock', function () {
-                blocker.style.display = 'none';
-            });
-
-            controls.addEventListener('unlock', function () {
-                if(!isDead) {
-                    blocker.style.display = 'flex';
-                    menuTitle.innerText = 'PAUSADO';
-                    menuInstructions.innerText = 'Clique abaixo para continuar.';
-                    startBtn.innerText = 'Continuar';
-                }
-            });
-
-            scene.add(controls.getObject());
-
-            // 7. Input Listeners
-            const onKeyDown = function (event) {
-                switch (event.code) {
-                    case 'ArrowUp':
-                    case 'KeyW': moveForward = true; break;
-                    case 'ArrowLeft':
-                    case 'KeyA': moveLeft = true; break;
-                    case 'ArrowDown':
-                    case 'KeyS': moveBackward = true; break;
-                    case 'ArrowRight':
-                    case 'KeyD': moveRight = true; break;
-                    case 'KeyE': handleInteraction(); break;
-                }
-            };
-
-            const onKeyUp = function (event) {
-                switch (event.code) {
-                    case 'ArrowUp':
-                    case 'KeyW': moveForward = false; break;
-                    case 'ArrowLeft':
-                    case 'KeyA': moveLeft = false; break;
-                    case 'ArrowDown':
-                    case 'KeyS': moveBackward = false; break;
-                    case 'ArrowRight':
-                    case 'KeyD': moveRight = false; break;
-                }
-            };
-
-            const onMouseClick = function (event) {
-                if (controls.isLocked && !isDead) {
-                    if (!isAttacking) {
-                        isAttacking = true;
-                        attackProgress = 0;
-                        attack();
-                    }
-                }
-            };
-
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-            document.addEventListener('mousedown', onMouseClick);
-            window.addEventListener('resize', onWindowResize);
-        }
-
-        function buildLevel() {
-            // Materials (Basic colors, flat looking for retro vibe)
-            const wallMat = new THREE.MeshLambertMaterial({ color: 0x332222 });
-            const floorMat = new THREE.MeshLambertMaterial({ color: 0x222233 });
-            const woodMat = new THREE.MeshLambertMaterial({ color: 0x3a2000 });
-            const pathMat = new THREE.MeshLambertMaterial({ color: 0x555555 });
-            const leafMat = new THREE.MeshLambertMaterial({ color: 0x003311 });
-            const castleMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
-
-            // A. Library Tower (Spawn Room)
-            const roomSize = 20;
-            const roomHeight = 15;
-            
-            // Floor
-            const libFloor = new THREE.Mesh(new THREE.PlaneGeometry(roomSize, roomSize), floorMat);
-            libFloor.rotation.x = -Math.PI / 2;
-            scene.add(libFloor);
-            floorObjects.push(libFloor);
-
-            // Walls (Back, Left, Right)
-            const wallGeo = new THREE.BoxGeometry(roomSize, roomHeight, 1);
-            const wallB = new THREE.Mesh(wallGeo, wallMat); wallB.position.set(0, roomHeight/2, roomSize/2);
-            const wallL = new THREE.Mesh(wallGeo, wallMat); wallL.position.set(-roomSize/2, roomHeight/2, 0); wallL.rotation.y = Math.PI/2;
-            const wallR = new THREE.Mesh(wallGeo, wallMat); wallR.position.set(roomSize/2, roomHeight/2, 0); wallR.rotation.y = Math.PI/2;
-            
-            // Front Wall (with hole for door)
-            const wallF1 = new THREE.Mesh(new THREE.BoxGeometry(roomSize/2 - 3, roomHeight, 1), wallMat);
-            wallF1.position.set(-roomSize/4 - 1.5, roomHeight/2, -roomSize/2);
-            const wallF2 = new THREE.Mesh(new THREE.BoxGeometry(roomSize/2 - 3, roomHeight, 1), wallMat);
-            wallF2.position.set(roomSize/4 + 1.5, roomHeight/2, -roomSize/2);
-            const wallF3 = new THREE.Mesh(new THREE.BoxGeometry(6, roomHeight - 8, 1), wallMat); // Above door
-            wallF3.position.set(0, roomHeight - (roomHeight-8)/2, -roomSize/2);
-
-            scene.add(wallB, wallL, wallR, wallF1, wallF2, wallF3);
-            collidableObjects.push(wallB, wallL, wallR, wallF1, wallF2);
-
-            // Bookshelves (Colored boxes)
-            for(let i=0; i<8; i++) {
-                const shelf = new THREE.Mesh(new THREE.BoxGeometry(3, 8, 2), new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}));
-                shelf.position.set((Math.random()-0.5)*12, 4, (Math.random()-0.5)*12);
-                // Keep center clear
-                if(shelf.position.distanceTo(new THREE.Vector3(0,4,0)) > 5) {
-                    scene.add(shelf);
-                    collidableObjects.push(shelf);
-                }
-            }
-
-            // Interactive Door
-            doorPivot = new THREE.Group();
-            doorPivot.position.set(-3, 0, -roomSize/2); // Hinge position
-            
-            doorMesh = new THREE.Mesh(new THREE.BoxGeometry(6, 8, 0.5), woodMat);
-            doorMesh.position.set(3, 4, 0); // Offset from pivot
-            doorPivot.add(doorMesh);
-            scene.add(doorPivot);
-            collidableObjects.push(doorMesh);
-
-            // B. Stone Path & Forest
-            const pathLength = 150;
-            const path = new THREE.Mesh(new THREE.PlaneGeometry(10, pathLength), pathMat);
-            path.rotation.x = -Math.PI / 2;
-            path.position.set(0, 0.1, -roomSize/2 - pathLength/2);
-            scene.add(path);
-            floorObjects.push(path);
-
-            // Trees (Retro style)
-            const treeGeo = new THREE.ConeGeometry(3, 10, 4); // 4-sided pyramid for retro look
-            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.5, 5, 4);
-            
-            for(let i=0; i<30; i++) {
-                const zPos = -roomSize/2 - Math.random() * pathLength;
-                const xPos = (Math.random() > 0.5 ? 1 : -1) * (8 + Math.random() * 10); // Placed on sides
-                
-                const tree = new THREE.Group();
-                const leaves = new THREE.Mesh(treeGeo, leafMat); leaves.position.y = 7;
-                const trunk = new THREE.Mesh(trunkGeo, woodMat); trunk.position.y = 2.5;
-                tree.add(leaves, trunk);
-                tree.position.set(xPos, 0, zPos);
-                scene.add(tree);
-                collidableObjects.push(trunk); // Collide with trunks
-            }
-
-            // C. Bridge
-            const bridgeLength = 80;
-            const bridgeZStart = -roomSize/2 - pathLength;
-            const bridge = new THREE.Mesh(new THREE.PlaneGeometry(6, bridgeLength), woodMat);
-            bridge.rotation.x = -Math.PI / 2;
-            bridge.position.set(0, 0.2, bridgeZStart - bridgeLength/2);
-            scene.add(bridge);
-            floorObjects.push(bridge);
-
-            // D. Castle (End of bridge)
-            const castleZ = bridgeZStart - bridgeLength - 20;
-            const castleGroup = new THREE.Group();
-            
-            // Main Keep
-            const keep = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), castleMat);
-            keep.position.set(0, 20, castleZ);
-            castleGroup.add(keep);
-            collidableObjects.push(keep);
-
-            // Towers
-            const towerGeo = new THREE.BoxGeometry(10, 60, 10);
-            const t1 = new THREE.Mesh(towerGeo, castleMat); t1.position.set(-20, 30, castleZ + 20);
-            const t2 = new THREE.Mesh(towerGeo, castleMat); t2.position.set(20, 30, castleZ + 20);
-            castleGroup.add(t1, t2);
-            collidableObjects.push(t1, t2);
-
-            // Glowing Windows
-            const winMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const winGeo = new THREE.BoxGeometry(2, 4, 11); // protrudes slightly on Z
-            const w1 = new THREE.Mesh(winGeo, winMat); w1.position.set(-20, 45, castleZ + 20);
-            const w2 = new THREE.Mesh(winGeo, winMat); w2.position.set(20, 45, castleZ + 20);
-            castleGroup.add(w1, w2);
-
-            scene.add(castleGroup);
-
-            // Spawn initial enemies along path and bridge
-            for(let i=0; i<15; i++) {
-                spawnEnemy(-roomSize/2 - 20 - Math.random() * (pathLength + bridgeLength - 30));
-            }
-        }
-
-        function handleInteraction() {
-            if(!controls.isLocked || isDead) return;
-
-            // Check distance to door
-            const playerPos = controls.getObject().position;
-            const doorPos = new THREE.Vector3(0, 4, -10); // Center of door arch
-            
-            if (playerPos.distanceTo(doorPos) < 15 && !isAnimatingDoor) {
-                isAnimatingDoor = true;
-                // Toggle collision based on door state *after* animation starts
-                if(isDoorOpen) {
-                    collidableObjects.push(doorMesh);
-                } else {
-                    const index = collidableObjects.indexOf(doorMesh);
-                    if (index > -1) collidableObjects.splice(index, 1);
-                }
-            }
-        }
-
-        function spawnEnemy(specificZ = null) {
-            // Blocky Skeleton
-            const skeletonGroup = new THREE.Group();
-            const boneMat = new THREE.MeshLambertMaterial({ color: 0xdddddd });
-
-            // Skull (Box)
-            const skull = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), boneMat);
-            skull.position.y = 5;
-            skeletonGroup.add(skull);
-
-            // Body
-            const body = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 1), boneMat);
-            body.position.y = 2.5;
-            skeletonGroup.add(body);
-
-            // Arms
-            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3, 0.8), boneMat);
-            const lArm = arm.clone(); lArm.position.set(-1.5, 3, 0); skeletonGroup.add(lArm);
-            const rArm = arm.clone(); rArm.position.set(1.5, 3, 0); skeletonGroup.add(rArm);
-            
-            // Placement
-            const zPos = specificZ !== null ? specificZ : (-30 - Math.random() * 200); // Along path
-            const xSpread = (zPos < -160 && zPos > -240) ? 2 : 4; // Narrower on bridge
-            const xPos = (Math.random() - 0.5) * xSpread;
-
-            skeletonGroup.position.set(xPos, 1.5, zPos);
-            
-            skeletonGroup.userData = { 
-                bobOffset: Math.random() * Math.PI * 2,
-                hp: 2,
-                originalMat: boneMat
-            };
-
-            scene.add(skeletonGroup);
-            enemies.push(skeletonGroup);
-        }
-
-        function attack() {
-            raycaster.setFromCamera(centerCoords, camera);
-            const attackRange = 15;
-            const intersects = raycaster.intersectObjects(enemies, true);
-
-            if (intersects.length > 0 && intersects[0].distance <= attackRange) {
-                let hitEnemy = intersects[0].object;
-                while (hitEnemy.parent && hitEnemy.parent.type !== 'Scene' && !enemies.includes(hitEnemy)) {
-                    hitEnemy = hitEnemy.parent;
-                }
-
-                if (enemies.includes(hitEnemy)) {
-                    // Level increases damage
-                    const damageDealt = 1 + Math.floor(level * 0.5);
-                    hitEnemy.userData.hp -= damageDealt;
-                    
-                    // Flash red
-                    hitEnemy.children.forEach(child => {
-                        child.material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-                    });
-
-                    setTimeout(() => {
-                        if (hitEnemy && hitEnemy.parent) {
-                            hitEnemy.children.forEach(child => {
-                                child.material = hitEnemy.userData.originalMat;
-                            });
-                        }
-                    }, 150);
-
-                    // Show DMG number (simple DOM element overlaid)
-                    showDamageNumber(damageDealt);
-
-                    if (hitEnemy.userData.hp <= 0) {
-                        scene.remove(hitEnemy);
-                        const index = enemies.indexOf(hitEnemy);
-                        if (index > -1) enemies.splice(index, 1);
-                        gainXP(1);
-                        
-                        // Respawn somewhere along the path
-                        setTimeout(() => spawnEnemy(), 3000);
-                    }
-                }
-            }
-        }
-
-        function showDamageNumber(amount) {
-            const dmgEl = document.createElement('div');
-            dmgEl.innerText = amount;
-            dmgEl.style.position = 'absolute';
-            dmgEl.style.left = '50%';
-            dmgEl.style.top = '50%';
-            dmgEl.style.color = 'red';
-            dmgEl.style.fontWeight = 'bold';
-            dmgEl.style.fontSize = '30px';
-            dmgEl.style.pointerEvents = 'none';
-            dmgEl.style.transform = `translate(-50%, -50%) translate(${(Math.random()-0.5)*50}px, ${(Math.random()-0.5)*50}px)`;
-            dmgEl.style.textShadow = '2px 2px 0px #000';
-            dmgEl.style.zIndex = '20';
-            document.body.appendChild(dmgEl);
-
-            let opacity = 1;
-            let topPos = 50;
-            const anim = setInterval(() => {
-                opacity -= 0.05;
-                topPos -= 1;
-                dmgEl.style.opacity = opacity;
-                dmgEl.style.top = topPos + '%';
-                if(opacity <= 0) {
-                    clearInterval(anim);
-                    dmgEl.remove();
-                }
-            }, 50);
-        }
-
-        function gainXP(amount) {
-            xp += amount;
-            if (xp >= xpToNext) levelUp();
-            updateHUD();
-        }
-
-        function levelUp() {
-            level++;
-            xp -= xpToNext;
-            xpToNext = Math.floor(xpToNext * 1.5);
-            currentHealth = maxHealth;
-            
-            damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(0, 255, 200, 0.4) 100%)';
-            damageOverlay.style.opacity = '1';
-            setTimeout(() => {
-                damageOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    damageOverlay.style.background = 'radial-gradient(circle, transparent 50%, rgba(200, 0, 0, 0.4) 100%)';
-                }, 200);
-            }, 150);
-        }
-
-        function takeDamage(amount) {
-            const now = performance.now() / 1000;
-            if (now - lastDamageTime < damageCooldown) return;
-            
-            lastDamageTime = now;
-            currentHealth -= amount;
-            if (currentHealth <= 0) {
-                currentHealth = 0;
-                die();
-            }
-            damageOverlay.style.opacity = '1';
-            setTimeout(() => { if(!isDead) damageOverlay.style.opacity = '0'; }, 300);
-            updateHUD();
-        }
-
-        function die() {
-            isDead = true;
-            controls.unlock();
-            blocker.style.display = 'flex';
-            menuTitle.innerText = 'VOCÊ MORREU';
-            menuTitle.style.color = '#ff0000';
-            menuInstructions.innerHTML = `Nível alcançado: ${level}.<br>O vazio o chama.`;
-            startBtn.innerText = 'Tentar Novamente';
-        }
-
-        function resetGame() {
-            maxHealth = 100; currentHealth = maxHealth;
-            level = 1; xp = 0; xpToNext = 5;
-            isDead = false; lastDamageTime = 0;
-            damageOverlay.style.opacity = '0';
-            
-            // Close door
-            isDoorOpen = false;
-            doorAnimationProgress = 0;
-            doorPivot.rotation.y = 0;
-            if(!collidableObjects.includes(doorMesh)) collidableObjects.push(doorMesh);
-
-            controls.getObject().position.set(0, 5, 0);
-
-            enemies.forEach(e => scene.remove(e));
-            enemies.length = 0;
-            for(let i=0; i<15; i++) spawnEnemy(-10 - Math.random() * 200);
-
-            updateHUD();
-        }
-
-        function updateHUD() {
-            healthBar.style.width = Math.max(0, (currentHealth / maxHealth) * 100) + '%';
-            lvlVal.innerText = level;
-            xpBar.style.width = Math.min(100, (xp / xpToNext) * 100) + '%';
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function checkCollision(targetPosition) {
-            // Very basic AABB collision against collidableObjects
-            const playerBox = new THREE.Box3();
-            const playerSize = 2.0; // Collision radius roughly
-            playerBox.setFromCenterAndSize(targetPosition, new THREE.Vector3(playerSize, 10, playerSize));
-
-            for(let i=0; i<collidableObjects.length; i++) {
-                const obj = collidableObjects[i];
-                const objBox = new THREE.Box3().setFromObject(obj);
-                if(playerBox.intersectsBox(objBox)) return true;
-            }
-            return false;
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const time = performance.now();
-            const delta = Math.min((time - prevTime) / 1000, 0.1); 
-
-            if (controls.isLocked && !isDead) {
-                // UI Prompts
-                const playerPos = controls.getObject().position;
-                const doorPos = new THREE.Vector3(0, 4, -10);
-                if(playerPos.distanceTo(doorPos) < 15) {
-                    interactionPrompt.style.display = 'block';
-                    interactionPrompt.innerText = isDoorOpen ? "Pressione E para fechar" : "Pressione E para abrir";
-                } else {
-                    interactionPrompt.style.display = 'none';
-                }
-
-                // Door Animation
-                if(isAnimatingDoor) {
-                    const targetAngle = isDoorOpen ? 0 : -Math.PI / 2;
-                    const currentAngle = doorPivot.rotation.y;
-                    const diff = targetAngle - currentAngle;
-                    
-                    doorPivot.rotation.y += diff * delta * 5;
-                    
-                    if(Math.abs(diff) < 0.05) {
-                        doorPivot.rotation.y = targetAngle;
-                        isAnimatingDoor = false;
-                        isDoorOpen = !isDoorOpen;
-                    }
-                }
-
-                // Player Movement Physics
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
-
-                direction.z = Number(moveForward) - Number(moveBackward);
-                direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize();
-
-                if (moveForward || moveBackward) velocity.z -= direction.z * playerSpeed * delta;
-                if (moveLeft || moveRight) velocity.x -= direction.x * playerSpeed * delta;
-
-                // Predict next position
-                const currentPos = controls.getObject().position.clone();
-                const nextPosX = currentPos.clone().add(new THREE.Vector3(-velocity.x * delta, 0, 0));
-                const nextPosZ = currentPos.clone().add(new THREE.Vector3(0, 0, -velocity.z * delta));
-
-                // Apply movement if no collision
-                if(!checkCollision(nextPosX)) controls.moveRight(-velocity.x * delta);
-                else velocity.x = 0;
-                
-                if(!checkCollision(nextPosZ)) controls.moveForward(-velocity.z * delta);
-                else velocity.z = 0;
-
-                // Fix height (prevent falling off easily, but keep simple)
-                controls.getObject().position.y = 5;
-
-                // Fall off edge detection (Very simple check based on Z bounds for bridge)
-                const pZ = controls.getObject().position.z;
-                const pX = controls.getObject().position.x;
-                // If on bridge section (-160 to -240 approx) and walk off edges
-                if(pZ < -160 && pZ > -240) {
-                    if(Math.abs(pX) > 4) takeDamage(100); // Fell off
-                }
-
-                // --- Sword Animation ---
-                if (isAttacking) {
-                    attackProgress += delta * 5; 
-                    if (attackProgress < 0.5) {
-                        const p = attackProgress * 2;
-                        swordGroup.rotation.x = -Math.PI / 4 - (p * Math.PI / 2.5);
-                        swordGroup.position.z = -3 - (p * 2);
-                    } else if (attackProgress < 1.0) {
-                        const p = (attackProgress - 0.5) * 2;
-                        swordGroup.rotation.x = -Math.PI / 4 - (Math.PI / 2.5) + (p * Math.PI / 2.5);
-                        swordGroup.position.z = -5 + (p * 2);
-                    } else {
-                        isAttacking = false;
-                        swordGroup.rotation.x = -Math.PI / 4;
-                        swordGroup.position.z = -3;
-                    }
-                }
-
-                // --- Enemy AI (Passive Bobbing & Look) ---
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    const enemy = enemies[i];
-                    enemy.position.y = 1.5 + Math.sin((time/1000) * 2 + enemy.userData.bobOffset) * 0.3;
-                    const targetRotation = Math.atan2(playerPos.x - enemy.position.x, playerPos.z - enemy.position.z);
-                    const currentRotation = enemy.rotation.y;
-                    enemy.rotation.y = currentRotation + (targetRotation - currentRotation) * delta * 2;
-                }
-            }
-
-            prevTime = time;
-            renderer.render(scene, camera);
-        }
+    };
     </script>
+</body>
+</html>
